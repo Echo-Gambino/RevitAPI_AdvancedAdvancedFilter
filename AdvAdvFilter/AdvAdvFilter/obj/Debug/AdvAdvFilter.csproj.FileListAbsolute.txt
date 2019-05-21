@@ -1,0 +1,9 @@
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\bin\Debug\AdvAdvFilter.dll
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\bin\Debug\AdvAdvFilter.pdb
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.csprojAssemblyReference.cache
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.csproj.CoreCompileInputs.cache
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.dll
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.pdb
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.ModelessForm.resources
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.Properties.Resources.resources
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.csproj.GenerateResource.cache
