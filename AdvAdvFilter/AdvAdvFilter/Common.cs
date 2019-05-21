@@ -19,7 +19,6 @@ namespace AdvAdvFilter
                 ElementId eId = element.Category.Id;
                 Category c = Category.GetCategory(doc, eId);
                 txt = c.Name;
-                // string txt = element.Category.Name;
             }
             catch (Exception ex)
             {

@@ -49,6 +49,12 @@
 
         #endregion
 
+        private List<ElementId> selElements;
+        private List<ElementId> allElements;
+
+        private bool uidocNull;
+        private bool docNull;
+
         #region Section Controllers
 
         ElementPickerInterface esController;
@@ -81,7 +87,33 @@
 
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
 
+            string txt = "";
+
+            Autodesk.Revit.DB.View v0 = uiDoc.ActiveView;
+            if (v0 == null)
+                txt += "uiDoc.ActiveView is null";
+            else
+                txt += "uiDoc.ActiveView isn't null";
+
+            txt += "\n";
+
+            Autodesk.Revit.DB.View v1 = doc.ActiveView;
+            if (v1 == null)
+                txt += "doc.ActiveView is null";
+            else
+                txt += "doc.ActiveView isn't null";
+
             // Something about loading elements into TreeView
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append(txt);
+            sb.Append("\n" + elementList.Count.ToString());
+            foreach (Element e in elementList)
+            {
+                sb.Append("\n+ " + e.Name);
+            }
+
+            TestLabel.Text = sb.ToString();
 
             this.FormClosing += this.ModelessForm_FormClosed;
 
@@ -130,22 +162,64 @@
 
                     // This is to check any time something in the model may have changed or something was selected
                     ICollection<ElementId> selectedElementIds = uiDoc.Selection.GetElementIds();
+
+
+
                     if (selectedElementIds.Count >= 1)
                     {
                         this.BeginInvoke(new Action(() =>
                         {
+                            string txt = "t";
+                            TestLabel.Text = txt;
+
+                            /*
                             List<Element> selectedElements = new List<Element>();
                             foreach (ElementId eId in selectedElementIds)
                                 selectedElements.Add(activeDoc.GetElement(eId));
 
                             esController.SetElementsToTreeView(selectedElements, doc);
+                            */
+                            /*
+                            string txt = "";
+                            try
+                            {
+                                Autodesk.Revit.DB.View view = activeDoc.ActiveView;
+                                if (view == null)
+                                    txt = "view is null";
+                                else
+                                {
+                                    // ElementId viewId = view.Id;
+                                    // FilteredElementCollector test = new FilteredElementCollector(activeDoc, viewId);
+                                    // ICollection<ElementId> allElements = test.ToElementIds();
+                                }
+                            }
+                            catch (ArgumentNullException ex)
+                            {
+                                txt = "ArgumentNullException: " + ex.Message;
+                            }
+                            catch (ArgumentException ex)
+                            {
+                                txt = "ArgumentException: " + ex.Message;
+                            }
+                            catch (NullReferenceException ex)
+                            {
+                                txt = "NullReferenceException: " + ex.Message;
+                            }
+                            catch (Exception ex)
+                            {
+                                txt = "Other Exception: " + ex.Message;
+                            }
 
                             // Update the form with the new selection
                             StringBuilder sb = new StringBuilder();
+
+                            sb.Append(txt);
+
                             foreach (ElementId id in selectedElementIds)
                             {
                                 Element e = activeDoc.GetElement(id);
                                 sb.Append("\n+ " + e.Name);
+                                
                                 try
                                 {
                                     ElementId eType = e.GetTypeId();
@@ -156,13 +230,15 @@
                                 {
                                     sb.Append(" + " + ex.Message);
                                 }
+                                
                             }
 
                             TestLabel.Text = sb.ToString();
-
+                            */
                         }));
                     }
                 }
+
             }
             catch (Exception ex)
             {
