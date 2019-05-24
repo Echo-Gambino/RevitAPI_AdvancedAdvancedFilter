@@ -52,16 +52,19 @@
         private List<ElementId> selElements;
         private List<ElementId> allElements;
 
-        private bool uidocNull;
-        private bool docNull;
+        private Autodesk.Revit.DB.View lastValidView;
 
-        #region Section Controllers
+        #region Controllers
 
-        ElementPickerInterface esController;
+        DataController dataController;
+        RevitController revitController;
+        ElementSelectionController selectionController;
+        
+        #endregion Controllers
 
         #endregion
 
-        #endregion
+        #region Essential Form Methods
 
         public ModelessForm(
             ExternalCommandData commandData,
@@ -73,6 +76,7 @@
         {
             InitializeComponent();
 
+            // Stop IdlingHandler from executing during initialization
             this.haltIdlingHandler = true;
 
             // Get all data needed for use on the modeless form
@@ -85,38 +89,21 @@
             this.eventHandler = eventHandler;
             this.elementProtectionUpdater = elementProtectionUpdater;
 
+            // Initialize this.lastValidView = null
+            this.lastValidView = null;
+
+            // Initialize controllers
+            this.selectionController = new ElementSelectionController(ElementSelectionPanel, ElementSelectionTreeView);
+            this.revitController = new RevitController(commandData);
+            this.dataController = new DataController();
+
+            // Get elementList, not sure what to use it for
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
 
-            string txt = "";
-
-            Autodesk.Revit.DB.View v0 = uiDoc.ActiveView;
-            if (v0 == null)
-                txt += "uiDoc.ActiveView is null";
-            else
-                txt += "uiDoc.ActiveView isn't null";
-
-            txt += "\n";
-
-            Autodesk.Revit.DB.View v1 = doc.ActiveView;
-            if (v1 == null)
-                txt += "doc.ActiveView is null";
-            else
-                txt += "doc.ActiveView isn't null";
-
-            // Something about loading elements into TreeView
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append(txt);
-            sb.Append("\n" + elementList.Count.ToString());
-            foreach (Element e in elementList)
-            {
-                sb.Append("\n+ " + e.Name);
-            }
-
-            TestLabel.Text = sb.ToString();
-
+            // Execute method ModelessForm_FormClosed when the form is closing
             this.FormClosing += this.ModelessForm_FormClosed;
 
+            // Resume IdlingHandler
             this.haltIdlingHandler = false;
 
         }
@@ -130,8 +117,47 @@
 
         private void ModelessForm_Load(object sender, EventArgs e)
         {
-            this.esController = new ElementPickerInterface(ElementSelectionPanel, ElementSelectionTreeView);
+            // Update all elements that is within this document
+            revitController.UpdateView();
+            List<ElementId> newElements = revitController.GetElementsFromView();
+            // This is to determine if we need to update the TreeView or not
+            bool updateTreeView = false;
+            updateTreeView = dataController.UpdateAllElements(newElements);
+
+            // TODO: Must update the treeView
+
+
         }
+
+        #endregion Essential Form Methods
+
+        #region EventHandlers
+
+        private void ElementSelectionTreeView_AfterExpand(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        private void ElementSelectionTreeView_AfterCollapse(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        private void ElementSelectionTreeView_AfterCheck(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        private void ElementSelectionTreeView_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+
+        }
+
+        #endregion EventHandlers
+
+        #region Supplementary Form Methods
+
+        #endregion Supplementary Form Methods
 
         #region API CALLS
 
@@ -154,8 +180,7 @@
 
                 if (!this.haltIdlingHandler)
                 {
-                    // MessageBox.Show("SelectionCheckedUIAppEvent_WhileIdling", "debug");
-
+                    // This is to get the essential objects to use the Revit API
                     UIApplication uiApp = sender as UIApplication;
                     UIDocument uiDoc = uiApp.ActiveUIDocument;
                     Document activeDoc = uiDoc.Document;
@@ -163,78 +188,174 @@
                     // This is to check any time something in the model may have changed or something was selected
                     ICollection<ElementId> selectedElementIds = uiDoc.Selection.GetElementIds();
 
+                    // This block is to update all the elements that is currently available within the document
+                    revitController.UpdateView();
+                    List<ElementId> newElements = revitController.GetElementsFromView();
+                    bool updateTreeView = false;
+                    updateTreeView = dataController.UpdateAllElements(newElements);
+
+                    List<ElementId> elementIds = dataController.AllElements;
+
+                    // Temp Test
+
+                    // List<CategoryType> categoryTypes = revitController.GetAllCategoryTypes();
+                    StringBuilder sb2 = new StringBuilder();
+
+                    void printDict(SortedDictionary<string, List<ElementId>> dict, StringBuilder sbf)
+                    {
+                        foreach (KeyValuePair<string, List<ElementId>> kvp in dict)
+                        {
+                            sbf.Append(String.Format("> {0}\n", kvp.Key));
+                            foreach (ElementId i in kvp.Value)
+                            {
+                                sbf.Append(String.Format("\t\t+ {0}\n", i.ToString()));
+                            }
+                        }
+                        sbf.Append("\n");
+                    }
+
+                    SortedDictionary<string, List<ElementId>> dGroup = null;
+
+                    dGroup = revitController.GroupElementIdsBy(
+                                        "CategoryType".GetType(),
+                                        dataController.AllElements);
+                    printDict(dGroup, sb2);
+
+                    dGroup = revitController.GroupElementIdsBy(
+                                        typeof(Category),
+                                        dataController.AllElements);
+                    printDict(dGroup, sb2);
+
+                    dGroup = revitController.GroupElementIdsBy(
+                                        typeof(Family),
+                                        dataController.AllElements);
+                    printDict(dGroup, sb2);
+                    dGroup = revitController.GroupElementIdsBy(
+                                        typeof(ElementType),
+                                        dataController.AllElements);
+                    printDict(dGroup, sb2);
 
 
+
+                    foreach (ElementId elementId in selectedElementIds)
+                    {
+                        Element e = revitController.GetElement(elementId);
+                        sb2.Append(String.Format("Element : {0}\n{1}\n", e.Name, elementId));
+                    }
+
+                    
+
+                    // Temp Test
+
+                    #region TEST SECTION
+                    StringBuilder sb1 = new StringBuilder();
+                    sb1.Append("Elements Categories\n");
+                    if (dataController.AllElements != null)
+                    {
+                        foreach (ElementId eId in dataController.AllElements)
+                        {
+                            Element e = revitController.GetElement(eId);
+                            Category c = revitController.GetCategory(e);
+                            
+                            string t = "null";
+
+                            if (c != null)
+                            {
+                                sb1.Append(eId.ToString() + "  "
+                                    + e.Name + "  "
+                                    + c.CategoryType.ToString() + "\n");
+                            }
+                            else
+                            {
+                                if (e != null)
+                                    t = e.Name;
+
+                                sb1.Append(eId.ToString() + "  "
+                                    + t + "  "
+                                    + "Null\n");
+                            }
+                        }
+                    }
+
+                    foreach (ElementId elementId in selectedElementIds)
+                    {
+                        Element e = revitController.GetElement(elementId);
+                        sb1.Append(String.Format("Element : {0}\n{1}\n", e.Name, elementId));
+                    }
+
+
+                    Document document = null;
+                    document = doc;
+
+                    StringBuilder sb = new StringBuilder();
+
+                    FilteredElementCollector test = null;
+                    test = new FilteredElementCollector(document);
+                    // FilteredElementCollector test = new FilteredElementCollector(activeDoc);
+                    int count = test.GetElementCount();
+                    sb.Append(string.Format("Element Count: {0}\n", count));
+
+                    sb.Append(string.Format("this.uiDoc is {0}\n", this.uiDoc));
+                    sb.Append(string.Format("this.doc is {0}\n", this.doc));
+
+                    sb.Append(string.Format("uiDoc.view is {0}\n", this.uiDoc.ActiveView));
+                    sb.Append(string.Format("doc.view is {0}\n", this.doc.ActiveView));
+
+                    sb.Append(string.Format("uiDoc.view.name is {0}\n", this.uiDoc.ActiveView.Name));
+                    sb.Append(string.Format("doc.view.name is {0}\n", this.doc.ActiveView.Name));
+
+                    sb.Append(string.Format("uiDoc.view.type is {0}\n", this.uiDoc.ActiveView.ViewType));
+                    sb.Append(string.Format("doc.view.type is {0}\n", this.doc.ActiveView.ViewType));
+
+                    // ViewType.FloorPlan
+                    Autodesk.Revit.DB.View activeView = this.doc.ActiveView;
+                    if (activeView.ViewType == ViewType.FloorPlan)
+                    {
+                        this.lastValidView = activeView;
+                    }
+
+                    if (this.lastValidView != null)
+                    {
+                        FilteredElementCollector test2 = new FilteredElementCollector(document, this.lastValidView.Id);
+                        List<Element> elements = test2.ToElements().ToList<Element>();
+                        foreach (Element e in elements)
+                        {
+                            sb.Append(string.Format("Id: {0}\n", e.Id));
+                        }
+                    }
+
+                    
+                    sb.Append("\n*For Reference*\n");
+
+                    foreach (ElementId elementId in selectedElementIds)
+                    {
+                        sb.Append(String.Format("Element : {0}\n", elementId));
+                    }
+
+
+                    #endregion TEST SECTION
+
+                    // Update the TreeView
+                    if (updateTreeView)
+                    {
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            // TODO: Update the TreeView
+                            ElementSelectionLabel.Text += "Thing";
+                            selectionController.UpdateTreeView(dataController.AllElements, revitController);
+                        }));
+                    }
+
+                    // Update the selectedElementIds
                     if (selectedElementIds.Count >= 1)
                     {
                         this.BeginInvoke(new Action(() =>
                         {
-                            string txt = "t";
-                            TestLabel.Text = txt;
+                            // This is for testing purposes
+                            TestLabel.Text = sb2.ToString();
 
-                            /*
-                            List<Element> selectedElements = new List<Element>();
-                            foreach (ElementId eId in selectedElementIds)
-                                selectedElements.Add(activeDoc.GetElement(eId));
 
-                            esController.SetElementsToTreeView(selectedElements, doc);
-                            */
-                            /*
-                            string txt = "";
-                            try
-                            {
-                                Autodesk.Revit.DB.View view = activeDoc.ActiveView;
-                                if (view == null)
-                                    txt = "view is null";
-                                else
-                                {
-                                    // ElementId viewId = view.Id;
-                                    // FilteredElementCollector test = new FilteredElementCollector(activeDoc, viewId);
-                                    // ICollection<ElementId> allElements = test.ToElementIds();
-                                }
-                            }
-                            catch (ArgumentNullException ex)
-                            {
-                                txt = "ArgumentNullException: " + ex.Message;
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                txt = "ArgumentException: " + ex.Message;
-                            }
-                            catch (NullReferenceException ex)
-                            {
-                                txt = "NullReferenceException: " + ex.Message;
-                            }
-                            catch (Exception ex)
-                            {
-                                txt = "Other Exception: " + ex.Message;
-                            }
 
-                            // Update the form with the new selection
-                            StringBuilder sb = new StringBuilder();
-
-                            sb.Append(txt);
-
-                            foreach (ElementId id in selectedElementIds)
-                            {
-                                Element e = activeDoc.GetElement(id);
-                                sb.Append("\n+ " + e.Name);
-                                
-                                try
-                                {
-                                    ElementId eType = e.GetTypeId();
-                                    ElementType type = doc.GetElement(eType) as ElementType;
-                                    sb.Append(" + " + type.Name + " + " + type.FamilyName);
-                                }
-                                catch (Exception ex)
-                                {
-                                    sb.Append(" + " + ex.Message);
-                                }
-                                
-                            }
-
-                            TestLabel.Text = sb.ToString();
-                            */
                         }));
                     }
                 }

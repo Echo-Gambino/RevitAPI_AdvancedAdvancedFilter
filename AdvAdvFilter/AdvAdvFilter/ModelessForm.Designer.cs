@@ -57,6 +57,10 @@
             this.ElementSelectionTreeView.Name = "ElementSelectionTreeView";
             this.ElementSelectionTreeView.Size = new System.Drawing.Size(300, 415);
             this.ElementSelectionTreeView.TabIndex = 1;
+            this.ElementSelectionTreeView.AfterExpand += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterExpand);
+            this.ElementSelectionTreeView.AfterCollapse += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCollapse);
+            this.ElementSelectionTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCheck);
+            this.ElementSelectionTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterSelect);
             // 
             // ElementSelectionLabel
             // 
