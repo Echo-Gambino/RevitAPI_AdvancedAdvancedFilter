@@ -27,9 +27,18 @@
             this.totalLeafs = 0;
         }
 
-        public void UpdateCounter()
+        public string UpdateCounter()
         {
             this.Text = string.Format("[ {0}/{1} ] {2}", this.numCheckedLeafs, this.totalLeafs, this.realText);
+            return this.Text;
+        }
+
+        public bool UpdateIsChecked(bool status)
+        {
+            if (this.Checked == status)
+                return false;
+            this.Checked = status;
+            return true;
         }
 
     }
@@ -59,6 +68,7 @@
         #region Fields
 
         private Panel panel;
+        private Label totalLabel;
         private TreeView treeView;
         private List<BranchTreeNode> categoryTypes;
         private List<LeafTreeNode> leafNodes;
@@ -72,6 +82,11 @@
             get { return this.panel; }
         }
 
+        public Label TotalLabel
+        {
+            get { return this.totalLabel; }
+        }
+
         public TreeView TreeView
         {
             get { return this.treeView; }
@@ -83,15 +98,72 @@
 
         public ElementSelectionController(
             Panel panel,
+            Label totalLabel,
             TreeView treeView
             )
         {
             this.panel = panel;
+            this.totalLabel = totalLabel;
             this.treeView = treeView;
 
-            this.categoryTypes = GetCategoryNodes();
+            // this.categoryTypes = GetCategoryNodes();
             this.leafNodes = new List<LeafTreeNode>();
         }
+
+        #region Selected Elements
+
+        public List<ElementId> GetSelectedElementIds()
+        {
+            List<ElementId> selected = new List<ElementId>();
+
+            foreach (LeafTreeNode leaf in this.leafNodes)
+            {
+                if (leaf.Checked)
+                {
+                    selected.Add(leaf.ElementId);
+                }
+            }
+
+            return selected;
+        }
+
+        public bool UpdateSelectedNodes(ICollection<ElementId> selected)
+        {
+            List<ElementId> currSelection = selected.ToList<ElementId>();
+            bool selectedChanged = false;
+
+            foreach (LeafTreeNode leaf in this.leafNodes)
+            {
+                if (selected.Contains(leaf.ElementId))
+                {
+                    if (!leaf.Checked)
+                    {
+                        leaf.Checked = true;
+                        UpdateAfterCheck(leaf);
+                        UpdateTotalSelectedItemsLabel();
+
+                        selectedChanged = true;
+                    }
+                }
+                else
+                {
+                    if (leaf.Checked)
+                    {
+                        leaf.Checked = false;
+                        UpdateAfterCheck(leaf);
+                        UpdateTotalSelectedItemsLabel();
+
+                        selectedChanged = true;
+                    }
+                }
+            }
+
+            return selectedChanged;
+        }
+
+        #endregion Selected Elements
+
+        #region Unused Functions
 
         public List<TreeNode> ToList(TreeNodeCollection collection)
         {
@@ -133,8 +205,40 @@
             return output;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="elements"></param>
+        /// <returns></returns>
+        private List<LeafTreeNode> GetNewLeafNodes(List<ElementId> elements)
+        {
+            List<LeafTreeNode> output = null;
+
+            if (elements == null)
+                return output;
+
+            output = new List<LeafTreeNode>();
+
+            LeafTreeNode leaf = null;
+            foreach (ElementId i in elements)
+            {
+                leaf = new LeafTreeNode();
+                leaf.ElementId = i;
+                output.Add(leaf);
+            }
+
+            return output;
+        }
+
+        #endregion Unused Functions
+
         #region UpdateTreeView
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="elements"></param>
+        /// <param name="rCon"></param>
         public void UpdateTreeView(List<ElementId> elements, RevitController rCon)
         {
             List<Type> updateList = new List<Type>()
@@ -146,12 +250,15 @@
                 typeof(ElementId)
             };
 
+            this.leafNodes.Clear();
+
             UpdateLevel(elements, treeView.Nodes, rCon, updateList);
 
             SetupCategoryTypeNodes(treeView.Nodes);
 
             SetupCheckedCounter(treeView.Nodes);
 
+            UpdateTotalSelectedItemsLabel();
         }
 
         /// <summary>
@@ -172,7 +279,7 @@
                 return;
             }
 
-            Dictionary<string, TreeNode> stringNodeMap = new Dictionary<string, TreeNode>();
+            Dictionary<string, AdvTreeNode> stringNodeMap = new Dictionary<string, AdvTreeNode>();
             SortedDictionary<string, List<ElementId>> group = null;
             List<TreeNode> nodesToBeDeleted = new List<TreeNode>();
             Type type = updateList[0];
@@ -194,7 +301,7 @@
                 // Add the node to the stringNodeMap for later
                 if (!stringNodeMap.ContainsKey(n.Text))
                 {
-                    stringNodeMap.Add(n.Text, n);
+                    stringNodeMap.Add(n.Text, n as AdvTreeNode);
                 }
 
             }
@@ -221,6 +328,7 @@
                     // If true, then the nodes that has the nodeName exists
                     if (lastLevel)
                     {
+                        this.leafNodes.Add(stringNodeMap[nodeName] as LeafTreeNode);
                         continue;
                     }
                     nextNode = stringNodeMap[nodeName] as BranchTreeNode;
@@ -239,6 +347,8 @@
                         newLeaf.Text = nodeName;
 
                         nodes.Add(newLeaf);
+
+                        this.leafNodes.Add(newLeaf);
                         continue;
                     }
                     else
@@ -271,6 +381,39 @@
                 // Expand the its tree
                 cNode.Expand();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="branch"></param>
+        public void ToggleCollapse(BranchTreeNode branch)
+        {
+            TreeNodeCollection subBranches = branch.Nodes;
+
+            bool allCollapsed = true;
+
+            foreach (AdvTreeNode sub in subBranches)
+            {
+                if (sub.IsExpanded)
+                {
+                    allCollapsed = false;
+                    break;
+                }
+            }
+
+            if (allCollapsed)
+            {
+                branch.ExpandAll();
+            }
+            else
+            {
+                foreach (AdvTreeNode sub in subBranches)
+                {
+                    sub.Collapse();
+                }
+            }
+
         }
 
         /// <summary>
@@ -311,36 +454,131 @@
             return output;
         }
 
+        #endregion
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="elements"></param>
-        /// <returns></returns>
-        private List<LeafTreeNode> GetNewLeafNodes(List<ElementId> elements)
+        #region Update When Check
+
+        public void UpdateAfterCheck(AdvTreeNode e)
         {
-            List<LeafTreeNode> output = null;
-
-            if (elements == null)
-                return output;
-
-            output = new List<LeafTreeNode>();
-
-            LeafTreeNode leaf = null;
-            foreach (ElementId i in elements)
+            AdvTreeNode GetRoot(AdvTreeNode node)
             {
-                leaf = new LeafTreeNode();
-                leaf.ElementId = i;
-                output.Add(leaf);
+                AdvTreeNode tmpRoot = null;
+
+                if (node == null) return null;
+
+                tmpRoot = GetRoot(node.Parent as AdvTreeNode);
+
+                if (tmpRoot == null)
+                    tmpRoot = node;
+
+                return tmpRoot;
+            }
+
+            if (e == null)
+                return;
+
+            // Update their children if it has any
+            if (e.Nodes.Count > 0)
+                UpdateChildNodes(e, e.Checked);
+
+            // Update their parents if it has any
+            if (e.Parent != null)
+                UpdateParentNodes(e.Parent as AdvTreeNode, e.Checked);
+
+            AdvTreeNode root = GetRoot(e);
+
+            UpdateCheckedCounters(root);
+
+            return;
+        }
+
+        private void UpdateChildNodes(AdvTreeNode node, bool isChecked)
+        {
+            if (node == null)
+                return;
+
+            foreach (AdvTreeNode n in node.Nodes)
+            {
+                if (n.Checked == isChecked) continue;
+
+                // Update the status of n
+                n.Checked = isChecked;
+
+                // If n has children, then update them too
+                if (n.Nodes.Count > 0)
+                {
+                    UpdateChildNodes(n, isChecked);
+                }
+            }
+        }
+
+        private void UpdateParentNodes(AdvTreeNode parent, bool isChecked)
+        {
+            bool isAllChecked(TreeNodeCollection collection)
+            {
+                foreach (AdvTreeNode n in collection)
+                    if (!n.Checked) return false;
+                return true;
+            }
+
+            if (parent == null) return;
+
+            parent.Checked = isAllChecked(parent.Nodes);
+
+            // If parent's parent isn't null, continue the recursion up
+            if (parent.Parent != null)
+                UpdateParentNodes(parent.Parent as AdvTreeNode, isChecked);
+
+            return;
+        }
+
+        #endregion Update When Check
+
+        #region Update Counters
+
+        private int UpdateCheckedCounters(AdvTreeNode node)
+        {
+            int output = 0;
+
+            if (node.Name == "Instance")
+            {
+                if (node.Checked)
+                    output = 1;
+                else
+                    output = 0;
+            }
+            else
+            {
+                foreach (AdvTreeNode n in node.Nodes)
+                {
+                    output += UpdateCheckedCounters(n);
+                }
+
+                node.numCheckedLeafs = output;
+                node.UpdateCounter();
+
             }
 
             return output;
         }
 
-        
+        public void UpdateTotalSelectedItemsLabel()
+        {
+            int total = 0;
+            int max = 0;
 
+            TreeNodeCollection nodes = treeView.Nodes;
 
-        #endregion
+            foreach (AdvTreeNode n in nodes)
+            {
+                total += UpdateCheckedCounters(n);
+                max += n.totalLeafs;
+            }
+
+            this.totalLabel.Text = string.Format("Total Selected Items: {0} / {1}", total, max);
+        }
+
+        #endregion Update Counters
 
         #region TMP STOW
 
@@ -464,18 +702,6 @@
 
         }
 
-        public void UpdateAfterCheck(TreeViewEventArgs e)
-        {
-            // Update their children if it has any
-            if (e.Node.Nodes.Count > 0)
-                UpdateChildNodes(e.Node, e.Node.Checked);
-
-            // Update their parents if it has any
-            if (e.Node.Parent != null)
-                UpdateParentNodes(e.Node.Parent, e.Node.Checked);
-
-            return;
-        }
 
         public List<TreeNode> GetListOfCheckedLeaves(TreeNodeCollection collection)
         {
@@ -557,41 +783,6 @@
             return categories;
         }
         
-
-        private void UpdateChildNodes(TreeNode node, bool isChecked)
-        {
-            foreach (TreeNode n in node.Nodes)
-            {
-                // Update the status of n
-                n.Checked = isChecked;
-                // If n has children, then update them too
-                if (n.Nodes.Count > 0)
-                {
-                    UpdateChildNodes(n, isChecked);
-                }
-            }
-        }
-
-        private void UpdateParentNodes(TreeNode parent, bool isChecked)
-        {
-            // Try to get out of the method as soon as it encounters 
-            // a node with the same state as the parent.
-            foreach (TreeNode n in parent.Nodes)
-            {
-                if (n.Checked == parent.Checked) return;
-            }
-
-            // If all its children are of the opposite status,
-            // change the parent's Checked status
-            parent.Checked = !parent.Checked;
-
-            // If parent's parent isn't null, continue the recursion up
-            if (parent.Parent != null)
-                UpdateParentNodes(parent.Parent, isChecked);
-
-            return;
-        }
-
         private List<TreeNode> GetLeaves(TreeNodeCollection collection, bool pickChecked)
         {
             // Get a new empty list

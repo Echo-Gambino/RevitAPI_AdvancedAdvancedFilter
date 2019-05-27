@@ -47,6 +47,9 @@
 
         private static ElementProtectionUpdater elementProtectionUpdater;
 
+        // This variable is used by a delegate
+        private static List<ElementId> formSelection;
+
         #endregion
 
         #region Properties
@@ -104,6 +107,17 @@
         }
 
         #endregion
+
+        #region Delegates
+
+        public delegate void SetSelection(List<ElementId> selection);
+
+        public static void SetSelectionFromForm(List<ElementId> selection)
+        {
+            formSelection = selection;
+        }
+
+        #endregion Delegates
 
         #region Static Methods
 
@@ -173,7 +187,7 @@
             }
 
             // Disable ribbon panel to prevent conflicting commands
-            foreach (RibbonPanel panel in Main.UiCtrlApp.GetRibbonPanels( RIBBON_TAB_NAME ))
+            foreach (RibbonPanel panel in Main.UiCtrlApp.GetRibbonPanels(RIBBON_TAB_NAME))
             {
                 panel.Enabled = false;
             }
@@ -189,7 +203,8 @@
                                 externalEvent,
                                 eventHandler,
                                 Main.ElementProtectionUpdater,
-                                protectedElements
+                                protectedElements,
+                                new SetSelection( SetSelectionFromForm )
                             );
 
                         Main.ActiveModelessForm = modelessForm;

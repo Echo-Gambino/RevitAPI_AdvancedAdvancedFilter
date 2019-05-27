@@ -49,9 +49,9 @@
 
         #endregion
 
-        private List<ElementId> selElements;
-        private List<ElementId> allElements;
-
+        // private List<ElementId> selElements;
+        // private List<ElementId> allElements;
+        // Almost useless, should delete later
         private Autodesk.Revit.DB.View lastValidView;
 
         #region Controllers
@@ -59,10 +59,22 @@
         DataController dataController;
         RevitController revitController;
         ElementSelectionController selectionController;
-        
+
         #endregion Controllers
 
-        #endregion
+        #region API Handler Requests
+
+        // Make an enum for all the possible requests
+        enum Request
+        {
+            AllElementIds = 0,
+            UpdateTreeView = 1,
+            SelectElementIds = 2,
+
+            Invalid = -1
+        }
+
+        #endregion API Handler Requests
 
         #region Essential Form Methods
 
@@ -72,10 +84,16 @@
             ExternalEvent externalEvent,
             EventHandler eventHandler,
             ElementProtectionUpdater elementProtectionUpdater,
-            List<Element> elementList)
+            List<Element> elementList,
+            Main.SetSelection selectionTool
+            )
+            // selectionTool(...);
+            
         {
             InitializeComponent();
 
+            //selectionTool(new List<ElementId>());
+            
             // Stop IdlingHandler from executing during initialization
             this.haltIdlingHandler = true;
 
@@ -93,7 +111,7 @@
             this.lastValidView = null;
 
             // Initialize controllers
-            this.selectionController = new ElementSelectionController(ElementSelectionPanel, ElementSelectionTreeView);
+            this.selectionController = new ElementSelectionController(ElementSelectionPanel, ElementSelectionLabel, ElementSelectionTreeView);
             this.revitController = new RevitController(commandData);
             this.dataController = new DataController();
 
@@ -124,8 +142,8 @@
             bool updateTreeView = false;
             updateTreeView = dataController.UpdateAllElements(newElements);
 
-            // TODO: Must update the treeView
-
+            if (updateTreeView)
+                selectionController.UpdateTreeView(dataController.AllElements, revitController);
 
         }
 
@@ -133,24 +151,52 @@
 
         #region EventHandlers
 
-        private void ElementSelectionTreeView_AfterExpand(object sender, TreeViewEventArgs e)
+        private void ElementSelectionTreeView_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
-
+            // .. Don't know what to use it for yet, keeping it here just in case
         }
 
-        private void ElementSelectionTreeView_AfterCollapse(object sender, TreeViewEventArgs e)
+        private void ElementSelectionTreeView_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
 
+            BranchTreeNode branch = e.Node as BranchTreeNode;
+
+            if (branch != null)
+            {
+                if (branch.Name == "System.String") // This is for "CategoryType" Only
+                {
+                    selectionController.ToggleCollapse(branch);
+                    e.Cancel = true;
+                }
+            }
         }
 
         private void ElementSelectionTreeView_AfterCheck(object sender, TreeViewEventArgs e)
         {
+            if (e.Action == TreeViewAction.Unknown)
+                return;
 
+            selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
+
+            selectionController.UpdateTotalSelectedItemsLabel();
+
+            List<ElementId> selectedElementIds = selectionController.GetSelectedElementIds();
+
+            // revitController.MakeNewSelection(selectedElementIds);
         }
 
         private void ElementSelectionTreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
+            if (e.Action == TreeViewAction.Unknown)
+                return;
 
+            selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
+
+            selectionController.UpdateTotalSelectedItemsLabel();
+
+            List<ElementId> selectedElementIds = selectionController.GetSelectedElementIds();
+
+            // revitController.MakeNewSelection(selectedElementIds);
         }
 
         #endregion EventHandlers
@@ -248,6 +294,7 @@
                     // Temp Test
 
                     #region TEST SECTION
+
                     StringBuilder sb1 = new StringBuilder();
                     sb1.Append("Elements Categories\n");
                     if (dataController.AllElements != null)
@@ -340,14 +387,18 @@
                     {
                         this.BeginInvoke(new Action(() =>
                         {
-                            // TODO: Update the TreeView
-                            ElementSelectionLabel.Text += "Thing";
+                            // ElementSelectionLabel.Text += "Thing";
                             selectionController.UpdateTreeView(dataController.AllElements, revitController);
                         }));
                     }
 
+                    // Check if the selection set is changed (treeView selection != Revit Selection)
+                    bool updateSelection = (selectedElementIds.Count >= 1);
+                    // updateSelection = selectionController.UpdateSelectedNodes(selectedElementIds);
+
                     // Update the selectedElementIds
-                    if (selectedElementIds.Count >= 1)
+                    // if (selectedElementIds.Count >= 1)
+                    if (updateSelection)
                     {
                         this.BeginInvoke(new Action(() =>
                         {
@@ -358,6 +409,17 @@
 
                         }));
                     }
+
+                    
+                    if (selectedElementIds.Count == 0)
+                    {
+                        selectedElementIds = selectionController.GetSelectedElementIds();
+                        if (selectedElementIds.Count != 0)
+                        {
+                            uiDoc.Selection.SetElementIds(selectedElementIds);
+                        }
+                    }
+
                 }
 
             }
@@ -532,5 +594,6 @@
         #endregion
 
         #endregion
+
     }
 }

@@ -155,6 +155,39 @@
 
         #endregion View Related Tasks
 
+        #region Selection Related Tasks
+
+        public void MakeNewSelection(List<ElementId> selection)
+        {
+            ICollection<ElementId> selectedElementIds = this.uiDoc.Selection.GetElementIds();
+
+            // selectedElementIds.Clear();
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("Actual Selection\n");
+            foreach (ElementId s in selectedElementIds)
+            {
+                sb.Append(s.ToString() + "\n");
+            }
+
+            sb.Append("\nTreeView Selection\n");
+            foreach (ElementId eId in selection)
+            {
+                sb.Append(eId.ToString() + "\n");
+                selectedElementIds.Add(eId);
+            }
+
+            MessageBox.Show(sb.ToString(), "Debug");
+
+            //selectedElementIds.Clear();
+
+            this.uiDoc.Selection.SetElementIds(selectedElementIds);
+
+        }
+
+        #endregion Selection Related Tasks
+
         #region Get ElementId Grouping
 
         public SortedDictionary<string, List<ElementId>> GroupElementIdsBy(Type type, List<ElementId> elementIds)
@@ -285,7 +318,6 @@
 
         // public Dictionary<string, List<ElementId>> 
 
-        // TODO: Get all possible Category Types
         public List<CategoryType> GetAllCategoryTypes()
         {
             List<CategoryType> output = new List<CategoryType>();

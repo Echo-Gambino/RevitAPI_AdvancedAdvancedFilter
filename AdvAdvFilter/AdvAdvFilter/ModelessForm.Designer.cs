@@ -53,24 +53,25 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ElementSelectionTreeView.CheckBoxes = true;
-            this.ElementSelectionTreeView.Location = new System.Drawing.Point(0, 27);
+            this.ElementSelectionTreeView.Location = new System.Drawing.Point(0, 3);
             this.ElementSelectionTreeView.Name = "ElementSelectionTreeView";
-            this.ElementSelectionTreeView.Size = new System.Drawing.Size(300, 415);
+            this.ElementSelectionTreeView.Size = new System.Drawing.Size(300, 420);
             this.ElementSelectionTreeView.TabIndex = 1;
-            this.ElementSelectionTreeView.AfterExpand += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterExpand);
-            this.ElementSelectionTreeView.AfterCollapse += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCollapse);
             this.ElementSelectionTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCheck);
+            this.ElementSelectionTreeView.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeCollapse);
+            this.ElementSelectionTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeExpand);
             this.ElementSelectionTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterSelect);
             // 
             // ElementSelectionLabel
             // 
+            this.ElementSelectionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ElementSelectionLabel.AutoSize = true;
-            this.ElementSelectionLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ElementSelectionLabel.Location = new System.Drawing.Point(0, 0);
+            this.ElementSelectionLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ElementSelectionLabel.Location = new System.Drawing.Point(3, 426);
             this.ElementSelectionLabel.Name = "ElementSelectionLabel";
-            this.ElementSelectionLabel.Size = new System.Drawing.Size(97, 24);
+            this.ElementSelectionLabel.Size = new System.Drawing.Size(137, 16);
             this.ElementSelectionLabel.TabIndex = 0;
-            this.ElementSelectionLabel.Text = "Elements";
+            this.ElementSelectionLabel.Text = "Total Selected Items: ";
             // 
             // TestLabel
             // 
