@@ -159,30 +159,14 @@
 
         public void MakeNewSelection(List<ElementId> selection)
         {
-            ICollection<ElementId> selectedElementIds = this.uiDoc.Selection.GetElementIds();
+            this.uiDoc.Selection.SetElementIds(selection);
+        }
 
-            // selectedElementIds.Clear();
+        public void IsSelectionChanged(List<ElementId> selection)
+        {
+            ICollection<ElementId> elementIds = this.uiDoc.Selection.GetElementIds();
 
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append("Actual Selection\n");
-            foreach (ElementId s in selectedElementIds)
-            {
-                sb.Append(s.ToString() + "\n");
-            }
-
-            sb.Append("\nTreeView Selection\n");
-            foreach (ElementId eId in selection)
-            {
-                sb.Append(eId.ToString() + "\n");
-                selectedElementIds.Add(eId);
-            }
-
-            MessageBox.Show(sb.ToString(), "Debug");
-
-            //selectedElementIds.Clear();
-
-            this.uiDoc.Selection.SetElementIds(selectedElementIds);
+            elementIds.Equals(selection);
 
         }
 

@@ -22,7 +22,7 @@
 
         #region Fields
 
-        #region Modeless Form
+        #region Fields: Modeless Form
 
         // Essential API data that is needed
         private ExternalCommandData commandData;
@@ -47,34 +47,38 @@
         private bool haltIdlingHandler = false;
         private Element selectedElement; // Might change this
 
-        #endregion
+        #endregion Fields: Modeless Form
 
-        // private List<ElementId> selElements;
-        // private List<ElementId> allElements;
-        // Almost useless, should delete later
-        private Autodesk.Revit.DB.View lastValidView;
-
-        #region Controllers
+        #region Fields: Controllers
 
         DataController dataController;
         RevitController revitController;
         ElementSelectionController selectionController;
 
-        #endregion Controllers
+        #endregion Fields: Controllers
 
-        #region API Handler Requests
+        #region Fields: API Handler Requests
 
         // Make an enum for all the possible requests
         enum Request
         {
-            AllElementIds = 0,
+            Nothing = 0,
             UpdateTreeView = 1,
-            SelectElementIds = 2,
+            UpdateTreeViewSelection = 2,
+            SelectElementIds = 3,
+
 
             Invalid = -1
         }
 
-        #endregion API Handler Requests
+        List<Request> failureList;
+        List<Request> actionQueue;
+
+        int TestInt = 0;
+
+        #endregion Fields: API Handler Requests
+
+        #endregion Fields
 
         #region Essential Form Methods
 
@@ -87,8 +91,6 @@
             List<Element> elementList,
             Main.SetSelection selectionTool
             )
-            // selectionTool(...);
-            
         {
             InitializeComponent();
 
@@ -107,13 +109,15 @@
             this.eventHandler = eventHandler;
             this.elementProtectionUpdater = elementProtectionUpdater;
 
-            // Initialize this.lastValidView = null
-            this.lastValidView = null;
-
             // Initialize controllers
             this.selectionController = new ElementSelectionController(ElementSelectionPanel, ElementSelectionLabel, ElementSelectionTreeView);
             this.revitController = new RevitController(commandData);
             this.dataController = new DataController();
+
+            // Initialize the failureList
+            failureList = new List<Request>();
+            // Initialize the action queue
+            actionQueue = new List<Request>();
 
             // Get elementList, not sure what to use it for
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
@@ -135,16 +139,8 @@
 
         private void ModelessForm_Load(object sender, EventArgs e)
         {
-            // Update all elements that is within this document
-            revitController.UpdateView();
-            List<ElementId> newElements = revitController.GetElementsFromView();
-            // This is to determine if we need to update the TreeView or not
-            bool updateTreeView = false;
-            updateTreeView = dataController.UpdateAllElements(newElements);
-
-            if (updateTreeView)
-                selectionController.UpdateTreeView(dataController.AllElements, revitController);
-
+            this.actionQueue.Clear();
+            this.actionQueue.Add(Request.UpdateTreeView);
         }
 
         #endregion Essential Form Methods
@@ -176,13 +172,15 @@
             if (e.Action == TreeViewAction.Unknown)
                 return;
 
+            this.haltIdlingHandler = true;
+
             selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
 
             selectionController.UpdateTotalSelectedItemsLabel();
 
-            List<ElementId> selectedElementIds = selectionController.GetSelectedElementIds();
+            this.actionQueue.Add(Request.SelectElementIds);
 
-            // revitController.MakeNewSelection(selectedElementIds);
+            this.haltIdlingHandler = false;
         }
 
         private void ElementSelectionTreeView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -190,13 +188,15 @@
             if (e.Action == TreeViewAction.Unknown)
                 return;
 
+            this.haltIdlingHandler = true;
+
             selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
 
             selectionController.UpdateTotalSelectedItemsLabel();
 
-            List<ElementId> selectedElementIds = selectionController.GetSelectedElementIds();
+            this.actionQueue.Add(Request.SelectElementIds);
 
-            // revitController.MakeNewSelection(selectedElementIds);
+            this.haltIdlingHandler = false;
         }
 
         #endregion EventHandlers
@@ -220,6 +220,7 @@
         /// <param name="args"></param>
         public void SelectionChanged_UIAppEvent_WhileIdling(object sender, IdlingEventArgs args)
         {
+
             try
             {
                 args.SetRaiseWithoutDelay();
@@ -234,192 +235,166 @@
                     // This is to check any time something in the model may have changed or something was selected
                     ICollection<ElementId> selectedElementIds = uiDoc.Selection.GetElementIds();
 
-                    // This block is to update all the elements that is currently available within the document
-                    revitController.UpdateView();
-                    List<ElementId> newElements = revitController.GetElementsFromView();
-                    bool updateTreeView = false;
-                    updateTreeView = dataController.UpdateAllElements(newElements);
+                    Request request;
+                    List<ElementId> elementIds = null;
 
-                    List<ElementId> elementIds = dataController.AllElements;
-
-                    // Temp Test
-
-                    // List<CategoryType> categoryTypes = revitController.GetAllCategoryTypes();
-                    StringBuilder sb2 = new StringBuilder();
-
-                    void printDict(SortedDictionary<string, List<ElementId>> dict, StringBuilder sbf)
+                    // Handle the first request of the Queue as long as the actionQueue isn't 0
+                    if (this.actionQueue.Count != 0)
                     {
-                        foreach (KeyValuePair<string, List<ElementId>> kvp in dict)
+                        request = this.actionQueue[0];
+                        this.actionQueue.RemoveAt(0);
+
+                        // This switch statement sets up the data needed to invoke a visible
+                        // change within the Modeless Form or the Revit software itself,
+                        // also makes last minute request overrides in case the change isn't needed to
+                        // not waste tons of CPU cycles and keeps the application responsive.
+                        switch (request)
                         {
-                            sbf.Append(String.Format("> {0}\n", kvp.Key));
-                            foreach (ElementId i in kvp.Value)
-                            {
-                                sbf.Append(String.Format("\t\t+ {0}\n", i.ToString()));
-                            }
+                            // Updates the TreeView from the list of elementIds from Revit's view
+                            case Request.UpdateTreeView:
+
+                                // Update / Refresh the revitController's view
+                                revitController.UpdateView();
+                                // Get Elements from the newly refreshed view
+                                elementIds = revitController.GetElementsFromView();
+                                // If dataController's UpdateAllElements(...) method returns FALSE,
+                                // Then switch the request from Request.UpdateTreeView to Request.Nothing
+                                if (!dataController.UpdateAllElements(elementIds))
+                                    request = Request.Nothing;
+                                else
+                                    elementIds = dataController.AllElements;
+
+                                break;
+                            // Make Revit select elements from a given elementId list
+                            case Request.SelectElementIds:
+
+                                // Get ElementId list that the ModelessForm requests to select
+                                elementIds = selectionController.GetSelectedElementIds();
+                                // TODO: Make an exit function if elementIds == null
+                                /*
+                                if (elementIds == null)
+                                {
+                                    actionQueue.Insert(0, request);
+                                    request = Request.Nothing;
+                                }
+                                */
+
+
+                                break;
+                            // This case usually handles Request.Invalid or Request.Nothing
+                            default:
+
+                                // When the given Request holds no significance, try to perform polling and
+                                // check if the Revit application changed states and values to update Modeless Form
+                                elementIds = selectionController.GetSelectedElementIds();
+                                // TODO: Make an exit function if elementIds == null
+                                /*
+                                if (elementIds == null)
+                                {
+                                    actionQueue.Insert(0, request);
+                                    request = Request.Nothing;
+                                }
+                                */
+                                List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
+
+                                if (!selectionController.IsListEqual(elementIds, currentSelected))
+                                {
+                                    request = Request.UpdateTreeViewSelection;
+                                }
+
+                                break;
                         }
-                        sbf.Append("\n");
                     }
-
-                    SortedDictionary<string, List<ElementId>> dGroup = null;
-
-                    dGroup = revitController.GroupElementIdsBy(
-                                        "CategoryType".GetType(),
-                                        dataController.AllElements);
-                    printDict(dGroup, sb2);
-
-                    dGroup = revitController.GroupElementIdsBy(
-                                        typeof(Category),
-                                        dataController.AllElements);
-                    printDict(dGroup, sb2);
-
-                    dGroup = revitController.GroupElementIdsBy(
-                                        typeof(Family),
-                                        dataController.AllElements);
-                    printDict(dGroup, sb2);
-                    dGroup = revitController.GroupElementIdsBy(
-                                        typeof(ElementType),
-                                        dataController.AllElements);
-                    printDict(dGroup, sb2);
-
-
-
-                    foreach (ElementId elementId in selectedElementIds)
+                    else
                     {
-                        Element e = revitController.GetElement(elementId);
-                        sb2.Append(String.Format("Element : {0}\n{1}\n", e.Name, elementId));
-                    }
+                        request = Request.Nothing;
 
-                    
-
-                    // Temp Test
-
-                    #region TEST SECTION
-
-                    StringBuilder sb1 = new StringBuilder();
-                    sb1.Append("Elements Categories\n");
-                    if (dataController.AllElements != null)
-                    {
-                        foreach (ElementId eId in dataController.AllElements)
+                        // When the given Request holds no significance, try to perform polling and
+                        // check if the Revit application changed states and values to update Modeless Form
+                        elementIds = selectionController.GetSelectedElementIds();
+                        // TODO: Make an exit function if elementIds == null
+                        /*
+                        if (elementIds == null)
                         {
-                            Element e = revitController.GetElement(eId);
-                            Category c = revitController.GetCategory(e);
+                            actionQueue.Insert(0, request);
+                            request = Request.Nothing;
+                        }
+                        */
+
+                        List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
+
+                        if (!selectionController.IsListEqual(elementIds, currentSelected))
+                        {
+                            request = Request.UpdateTreeViewSelection;
+                        }
+
+                    }
+
+
+                    switch (request)
+                    {
+                        case Request.UpdateTreeView:
+
+                            // Update the treeView element within the form
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                selectionController.UpdateTreeView(elementIds, revitController);
+                            }));
+
+                            break;
+                        case Request.UpdateTreeViewSelection:
+
+                            ICollection<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds();
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                bool updateSucceeded = selectionController.UpdateSelectedLeaves(currentSelected);
+                                if (!updateSucceeded)
+                                {
+                                    if (failureList.Contains(Request.UpdateTreeViewSelection))
+                                    {
+                                        // Prompt user with error message if the refreshed reattempt still failed.
+                                        MessageBox.Show("Fatal Error: selectionController failed to update the selected leaves from the Revit application",
+                                            "Debug - SelectionChanged_UIAppEvent_WhileIdling(...)");
+                                        failureList.Remove(Request.UpdateTreeViewSelection);
+                                    }
+                                    else
+                                    {
+                                        // Add a failure list to prevent infinite loops / requests
+                                        failureList.Add(Request.UpdateTreeViewSelection);
+                                        // Demand an update request to refresh the treeview structure and its selection
+                                        actionQueue.Insert(0, Request.UpdateTreeViewSelection);
+                                        actionQueue.Insert(0, Request.UpdateTreeView);
+                                    }
+
+                                }
+                                else
+                                {
+                                    // if failureList has UpdateTreeViewSelection, remove it
+                                    if (failureList.Contains(Request.UpdateTreeViewSelection))
+                                        failureList.Remove(Request.UpdateTreeViewSelection);
+                                }
+
+                            }));
+
+                            break;
+                        case Request.SelectElementIds:
+
+                            // revitController.MakeNewSelection(elementIds);
+                            this.uiDoc.Selection.SetElementIds(elementIds);
+
+                            break;
+                        case Request.Nothing:
+                            // Do absolutely nothing
+                            break;
+                        default:
                             
-                            string t = "null";
+                            // If the request isn't any other request (even Nothing), then prompt user with warning message
+                            MessageBox.Show("Warning: Handler given invalid request",
+                                "Debug - SelectionChanged_UIAppEvent_WhileIdling");
 
-                            if (c != null)
-                            {
-                                sb1.Append(eId.ToString() + "  "
-                                    + e.Name + "  "
-                                    + c.CategoryType.ToString() + "\n");
-                            }
-                            else
-                            {
-                                if (e != null)
-                                    t = e.Name;
+                            break;
 
-                                sb1.Append(eId.ToString() + "  "
-                                    + t + "  "
-                                    + "Null\n");
-                            }
-                        }
                     }
-
-                    foreach (ElementId elementId in selectedElementIds)
-                    {
-                        Element e = revitController.GetElement(elementId);
-                        sb1.Append(String.Format("Element : {0}\n{1}\n", e.Name, elementId));
-                    }
-
-
-                    Document document = null;
-                    document = doc;
-
-                    StringBuilder sb = new StringBuilder();
-
-                    FilteredElementCollector test = null;
-                    test = new FilteredElementCollector(document);
-                    // FilteredElementCollector test = new FilteredElementCollector(activeDoc);
-                    int count = test.GetElementCount();
-                    sb.Append(string.Format("Element Count: {0}\n", count));
-
-                    sb.Append(string.Format("this.uiDoc is {0}\n", this.uiDoc));
-                    sb.Append(string.Format("this.doc is {0}\n", this.doc));
-
-                    sb.Append(string.Format("uiDoc.view is {0}\n", this.uiDoc.ActiveView));
-                    sb.Append(string.Format("doc.view is {0}\n", this.doc.ActiveView));
-
-                    sb.Append(string.Format("uiDoc.view.name is {0}\n", this.uiDoc.ActiveView.Name));
-                    sb.Append(string.Format("doc.view.name is {0}\n", this.doc.ActiveView.Name));
-
-                    sb.Append(string.Format("uiDoc.view.type is {0}\n", this.uiDoc.ActiveView.ViewType));
-                    sb.Append(string.Format("doc.view.type is {0}\n", this.doc.ActiveView.ViewType));
-
-                    // ViewType.FloorPlan
-                    Autodesk.Revit.DB.View activeView = this.doc.ActiveView;
-                    if (activeView.ViewType == ViewType.FloorPlan)
-                    {
-                        this.lastValidView = activeView;
-                    }
-
-                    if (this.lastValidView != null)
-                    {
-                        FilteredElementCollector test2 = new FilteredElementCollector(document, this.lastValidView.Id);
-                        List<Element> elements = test2.ToElements().ToList<Element>();
-                        foreach (Element e in elements)
-                        {
-                            sb.Append(string.Format("Id: {0}\n", e.Id));
-                        }
-                    }
-
-                    
-                    sb.Append("\n*For Reference*\n");
-
-                    foreach (ElementId elementId in selectedElementIds)
-                    {
-                        sb.Append(String.Format("Element : {0}\n", elementId));
-                    }
-
-
-                    #endregion TEST SECTION
-
-                    // Update the TreeView
-                    if (updateTreeView)
-                    {
-                        this.BeginInvoke(new Action(() =>
-                        {
-                            // ElementSelectionLabel.Text += "Thing";
-                            selectionController.UpdateTreeView(dataController.AllElements, revitController);
-                        }));
-                    }
-
-                    // Check if the selection set is changed (treeView selection != Revit Selection)
-                    bool updateSelection = (selectedElementIds.Count >= 1);
-                    // updateSelection = selectionController.UpdateSelectedNodes(selectedElementIds);
-
-                    // Update the selectedElementIds
-                    // if (selectedElementIds.Count >= 1)
-                    if (updateSelection)
-                    {
-                        this.BeginInvoke(new Action(() =>
-                        {
-                            // This is for testing purposes
-                            TestLabel.Text = sb2.ToString();
-
-
-
-                        }));
-                    }
-
-                    
-                    if (selectedElementIds.Count == 0)
-                    {
-                        selectedElementIds = selectionController.GetSelectedElementIds();
-                        if (selectedElementIds.Count != 0)
-                        {
-                            uiDoc.Selection.SetElementIds(selectedElementIds);
-                        }
-                    }
-
                 }
 
             }

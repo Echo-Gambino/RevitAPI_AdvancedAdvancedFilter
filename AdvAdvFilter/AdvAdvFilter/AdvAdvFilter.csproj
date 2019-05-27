@@ -58,6 +58,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormCore\ActionController.cs" />
     <Compile Include="FormCore\Common.cs" />
     <Compile Include="Custom\TreeCheckList.cs" />
     <Compile Include="FormCore\DataController.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="ElementProtectionUpdater.cs" />
     <Compile Include="ErrorReport.cs" />
     <Compile Include="EventHandler.cs" />
+    <Compile Include="FormCore\OptionController.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ModelessForm.cs">
       <SubType>Form</SubType>

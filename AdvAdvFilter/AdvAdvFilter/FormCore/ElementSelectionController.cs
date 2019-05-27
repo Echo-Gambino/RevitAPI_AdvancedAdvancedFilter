@@ -114,17 +114,27 @@
 
         public List<ElementId> GetSelectedElementIds()
         {
-            List<ElementId> selected = new List<ElementId>();
+            List<ElementId> output = null;
+            int max = 5;
 
-            foreach (LeafTreeNode leaf in this.leafNodes)
+            while (max > 0)
             {
-                if (leaf.Checked)
+                max -= 1;
+                try
                 {
-                    selected.Add(leaf.ElementId);
+                    IEnumerable<ElementId> selected
+                                = from LeafTreeNode leaf in this.leafNodes
+                                  where leaf.Checked
+                                  select leaf.ElementId;
+                    output = selected.ToList<ElementId>();
+                    break;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    continue;
                 }
             }
-
-            return selected;
+            return output;
         }
 
         public bool UpdateSelectedNodes(ICollection<ElementId> selected)
@@ -159,6 +169,70 @@
             }
 
             return selectedChanged;
+        }
+
+        public bool UpdateSelectedLeaves(ICollection<ElementId> selected)
+        {
+            bool updateSuccess = true;
+
+            IEnumerable<ElementId> leafNodeElementIds
+                        = from LeafTreeNode leaf in this.leafNodes
+                            select leaf.ElementId;
+
+            foreach (ElementId elementId in selected)
+            {
+                // If the leaf node doesn't exist in the selected elementIds,
+                // Then the leafNodes are outdated and the update won't work
+                if (!leafNodeElementIds.Contains(elementId))
+                {
+                    updateSuccess = false;
+                    break;
+                }
+            }
+
+            if (updateSuccess)
+            {
+                foreach (LeafTreeNode leaf in this.leafNodes)
+                {
+                    if (selected.Contains(leaf.ElementId))
+                    {
+                        if (!leaf.Checked)
+                        {
+                            leaf.Checked = !leaf.Checked;
+                            UpdateAfterCheck(leaf);
+                            UpdateTotalSelectedItemsLabel();
+                        }
+                    }
+                    else
+                    {
+                        if (leaf.Checked)
+                        {
+                            leaf.Checked = !leaf.Checked;
+                            UpdateAfterCheck(leaf);
+                            UpdateTotalSelectedItemsLabel();
+                        }
+                    }
+                }
+            }
+
+            return updateSuccess;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="list1"></param>
+        /// <param name="list2"></param>
+        /// <returns></returns>
+        public bool IsListEqual(List<ElementId> list1, List<ElementId> list2)
+        {
+            bool b1 = list1.All(e => list2.Contains(e));
+            bool b2 = list2.All(e => list1.Contains(e));
+            bool b3 = (list1.Count == list2.Count);
+
+            bool result = b1 && b2 && b3;
+
+            return result;
         }
 
         #endregion Selected Elements
