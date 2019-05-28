@@ -61,12 +61,15 @@
     <Compile Include="FormCore\ActionController.cs" />
     <Compile Include="FormCore\Common.cs" />
     <Compile Include="Custom\TreeCheckList.cs" />
+    <Compile Include="FormCore\Controller.cs" />
     <Compile Include="FormCore\DataController.cs" />
     <Compile Include="FormCore\ElementSelectionController.cs" />
     <Compile Include="ElementProtectionUpdater.cs" />
     <Compile Include="ErrorReport.cs" />
     <Compile Include="EventHandler.cs" />
     <Compile Include="FormCore\OptionController.cs" />
+    <Compile Include="FormCore\OptionFilterController.cs" />
+    <Compile Include="FormCore\OptionVisibilityController.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ModelessForm.cs">
       <SubType>Form</SubType>

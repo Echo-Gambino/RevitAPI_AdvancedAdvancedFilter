@@ -16,6 +16,7 @@
 
     using Point = System.Drawing.Point;
     using Panel = System.Windows.Forms.Panel;
+    using FilterMode = AdvAdvFilter.DataController.FilterMode;
 
     public partial class ModelessForm : System.Windows.Forms.Form
     {
@@ -51,9 +52,12 @@
 
         #region Fields: Controllers
 
+        // Controls the inner workings of the form and revit 
         DataController dataController;
         RevitController revitController;
+        // Controls elements visible in modeless form
         ElementSelectionController selectionController;
+        OptionController optionController;
 
         #endregion Fields: Controllers
 
@@ -66,13 +70,24 @@
             UpdateTreeView = 1,
             UpdateTreeViewSelection = 2,
             SelectElementIds = 3,
-
-
             Invalid = -1
         }
 
+        struct Condition
+        {
+            public bool unselectedVisible;
+            public FilterMode filterSelection;
+        };
+
+        // Records requests that have previously failed so that the API handler will abort the action
+        // when the handler tries to resolve the request a second time.
         List<Request> failureList;
+        // This actionQueue allows asynchronous execution of modeless form and the revit software
+        // by making requests that persist even if other requests are posted before that reqeust gets resolved
         List<Request> actionQueue;
+        // ActionCondition is something that is must be present in almost every loop of API handler
+        Condition actionCondition;
+
 
         int TestInt = 0;
 
@@ -95,7 +110,7 @@
             InitializeComponent();
 
             //selectionTool(new List<ElementId>());
-            
+
             // Stop IdlingHandler from executing during initialization
             this.haltIdlingHandler = true;
 
@@ -109,15 +124,30 @@
             this.eventHandler = eventHandler;
             this.elementProtectionUpdater = elementProtectionUpdater;
 
-            // Initialize controllers
-            this.selectionController = new ElementSelectionController(ElementSelectionPanel, ElementSelectionLabel, ElementSelectionTreeView);
+            // Initialize Back-end Controllers
             this.revitController = new RevitController(commandData);
             this.dataController = new DataController();
+            // Initialize Front-end Controllers
+            this.selectionController = new ElementSelectionController(
+                                            ElementSelectionPanel,
+                                            ElementSelectionLabel,
+                                            ElementSelectionTreeView);
+            OptionVisibilityController optionVisibility = new OptionVisibilityController(
+                                            OptionVisibilityPanel,
+                                            OptionVisibilityCheckBox);
+            OptionFilterController optionFilter = new OptionFilterController(
+                                            OptionFilterPanel,
+                                            OptionFilterRadioButton0,
+                                            OptionFilterRadioButton1,
+                                            OptionFilterRadioButton2);
+            this.optionController = new OptionController(OptionPanel, optionVisibility, optionFilter);
 
             // Initialize the failureList
             failureList = new List<Request>();
             // Initialize the action queue
             actionQueue = new List<Request>();
+            // Initialize the action conditions
+            actionCondition = new Condition();
 
             // Get elementList, not sure what to use it for
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
@@ -140,12 +170,34 @@
         private void ModelessForm_Load(object sender, EventArgs e)
         {
             this.actionQueue.Clear();
+
+            // Set up Element Selector / TreeView
+            // Request the API handler to update the tree view
             this.actionQueue.Add(Request.UpdateTreeView);
+
+            // Set up Options
+            List<System.EventHandler> visibilityHandler = new List<System.EventHandler>() { OptionVisibilityCheckBox_CheckedChanged };
+            List<System.EventHandler> filterHandler = new List<System.EventHandler>()
+            {
+                OptionFilterRadioButton0_CheckedChanged,
+                OptionFilterRadioButton1_CheckedChanged,
+                OptionFilterRadioButton2_CheckedChanged
+            };
+            this.optionController.Reset(visibilityHandler, filterHandler);
+
+            // Initialize action conditions
+            bool unselectedVisible = this.optionController.GetVisibilityState();
+            actionCondition.unselectedVisible = unselectedVisible;
+            FilterMode filterMode = this.optionController.GetFilterState();
+            actionCondition.filterSelection = filterMode;
+
         }
 
         #endregion Essential Form Methods
 
         #region EventHandlers
+
+        #region EventHandlers: ElementSelection
 
         private void ElementSelectionTreeView_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
@@ -198,6 +250,39 @@
 
             this.haltIdlingHandler = false;
         }
+
+        #endregion EventHandlers: ElementSelection
+
+        #region EventHandlers: Option
+
+        private void OptionVisibilityCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            actionCondition.unselectedVisible = !actionCondition.unselectedVisible;
+            actionQueue.Add(Request.SelectElementIds);
+        }
+
+        private void OptionFilterRadioButton0_CheckedChanged(object sender, EventArgs e)
+        {
+            FilterMode filterMode = optionController.GetFilterState();
+            actionCondition.filterSelection = filterMode;
+            // actionQueue.Add(Request.UpdateTreeView);
+        }
+
+        private void OptionFilterRadioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            FilterMode filterMode = optionController.GetFilterState();
+            actionCondition.filterSelection = filterMode;
+            // actionQueue.Add(Request.UpdateTreeView);
+        }
+
+        private void OptionFilterRadioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            FilterMode filterMode = optionController.GetFilterState();
+            actionCondition.filterSelection = filterMode;
+            // actionQueue.Add(Request.UpdateTreeView);
+        }
+
+        #endregion EventHandlers: Option
 
         #endregion EventHandlers
 
@@ -270,15 +355,30 @@
 
                                 // Get ElementId list that the ModelessForm requests to select
                                 elementIds = selectionController.GetSelectedElementIds();
-                                // TODO: Make an exit function if elementIds == null
-                                /*
                                 if (elementIds == null)
                                 {
-                                    actionQueue.Insert(0, request);
-                                    request = Request.Nothing;
+                                    if (failureList.Contains(request))
+                                    {
+                                        // Show the MessageBox to display the error and remove the request
+                                        // from the failure list in hopes that it works another time
+                                        MessageBox.Show("Fatal Error: Cannot retrieve selected elementIds on retry due to the leaf nodes being changed",
+                                            "Debug - selectionController.GetSelectedElementIds()");
+                                        failureList.Remove(request);
+                                    }
+                                    else
+                                    {
+                                        // Add request into the failure list to prevent infinite loops
+                                        failureList.Add(request);
+                                        // Insert the same request on the top of the actionQueue to reattempt
+                                        actionQueue.Insert(0, request);
+                                        request = Request.Nothing;
+                                    }
                                 }
-                                */
-
+                                else
+                                {
+                                    // Remove the request from the failure list if it exists there
+                                    if (failureList.Contains(request)) failureList.Remove(request);
+                                }
 
                                 break;
                             // This case usually handles Request.Invalid or Request.Nothing
@@ -287,19 +387,21 @@
                                 // When the given Request holds no significance, try to perform polling and
                                 // check if the Revit application changed states and values to update Modeless Form
                                 elementIds = selectionController.GetSelectedElementIds();
-                                // TODO: Make an exit function if elementIds == null
-                                /*
                                 if (elementIds == null)
                                 {
+                                    // Insert the same request on the top of the actionQueue to reattempt
                                     actionQueue.Insert(0, request);
                                     request = Request.Nothing;
                                 }
-                                */
-                                List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
-
-                                if (!selectionController.IsListEqual(elementIds, currentSelected))
+                                else
                                 {
-                                    request = Request.UpdateTreeViewSelection;
+                                    // Get the selected elementIds from the view to compare 
+                                    List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
+                                    // Check if the lists are equal or not, if not, then update the treeview's selection
+                                    if (!selectionController.IsListEqual(elementIds, currentSelected))
+                                    {
+                                        request = Request.UpdateTreeViewSelection;
+                                    }
                                 }
 
                                 break;
@@ -312,22 +414,22 @@
                         // When the given Request holds no significance, try to perform polling and
                         // check if the Revit application changed states and values to update Modeless Form
                         elementIds = selectionController.GetSelectedElementIds();
-                        // TODO: Make an exit function if elementIds == null
-                        /*
                         if (elementIds == null)
                         {
+                            // Insert the same request on the top of the actionQueue to reattempt
                             actionQueue.Insert(0, request);
                             request = Request.Nothing;
                         }
-                        */
-
-                        List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
-
-                        if (!selectionController.IsListEqual(elementIds, currentSelected))
+                        else
                         {
-                            request = Request.UpdateTreeViewSelection;
+                            // Get the selected elementIds from the view to compare 
+                            List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
+                            // Check if the lists are equal or not, if not, then update the treeview's selection
+                            if (!selectionController.IsListEqual(elementIds, currentSelected))
+                            {
+                                request = Request.UpdateTreeViewSelection;
+                            }
                         }
-
                     }
 
 
@@ -387,7 +489,7 @@
                             // Do absolutely nothing
                             break;
                         default:
-                            
+
                             // If the request isn't any other request (even Nothing), then prompt user with warning message
                             MessageBox.Show("Warning: Handler given invalid request",
                                 "Debug - SelectionChanged_UIAppEvent_WhileIdling");
@@ -403,6 +505,67 @@
                 ErrorReport.Report(ex);
             }
         }
+
+        private void HandleUpdateTreeViewSelection(List<ElementId> elementIds)
+        {
+            // Get the selected elementIds from the view to compare 
+            List<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds().ToList<ElementId>();
+            // Check if the lists are equal or not, if not, then update the treeview's selection
+            if (selectionController.IsListEqual(elementIds, currentSelected)) return;
+        }
+
+        private void HandleUpdateTreeView(List<ElementId> elementIds)
+        {
+            // If dataController's UpdateAllElements(...) method returns FALSE, then exit immediately
+            if (!dataController.UpdateAllElements(elementIds)) return;
+
+            elementIds = dataController.AllElements;
+
+            // Update the treeView element within the form
+            this.BeginInvoke(new Action(() =>
+            {
+                selectionController.UpdateTreeView(elementIds, revitController);
+            }));
+        }
+
+        private void HandleSelectElementIds(List<ElementId> elementIds)
+        {
+            // Select the list of elementIds with uiDoc (Must be run the in the API idling handler
+            this.uiDoc.Selection.SetElementIds(elementIds);
+        }
+
+        private List<ElementId> SafelyGetSelectedElementIds(Request request, bool attemptRecovery = true)
+        {
+            List<ElementId> output;
+
+            output = selectionController.GetSelectedElementIds();
+            if (output == null)
+            {
+                // If the argument specifies to not attempt recovery, then don't change anything!
+                if (!attemptRecovery) return output;
+
+                if (this.failureList.Contains(request))
+                {
+                    // Show and report the error and remove the request from the failureList as it has been 'resolved'
+                    MessageBox.Show("Fatal Error: Cannot retrieve selected elementIds on retry due to the leaf nodes being changed",
+                        "Debug - selectionController.GetSelectedElementIds()");
+                    this.failureList.Remove(request);
+                }
+                else
+                {
+                    // Record that this requested has failed before and put the request back on top to reattempt it
+                    this.failureList.Add(request);
+                    actionQueue.Insert(0, request);
+                }
+            }
+            else
+            {
+                // If the program has recorded that the request has failed before, erase that record (second chance resolved)
+                if (failureList.Contains(request)) failureList.Remove(request);
+            }
+
+            return output;
+        }            
 
         #region Not Need Attention
 

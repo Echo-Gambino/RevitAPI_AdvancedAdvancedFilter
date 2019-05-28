@@ -16,6 +16,19 @@
     /// </summary>
     class DataController
     {
+
+        #region DataTypes
+
+        public enum FilterMode
+        {
+            Selection = 0,
+            View = 1,
+            Project = 2,
+            Invalid = -1
+        }
+
+        #endregion DataTypes
+
         #region Fields
 
         private List<ElementId> allElements;
