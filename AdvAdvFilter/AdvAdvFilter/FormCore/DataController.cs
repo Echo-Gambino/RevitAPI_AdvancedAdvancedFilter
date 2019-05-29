@@ -45,6 +45,7 @@
 
         public List<ElementId> SelElements
         {
+            set { this.selElements = value; }
             get { return this.selElements; }
         }
 

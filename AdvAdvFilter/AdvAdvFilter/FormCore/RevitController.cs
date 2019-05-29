@@ -170,7 +170,40 @@
 
         }
 
-        #endregion Selection Related Tasks
+        public ICollection<ElementId> GetSelectedElementIds()
+        {
+            return this.uiDoc.Selection.GetElementIds();
+        }
+
+        public void HideUnselectedElementIds(List<ElementId> selection)
+        {
+            ICollection<ElementId> ids = new FilteredElementCollector(this.doc).OfClass(typeof(FamilyInstance)).ToElementIds();
+
+            List<ElementId> hideIds = new List<ElementId>();
+            foreach (var id in ids)
+            {
+                if (!selection.Contains(id))
+                {
+                    hideIds.Add(id);
+                }
+            }
+
+            using (var tran = new Transaction(doc, "Test"))
+            {
+                tran.Start();
+
+                View view = this.uiDoc.ActiveView;
+                if (view != null)
+                {
+                    view.HideElements(hideIds);
+                }
+
+                tran.Commit();
+            }
+
+        }
+
+            #endregion Selection Related Tasks
 
         #region Get ElementId Grouping
 

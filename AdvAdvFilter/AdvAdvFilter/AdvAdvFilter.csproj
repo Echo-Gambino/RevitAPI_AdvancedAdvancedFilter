@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FormCore\ActionController.cs" />
+    <Compile Include="FormCore\RequestHandler.cs" />
     <Compile Include="FormCore\Common.cs" />
     <Compile Include="Custom\TreeCheckList.cs" />
     <Compile Include="FormCore\Controller.cs" />
