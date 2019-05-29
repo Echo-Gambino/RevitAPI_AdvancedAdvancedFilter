@@ -53,8 +53,8 @@
 
         public DataController()
         {
-            this.allElements = null;
-            this.selElements = null;
+            this.allElements = new List<ElementId>();
+            this.selElements = new List<ElementId>();
         }
 
         public bool UpdateAllElements(List<ElementId> newAllElements)
@@ -77,7 +77,16 @@
             }
 
             if (listChanged)
-                this.allElements = newAllElements;
+            {
+                if (newAllElements != null)
+                {
+                    this.allElements = newAllElements;
+                }
+                else
+                {
+                    this.allElements.Clear();
+                }
+            }
 
             return listChanged;
         }

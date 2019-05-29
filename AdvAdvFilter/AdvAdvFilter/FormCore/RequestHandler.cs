@@ -15,7 +15,7 @@
 
     class RequestHandler
     {
-
+        #region Data Types
         // Make an enum for all the possible requests
         public enum Request
         {
@@ -40,6 +40,10 @@
             public FilterMode filter;
         };
 
+        #endregion Data Types
+
+        #region Fields
+
         // Records requests that have previously failed so that the API handler will abort the action
         // when the handler tries to resolve the request a second time.
         private List<Request> failureList;
@@ -49,9 +53,26 @@
         // ActionCondition is something that is must be present in almost every loop of API handler
         private Condition actionCondition;
 
+        // Use these objects to get information
         RevitController revitController;
         DataController dataController;
         ElementSelectionController selectionController;
+
+        #endregion Fields
+
+        #region Parameters
+
+        public bool UnselectedHidden
+        {
+            get { return actionCondition.hideUnselected; }
+        }
+
+        public FilterMode FilterBy
+        {
+            get { return actionCondition.filter; }
+        }
+
+        #endregion Parameters
 
         public RequestHandler(
             RevitController revitController,
@@ -69,6 +90,12 @@
             this.dataController = dataController;
             this.selectionController = selectionController;
 
+        }
+
+        public void ResetAll()
+        {
+            ResetRequest();
+            ResetFailureList();
         }
 
         #region Set conditions
@@ -129,6 +156,11 @@
             return output;
         }
 
+        public void ResetRequest()
+        {
+            this.actionQueue.Clear();
+        }
+
         #endregion actionQueue Manipulators
 
         #region failureList Manipulators
@@ -164,6 +196,11 @@
             {
                 this.failureList.Remove(request);
             }
+        }
+
+        public void ResetFailureList()
+        {
+            this.failureList.Clear();
         }
 
         #endregion failureList Manipulators

@@ -175,27 +175,68 @@
             return this.uiDoc.Selection.GetElementIds();
         }
 
-        public void HideUnselectedElementIds(List<ElementId> selection)
+        public StringBuilder PrintString(List<ElementId> list, StringBuilder sb)
         {
-            ICollection<ElementId> ids = new FilteredElementCollector(this.doc).OfClass(typeof(FamilyInstance)).ToElementIds();
-
-            List<ElementId> hideIds = new List<ElementId>();
-            foreach (var id in ids)
+            foreach (ElementId i in list)
             {
+                sb.Append(String.Format("+ {0}\n", i.ToString()));
+            }
+
+            return sb;
+        }
+
+        public void HideUnselectedElementIds(
+            List<ElementId> selection,
+            List<ElementId> allElements)
+        {
+            View view = this.View;
+            List<ElementId> hideIds = new List<ElementId>();
+            List<ElementId> showIds = new List<ElementId>();
+
+            //StringBuilder debugInfo0 = new StringBuilder();
+            //debugInfo0.Append("Ids selected\n");
+            //PrintString(selection, debugInfo0);
+            //debugInfo0.Append("Ids in view\n");
+            //PrintString(allElements, debugInfo0);
+            //MessageBox.Show(debugInfo0.ToString());
+
+            // Construct hideIds and showIds
+            foreach (ElementId id in allElements)
+            {
+                Element e = this.doc.GetElement(id);
                 if (!selection.Contains(id))
                 {
-                    hideIds.Add(id);
+                    if (e.CanBeHidden(view) && (!e.IsHidden(view)))
+                    {
+                        hideIds.Add(id);
+                    }
+                }
+                else
+                {
+                    if (e.IsHidden(view))
+                    {
+                        showIds.Add(id);
+                    }
                 }
             }
 
-            using (var tran = new Transaction(doc, "Test"))
+            //StringBuilder debugInfo1 = new StringBuilder();
+            //debugInfo1.Append("Ids to hide\n");
+            //PrintString(hideIds, debugInfo1);
+            //debugInfo1.Append("Ids to show\n");
+            //PrintString(showIds, debugInfo1);
+            //MessageBox.Show(debugInfo1.ToString());
+
+            using (Transaction tran = new Transaction(doc, "Test"))
             {
                 tran.Start();
-
-                View view = this.uiDoc.ActiveView;
+                
                 if (view != null)
                 {
-                    view.HideElements(hideIds);
+                    if (hideIds.Count != 0)
+                        view.HideElements(hideIds);
+                    if (selection.Count != 0)
+                        view.UnhideElements(selection);
                 }
 
                 tran.Commit();
