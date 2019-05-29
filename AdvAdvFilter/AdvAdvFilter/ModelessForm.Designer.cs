@@ -332,12 +332,10 @@
             // OptionFilterRadioButton2
             // 
             this.OptionFilterRadioButton2.AutoSize = true;
-            this.OptionFilterRadioButton2.Checked = true;
             this.OptionFilterRadioButton2.Location = new System.Drawing.Point(6, 19);
             this.OptionFilterRadioButton2.Name = "OptionFilterRadioButton2";
             this.OptionFilterRadioButton2.Size = new System.Drawing.Size(95, 17);
             this.OptionFilterRadioButton2.TabIndex = 3;
-            this.OptionFilterRadioButton2.TabStop = true;
             this.OptionFilterRadioButton2.Text = "Current Project";
             this.OptionFilterRadioButton2.UseVisualStyleBackColor = true;
             this.OptionFilterRadioButton2.CheckedChanged += new System.EventHandler(this.OptionFilterRadioButton2_CheckedChanged);
@@ -345,10 +343,12 @@
             // OptionFilterRadioButton1
             // 
             this.OptionFilterRadioButton1.AutoSize = true;
+            this.OptionFilterRadioButton1.Checked = true;
             this.OptionFilterRadioButton1.Location = new System.Drawing.Point(6, 42);
             this.OptionFilterRadioButton1.Name = "OptionFilterRadioButton1";
             this.OptionFilterRadioButton1.Size = new System.Drawing.Size(85, 17);
             this.OptionFilterRadioButton1.TabIndex = 2;
+            this.OptionFilterRadioButton1.TabStop = true;
             this.OptionFilterRadioButton1.Text = "Current View";
             this.OptionFilterRadioButton1.UseVisualStyleBackColor = true;
             this.OptionFilterRadioButton1.CheckedChanged += new System.EventHandler(this.OptionFilterRadioButton1_CheckedChanged);

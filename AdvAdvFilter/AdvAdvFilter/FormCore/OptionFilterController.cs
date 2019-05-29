@@ -8,7 +8,7 @@
     using System.Threading.Tasks;
     using System.Windows.Forms;
 
-    using FilterMode = AdvAdvFilter.DataController.FilterMode;
+    using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
 
     class OptionFilterController : Controller
     {
@@ -72,8 +72,8 @@
             this.projectRadioButton.CheckedChanged -= eventHandlers[2];
 
             this.selectionRadioButton.Checked = false;
-            this.viewRadioButton.Checked = false;
-            this.projectRadioButton.Checked = true;
+            this.viewRadioButton.Checked = true;
+            this.projectRadioButton.Checked = false;
 
             this.selectionRadioButton.CheckedChanged += eventHandlers[0];
             this.viewRadioButton.CheckedChanged += eventHandlers[1];

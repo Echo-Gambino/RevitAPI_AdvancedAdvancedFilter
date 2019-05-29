@@ -16,7 +16,7 @@
 
     using Point = System.Drawing.Point;
     using Panel = System.Windows.Forms.Panel;
-    using FilterMode = AdvAdvFilter.DataController.FilterMode;
+    using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
     using Request = AdvAdvFilter.RequestHandler.Request;
 
     public partial class ModelessForm : System.Windows.Forms.Form
@@ -243,56 +243,44 @@
                 requestHandler.ShowAll();
             }
 
-            requestHandler.AddRequest(Request.SelectElementIds);
-
             this.haltIdlingHandler = false;
         }
 
         private void OptionFilterRadioButton0_CheckedChanged(object sender, EventArgs e)
         {
+            this.haltIdlingHandler = true;
+
             FilterMode filterMode = optionController.GetFilterState();
-            switch (filterMode)
-            {
-                case FilterMode.Project:
-                    requestHandler.FilterByProject();
-                    break;
-                case FilterMode.View:
-                    requestHandler.FilterByView();
-                    break;
-                case FilterMode.Selection:
-                    requestHandler.FilterBySelection();
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException("Error: filterMode is not Project, View, or Selection in this.optionController.GetFilterState()");
-            }
-            // actionCondition.filterSelection = filterMode;
-            // actionQueue.Add(Request.UpdateTreeView);
+            OptionFilterRadioButton_ChangeFilter(filterMode);
+
+            this.haltIdlingHandler = false;
         }
 
         private void OptionFilterRadioButton1_CheckedChanged(object sender, EventArgs e)
         {
+            this.haltIdlingHandler = true;
+
             FilterMode filterMode = optionController.GetFilterState();
-            switch (filterMode)
-            {
-                case FilterMode.Project:
-                    requestHandler.FilterByProject();
-                    break;
-                case FilterMode.View:
-                    requestHandler.FilterByView();
-                    break;
-                case FilterMode.Selection:
-                    requestHandler.FilterBySelection();
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException("Error: filterMode is not Project, View, or Selection in this.optionController.GetFilterState()");
-            }
-            // actionCondition.filterSelection = filterMode;
-            // actionQueue.Add(Request.UpdateTreeView);
+            OptionFilterRadioButton_ChangeFilter(filterMode);
+
+            this.haltIdlingHandler = false;
         }
 
         private void OptionFilterRadioButton2_CheckedChanged(object sender, EventArgs e)
         {
+            this.haltIdlingHandler = true;
+
             FilterMode filterMode = optionController.GetFilterState();
+            OptionFilterRadioButton_ChangeFilter(filterMode);
+
+            this.haltIdlingHandler = false;
+        }
+
+        private void OptionFilterRadioButton_ChangeFilter(FilterMode filterMode)
+        {
+            if (requestHandler.FilterBy == filterMode)
+                return;
+
             switch (filterMode)
             {
                 case FilterMode.Project:
@@ -307,8 +295,6 @@
                 default:
                     throw new InvalidEnumArgumentException("Error: filterMode is not Project, View, or Selection in this.optionController.GetFilterState()");
             }
-            // actionCondition.filterSelection = filterMode;
-            // actionQueue.Add(Request.UpdateTreeView);
         }
 
         #endregion EventHandlers: Option
@@ -347,22 +333,21 @@
                     Document activeDoc = uiDoc.Document;
 
                     Request request;
+                    FilterMode filter;
 
-                    revitController.UpdateView();
+                    filter = requestHandler.FilterBy;
 
-                    request = requestHandler.GetRequest();
-
-                    //if (request != Request.Nothing)
-                    //{
-                    //    TaskDialog.Show("Debug - Before", request.ToString());
-                    //}
+                    int viewChanged = revitController.UpdateView();
+                    if (viewChanged == 1)
+                    {
+                        request = Request.UpdateTreeView;
+                    }
+                    else
+                    {
+                        request = requestHandler.GetRequest();
+                    }
 
                     request = requestHandler.ProcessRequest(request);
-
-                    //if (request != Request.Nothing)
-                    //{
-                    //    TaskDialog.Show("Debug - After", request.ToString());
-                    //}
 
                     switch (request)
                     {
@@ -396,21 +381,21 @@
 
                             revitController.MakeNewSelection(dataController.SelElements);
 
+                            List<ElementId> elementIds
+                                = revitController.GetAllElementIds(filter);
+
+                            dataController.UpdateAllElements(elementIds);
+
                             // Hide all elements 
                             if (requestHandler.UnselectedHidden)
                             {
-                                List<ElementId> elementIds = revitController.GetElementsFromView();
-
-                                // StringBuilder debugInfo0 = new StringBuilder();
-                                // debugInfo0.Append("Ids all\n");
-                                // PrintString(elementIds, debugInfo0);
-                                // TaskDialog.Show("Debug", debugInfo0.ToString());
-
-                                dataController.UpdateAllElements(elementIds);
-
                                 revitController.HideUnselectedElementIds(
                                     dataController.SelElements,
                                     dataController.AllElements);
+                            }
+                            else
+                            {
+                                revitController.ShowSelectedElementIds(dataController.SelElements);
                             }
 
                             break;
@@ -431,16 +416,6 @@
             {
                 ErrorReport.Report(ex);
             }
-        }
-
-        public StringBuilder PrintString(List<ElementId> list, StringBuilder sb)
-        {
-            foreach (ElementId i in list)
-            {
-                sb.Append(String.Format("+ {0}\n", i.ToString()));
-            }
-
-            return sb;
         }
 
         #region Idling API Handler Methods

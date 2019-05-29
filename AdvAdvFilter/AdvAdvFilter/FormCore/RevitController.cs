@@ -11,6 +11,7 @@
     using Autodesk.Revit.UI.Events;
 
     using MessageBox = System.Windows.Forms.MessageBox;
+    using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
 
     /// <summary>
     /// RevitController performs any complex tasks regarding the 
@@ -72,44 +73,66 @@
             this.view = null;
         }
 
-        #region View Related Tasks
+        #region ElementId Getters
 
-        /// <summary>
-        /// Updates View 'this.view' with a new view that is of
-        /// ViewType 'type' from the Document 'this.doc'
-        /// unless special settings are enforced.
-        /// </summary>
-        /// <param name="type">If newView.ViewType is equal to type, then result is Valid and vice versa</param>
-        /// <param name="force">If true, sets this.view to the latest view of this.doc.ActiveView whether or not its valid</param>
-        /// <returns>Returns true if the result is valid and vice versa</returns>
-        public bool UpdateView(
-            ViewType type = ViewType.FloorPlan,
-            bool force = false
-            )
+        public List<ElementId> GetAllElementIds(FilterMode filter)
         {
-            // Get doc.ActiveView
-            View newView = this.doc.ActiveView;
-            // Start optimistic
-            bool resultValid = true;
+            List<ElementId> output = null;
 
-            // Check if the result given is valid or not
-            if (newView == null)
-                resultValid = false;
-            else if (newView.ViewType != type)
-                resultValid = false;
+            switch (filter)
+            {
+                case FilterMode.Selection:
+                    output = GetElementIdsFromSelection();
+                    break;
+                case FilterMode.View:
+                    output = GetElementIdsFromView();
+                    break;
+                case FilterMode.Project:
+                    output = GetElementIdsFromDocument();
+                    break;
+                default:
+                    break;
+            }
 
-            // If its forced or the result is valid, then set newView to this.View
-            if (force || resultValid)
-                this.view = newView;
+            return output;
+        }
 
-            return resultValid;
+        public List<ElementId> GetElementIdsFromDocument()
+        {
+            List<ElementId> output = null;
+
+            try
+            {
+                FilteredElementCollector collection = new FilteredElementCollector(this.doc);
+
+                collection.WherePasses(
+                    new LogicalOrFilter(
+                        new ElementIsElementTypeFilter(false),
+                        new ElementIsElementTypeFilter(true)));
+
+                output = collection.ToElementIds().ToList<ElementId>();
+            }
+            catch (ArgumentNullException ex)
+            {
+                ErrorReport.Report(ex);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ErrorReport.Report(ex);
+            }
+            catch (Exception ex)
+            {
+                ErrorReport.Report(ex);
+            }
+
+            return output;
         }
 
         /// <summary>
         /// Get all element ids from this.view, returns null if unsuccessful
         /// </summary>
         /// <returns>All elements within the view</returns>
-        public List<ElementId> GetElementsFromView()
+        public List<ElementId> GetElementIdsFromView()
         {
             List<ElementId> output = null;
 
@@ -153,6 +176,86 @@
             return output;
         }
 
+        public List<ElementId> GetElementIdsFromSelection()
+        {
+            List<ElementId> output = null;
+
+            ICollection<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds();
+
+            if (currentSelected != null)
+            {
+                output = currentSelected.ToList<ElementId>();
+            }
+
+            return output;
+        }
+
+        #endregion ElementId Getters
+
+        #region View Related Tasks
+
+        /// <summary>
+        /// Updates View 'this.view' with a new view that is of
+        /// ViewType 'type' from the Document 'this.doc'
+        /// unless special settings are enforced.
+        /// </summary>
+        /// <param name="type">If newView.ViewType is equal to type, then result is Valid and vice versa</param>
+        /// <param name="force">If true, sets this.view to the latest view of this.doc.ActiveView whether or not its valid</param>
+        /// <returns></returns>
+        public int UpdateView(bool force = false)
+        {
+            List<ViewType> types = new List<ViewType>()
+            {
+                ViewType.EngineeringPlan,
+                ViewType.FloorPlan,
+                ViewType.CeilingPlan,
+                // ViewType.ThreeD,
+                ViewType.Elevation
+            };
+
+            // Get doc.ActiveView
+            View newView = this.doc.ActiveView;
+            int result = 0;
+
+            // Check if the result given is valid or not
+            if (newView == null)
+            {
+                // Means, newView changed to an invalid type
+                result = -2;
+            }
+            else if (!types.Contains(newView.ViewType))
+            {
+                // Means, newView changed to a different type (could still be applicable)
+                result = -1;
+            }
+            else if (this.view != null)
+            {
+                if (this.view.Id == newView.Id)
+                {
+                    // Means, newView hasn't changed meaningfully
+                    result = 0;
+                }
+                else
+                {
+                    // Means, newView has changed to a valid and meaningful value
+                    result = 1;
+                }
+            }
+            else
+            {
+                // Means, newView has changed to a valid and meaningful value
+                result = 1;
+            }
+
+            // If its forced or the result is valid, then set newView to this.View
+            if (force || (result == 1))
+            {
+                this.view = newView;
+            }
+
+            return result;
+        }
+
         #endregion View Related Tasks
 
         #region Selection Related Tasks
@@ -170,21 +273,6 @@
 
         }
 
-        public ICollection<ElementId> GetSelectedElementIds()
-        {
-            return this.uiDoc.Selection.GetElementIds();
-        }
-
-        public StringBuilder PrintString(List<ElementId> list, StringBuilder sb)
-        {
-            foreach (ElementId i in list)
-            {
-                sb.Append(String.Format("+ {0}\n", i.ToString()));
-            }
-
-            return sb;
-        }
-
         public void HideUnselectedElementIds(
             List<ElementId> selection,
             List<ElementId> allElements)
@@ -192,13 +280,6 @@
             View view = this.View;
             List<ElementId> hideIds = new List<ElementId>();
             List<ElementId> showIds = new List<ElementId>();
-
-            //StringBuilder debugInfo0 = new StringBuilder();
-            //debugInfo0.Append("Ids selected\n");
-            //PrintString(selection, debugInfo0);
-            //debugInfo0.Append("Ids in view\n");
-            //PrintString(allElements, debugInfo0);
-            //MessageBox.Show(debugInfo0.ToString());
 
             // Construct hideIds and showIds
             foreach (ElementId id in allElements)
@@ -220,14 +301,7 @@
                 }
             }
 
-            //StringBuilder debugInfo1 = new StringBuilder();
-            //debugInfo1.Append("Ids to hide\n");
-            //PrintString(hideIds, debugInfo1);
-            //debugInfo1.Append("Ids to show\n");
-            //PrintString(showIds, debugInfo1);
-            //MessageBox.Show(debugInfo1.ToString());
-
-            using (Transaction tran = new Transaction(doc, "Test"))
+            using (Transaction tran = new Transaction(this.doc, "Test"))
             {
                 tran.Start();
                 
@@ -244,7 +318,38 @@
 
         }
 
-            #endregion Selection Related Tasks
+        public void ShowSelectedElementIds(
+            List<ElementId> selection)
+        {
+            View view = this.View;
+            List<ElementId> showIds = new List<ElementId>();
+
+            foreach (ElementId id in selection)
+            {
+                Element e = this.doc.GetElement(id);
+                if (e.IsHidden(view))
+                {
+                    showIds.Add(id);
+                }
+            }
+
+            if (showIds.Count == 0) return;
+
+            using (Transaction tran = new Transaction(this.doc, "Show Elements"))
+            {
+                tran.Start();
+
+                if (view != null)
+                {
+                    view.UnhideElements(showIds);
+                }
+
+                tran.Commit();
+            }
+
+        }
+
+        #endregion Selection Related Tasks
 
         #region Get ElementId Grouping
 

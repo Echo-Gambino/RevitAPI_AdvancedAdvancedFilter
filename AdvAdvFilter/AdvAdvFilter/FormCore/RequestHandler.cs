@@ -103,31 +103,31 @@
         public void HideUnselected()
         {
             this.actionCondition.hideUnselected = true;
-            // Request to refresh selection?
+            this.actionQueue.Add(Request.SelectElementIds);
         }
 
         public void ShowAll()
         {
             this.actionCondition.hideUnselected = false;
-            // Request to refresh selection?
+            this.actionQueue.Add(Request.SelectElementIds);
         }
 
         public void FilterBySelection()
         {
             this.actionCondition.filter = FilterMode.Selection;
-            // Request to rebuild the tree?
+            this.actionQueue.Add(Request.UpdateTreeView);
         }
 
         public void FilterByView()
         {
             this.actionCondition.filter = FilterMode.View;
-            // Request to rebuild the tree?
+            this.actionQueue.Add(Request.UpdateTreeView);
         }
 
         public void FilterByProject()
         {
             this.actionCondition.filter = FilterMode.Project;
-            // Request to rebuild the tree?
+            this.actionQueue.Add(Request.UpdateTreeView);
         }
 
         #endregion Set conditions
@@ -208,7 +208,7 @@
         public Request ProcessRequest(Request request)
         {
             List<ElementId> elementIds;
-            ICollection<ElementId> currSelected;
+            List<ElementId> currSelected;
 
             switch (request)
             {
@@ -217,7 +217,7 @@
                     // Update / Refresh the revitController's view and get elements from that newly refreshed view
                     revitController.UpdateView();
                     // TODO: Make it so that revitController only gives filtered results (selection, view, project)
-                    elementIds = revitController.GetElementsFromView();
+                    elementIds = revitController.GetAllElementIds(this.actionCondition.filter);
                     // If dataController failed to update all elements, then attempt a recovery and switch the request to nothing
                     if (!dataController.UpdateAllElements(elementIds))
                     {
@@ -247,12 +247,12 @@
                     break;
                 case Request.UpdateTreeViewSelection:
 
-                    currSelected = revitController.GetSelectedElementIds();
+                    currSelected = revitController.GetElementIdsFromSelection();
                     if (currSelected != null)
                     {
                         // If successful, then set dataController with currentSelected to list and
                         // remove request from the failure list if it exists.
-                        dataController.SelElements = currSelected.ToList<ElementId>();
+                        dataController.SelElements = currSelected;
                         this.FailureListRemove(request);
                     }
                     else
@@ -271,10 +271,10 @@
                     if (elementIds == null)
                         break;
 
-                    currSelected = revitController.GetSelectedElementIds();
+                    currSelected = revitController.GetElementIdsFromSelection();
                     if (currSelected != null)
                     {
-                        if (!selectionController.IsListEqual(elementIds, currSelected.ToList<ElementId>()))
+                        if (!selectionController.IsListEqual(elementIds, currSelected))
                         {
                             request = Request.UpdateTreeViewSelection;
                         }
