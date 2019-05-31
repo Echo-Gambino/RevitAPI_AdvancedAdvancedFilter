@@ -351,6 +351,89 @@
 
         #endregion Selection Related Tasks
 
+        #region Movement / Shift Related Tasks
+
+        public void CopyAndMoveElements(
+            List<ElementId> elementIds,
+            List<int> xyzValues,
+            bool shiftRelative
+            )
+        {
+            ICollection<ElementId> elementsToCopy = elementIds;
+            // XYZ coords = new XYZ();
+            // coords.
+
+            if (!shiftRelative) return;
+
+            return; // This is just to make sure that the process gets to this code without any errors in code
+
+            using (Transaction tran = new Transaction(this.doc, "Show Elements"))
+            {
+                tran.Start();
+
+                bool transactionSuccessful = true;
+
+                XYZ coords = new XYZ();
+
+                if (shiftRelative)
+                {
+                    foreach (ElementId id in elementsToCopy)
+                    {
+                        Element e = this.GetElement(id);
+
+                        Location eLoc = e.Location;
+                        if (eLoc == null)
+                        {
+                            transactionSuccessful = false;
+                            break;
+                        }
+
+                        LocationPoint ePoint = eLoc as LocationPoint;
+                        LocationCurve eCurve = eLoc as LocationCurve;
+                        if (ePoint != null)
+                        {
+                            coords = new XYZ(
+                                ePoint.Point.X + xyzValues[0],
+                                ePoint.Point.Y + xyzValues[1],
+                                ePoint.Point.Z + xyzValues[2]);
+                        }
+                        else if (eCurve != null)
+                        {
+                            TaskDialog.Show("Debug", "eCurve detected");
+                        }
+                        else
+                        {
+                            transactionSuccessful = false;
+                            break;
+                        }
+                        
+
+
+                        // coords.X
+                    }
+                }
+                // foreach () { }
+                // ElementTransformUtils.Cop
+
+                if (transactionSuccessful)
+                {
+                    tran.Commit();
+                }
+                else
+                {
+                    tran.RollBack();
+                }
+            }
+            // ElementTransformUtils.CopyElements(this.doc, elementsToCopy, )
+        }
+
+        /*
+        public void MoveElemeents(List<ElementId> elementIds)
+        {
+        }
+        */
+        #endregion Movement / Shift Related Tasks
+
         #region Get ElementId Grouping
 
         public SortedDictionary<string, List<ElementId>> GroupElementIdsBy(Type type, List<ElementId> elementIds)

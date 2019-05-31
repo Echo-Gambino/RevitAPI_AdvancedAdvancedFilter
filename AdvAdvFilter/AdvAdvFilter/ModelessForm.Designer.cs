@@ -35,9 +35,10 @@
             this.SidePanel = new System.Windows.Forms.Panel();
             this.ActionPanel = new System.Windows.Forms.Panel();
             this.ActionShiftButton = new System.Windows.Forms.Button();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.ActionShiftRadioButton0 = new System.Windows.Forms.RadioButton();
-            this.ActionShiftRadioButton1 = new System.Windows.Forms.RadioButton();
+            this.ActionResetButton = new System.Windows.Forms.Button();
+            this.ActionModePanel = new System.Windows.Forms.Panel();
+            this.ActionModeRadioButton0 = new System.Windows.Forms.RadioButton();
+            this.ActionModeRadioButton1 = new System.Windows.Forms.RadioButton();
             this.ActionShiftPanel2 = new System.Windows.Forms.Panel();
             this.ActionShiftTextBox2 = new System.Windows.Forms.TextBox();
             this.ActionShiftLabel2 = new System.Windows.Forms.Label();
@@ -61,7 +62,7 @@
             this.ElementSelectionPanel.SuspendLayout();
             this.SidePanel.SuspendLayout();
             this.ActionPanel.SuspendLayout();
-            this.panel1.SuspendLayout();
+            this.ActionModePanel.SuspendLayout();
             this.ActionShiftPanel2.SuspendLayout();
             this.ActionShiftPanel1.SuspendLayout();
             this.ActionShiftPanel0.SuspendLayout();
@@ -111,7 +112,7 @@
             // 
             this.TestLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.TestLabel.AutoSize = true;
-            this.TestLabel.Location = new System.Drawing.Point(681, 12);
+            this.TestLabel.Location = new System.Drawing.Point(820, 12);
             this.TestLabel.Name = "TestLabel";
             this.TestLabel.Size = new System.Drawing.Size(35, 13);
             this.TestLabel.TabIndex = 7;
@@ -128,7 +129,7 @@
             this.SidePanel.MaximumSize = new System.Drawing.Size(400, 1000);
             this.SidePanel.MinimumSize = new System.Drawing.Size(250, 300);
             this.SidePanel.Name = "SidePanel";
-            this.SidePanel.Size = new System.Drawing.Size(289, 390);
+            this.SidePanel.Size = new System.Drawing.Size(400, 390);
             this.SidePanel.TabIndex = 8;
             // 
             // ActionPanel
@@ -137,59 +138,73 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ActionPanel.Controls.Add(this.ActionShiftButton);
-            this.ActionPanel.Controls.Add(this.panel1);
+            this.ActionPanel.Controls.Add(this.ActionResetButton);
+            this.ActionPanel.Controls.Add(this.ActionModePanel);
             this.ActionPanel.Controls.Add(this.ActionShiftPanel2);
             this.ActionPanel.Controls.Add(this.ActionShiftPanel1);
             this.ActionPanel.Controls.Add(this.ActionShiftPanel0);
             this.ActionPanel.Controls.Add(this.ActionLabel);
             this.ActionPanel.Location = new System.Drawing.Point(4, 173);
             this.ActionPanel.Name = "ActionPanel";
-            this.ActionPanel.Size = new System.Drawing.Size(282, 214);
+            this.ActionPanel.Size = new System.Drawing.Size(393, 214);
             this.ActionPanel.TabIndex = 1;
             // 
             // ActionShiftButton
             // 
             this.ActionShiftButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ActionShiftButton.Location = new System.Drawing.Point(3, 186);
+            this.ActionShiftButton.Location = new System.Drawing.Point(3, 188);
             this.ActionShiftButton.Name = "ActionShiftButton";
-            this.ActionShiftButton.Size = new System.Drawing.Size(276, 25);
-            this.ActionShiftButton.TabIndex = 8;
-            this.ActionShiftButton.Text = "Defaults";
+            this.ActionShiftButton.Size = new System.Drawing.Size(387, 23);
+            this.ActionShiftButton.TabIndex = 9;
+            this.ActionShiftButton.Text = "Apply";
             this.ActionShiftButton.UseVisualStyleBackColor = true;
+            this.ActionShiftButton.Click += new System.EventHandler(this.ActionShiftButton_Click);
             // 
-            // panel1
+            // ActionResetButton
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.ActionResetButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.panel1.Controls.Add(this.ActionShiftRadioButton0);
-            this.panel1.Controls.Add(this.ActionShiftRadioButton1);
-            this.panel1.Location = new System.Drawing.Point(3, 102);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(276, 50);
-            this.panel1.TabIndex = 7;
+            this.ActionResetButton.Location = new System.Drawing.Point(3, 157);
+            this.ActionResetButton.Name = "ActionResetButton";
+            this.ActionResetButton.Size = new System.Drawing.Size(387, 25);
+            this.ActionResetButton.TabIndex = 8;
+            this.ActionResetButton.Text = "Defaults";
+            this.ActionResetButton.UseVisualStyleBackColor = true;
+            this.ActionResetButton.Click += new System.EventHandler(this.ActionResetButton_Click);
             // 
-            // ActionShiftRadioButton0
+            // ActionModePanel
             // 
-            this.ActionShiftRadioButton0.AutoSize = true;
-            this.ActionShiftRadioButton0.Location = new System.Drawing.Point(6, 5);
-            this.ActionShiftRadioButton0.Name = "ActionShiftRadioButton0";
-            this.ActionShiftRadioButton0.Size = new System.Drawing.Size(64, 17);
-            this.ActionShiftRadioButton0.TabIndex = 5;
-            this.ActionShiftRadioButton0.TabStop = true;
-            this.ActionShiftRadioButton0.Text = "Relative";
-            this.ActionShiftRadioButton0.UseVisualStyleBackColor = true;
+            this.ActionModePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ActionModePanel.Controls.Add(this.ActionModeRadioButton0);
+            this.ActionModePanel.Controls.Add(this.ActionModeRadioButton1);
+            this.ActionModePanel.Location = new System.Drawing.Point(3, 102);
+            this.ActionModePanel.Name = "ActionModePanel";
+            this.ActionModePanel.Size = new System.Drawing.Size(387, 50);
+            this.ActionModePanel.TabIndex = 7;
             // 
-            // ActionShiftRadioButton1
+            // ActionModeRadioButton0
             // 
-            this.ActionShiftRadioButton1.AutoSize = true;
-            this.ActionShiftRadioButton1.Location = new System.Drawing.Point(6, 28);
-            this.ActionShiftRadioButton1.Name = "ActionShiftRadioButton1";
-            this.ActionShiftRadioButton1.Size = new System.Drawing.Size(66, 17);
-            this.ActionShiftRadioButton1.TabIndex = 6;
-            this.ActionShiftRadioButton1.TabStop = true;
-            this.ActionShiftRadioButton1.Text = "Absolute";
-            this.ActionShiftRadioButton1.UseVisualStyleBackColor = true;
+            this.ActionModeRadioButton0.AutoSize = true;
+            this.ActionModeRadioButton0.Location = new System.Drawing.Point(6, 5);
+            this.ActionModeRadioButton0.Name = "ActionModeRadioButton0";
+            this.ActionModeRadioButton0.Size = new System.Drawing.Size(64, 17);
+            this.ActionModeRadioButton0.TabIndex = 5;
+            this.ActionModeRadioButton0.TabStop = true;
+            this.ActionModeRadioButton0.Text = "Relative";
+            this.ActionModeRadioButton0.UseVisualStyleBackColor = true;
+            // 
+            // ActionModeRadioButton1
+            // 
+            this.ActionModeRadioButton1.AutoSize = true;
+            this.ActionModeRadioButton1.Location = new System.Drawing.Point(6, 28);
+            this.ActionModeRadioButton1.Name = "ActionModeRadioButton1";
+            this.ActionModeRadioButton1.Size = new System.Drawing.Size(66, 17);
+            this.ActionModeRadioButton1.TabIndex = 6;
+            this.ActionModeRadioButton1.TabStop = true;
+            this.ActionModeRadioButton1.Text = "Absolute";
+            this.ActionModeRadioButton1.UseVisualStyleBackColor = true;
             // 
             // ActionShiftPanel2
             // 
@@ -199,7 +214,7 @@
             this.ActionShiftPanel2.Controls.Add(this.ActionShiftLabel2);
             this.ActionShiftPanel2.Location = new System.Drawing.Point(3, 75);
             this.ActionShiftPanel2.Name = "ActionShiftPanel2";
-            this.ActionShiftPanel2.Size = new System.Drawing.Size(276, 26);
+            this.ActionShiftPanel2.Size = new System.Drawing.Size(387, 26);
             this.ActionShiftPanel2.TabIndex = 4;
             // 
             // ActionShiftTextBox2
@@ -210,8 +225,9 @@
             this.ActionShiftTextBox2.Location = new System.Drawing.Point(20, 3);
             this.ActionShiftTextBox2.MinimumSize = new System.Drawing.Size(100, 20);
             this.ActionShiftTextBox2.Name = "ActionShiftTextBox2";
-            this.ActionShiftTextBox2.Size = new System.Drawing.Size(253, 20);
+            this.ActionShiftTextBox2.Size = new System.Drawing.Size(364, 20);
             this.ActionShiftTextBox2.TabIndex = 4;
+            this.ActionShiftTextBox2.TextChanged += new System.EventHandler(this.ActionShiftTextBox2_TextChanged);
             // 
             // ActionShiftLabel2
             // 
@@ -233,7 +249,7 @@
             this.ActionShiftPanel1.Controls.Add(this.ActionShiftLabel1);
             this.ActionShiftPanel1.Location = new System.Drawing.Point(3, 49);
             this.ActionShiftPanel1.Name = "ActionShiftPanel1";
-            this.ActionShiftPanel1.Size = new System.Drawing.Size(276, 26);
+            this.ActionShiftPanel1.Size = new System.Drawing.Size(387, 26);
             this.ActionShiftPanel1.TabIndex = 3;
             // 
             // ActionShiftTextBox1
@@ -244,8 +260,9 @@
             this.ActionShiftTextBox1.Location = new System.Drawing.Point(20, 3);
             this.ActionShiftTextBox1.MinimumSize = new System.Drawing.Size(100, 20);
             this.ActionShiftTextBox1.Name = "ActionShiftTextBox1";
-            this.ActionShiftTextBox1.Size = new System.Drawing.Size(253, 20);
+            this.ActionShiftTextBox1.Size = new System.Drawing.Size(364, 20);
             this.ActionShiftTextBox1.TabIndex = 4;
+            this.ActionShiftTextBox1.TextChanged += new System.EventHandler(this.ActionShiftTextBox1_TextChanged);
             // 
             // ActionShiftLabel1
             // 
@@ -267,7 +284,7 @@
             this.ActionShiftPanel0.Controls.Add(this.ActionShiftLabel0);
             this.ActionShiftPanel0.Location = new System.Drawing.Point(3, 23);
             this.ActionShiftPanel0.Name = "ActionShiftPanel0";
-            this.ActionShiftPanel0.Size = new System.Drawing.Size(276, 26);
+            this.ActionShiftPanel0.Size = new System.Drawing.Size(387, 26);
             this.ActionShiftPanel0.TabIndex = 2;
             // 
             // ActionShiftTextBox0
@@ -278,8 +295,9 @@
             this.ActionShiftTextBox0.Location = new System.Drawing.Point(20, 3);
             this.ActionShiftTextBox0.MinimumSize = new System.Drawing.Size(100, 20);
             this.ActionShiftTextBox0.Name = "ActionShiftTextBox0";
-            this.ActionShiftTextBox0.Size = new System.Drawing.Size(253, 20);
+            this.ActionShiftTextBox0.Size = new System.Drawing.Size(364, 20);
             this.ActionShiftTextBox0.TabIndex = 4;
+            this.ActionShiftTextBox0.TextChanged += new System.EventHandler(this.ActionShiftTextBox0_TextChanged);
             // 
             // ActionShiftLabel0
             // 
@@ -312,7 +330,7 @@
             this.OptionPanel.Controls.Add(this.OptionLabel);
             this.OptionPanel.Location = new System.Drawing.Point(4, 4);
             this.OptionPanel.Name = "OptionPanel";
-            this.OptionPanel.Size = new System.Drawing.Size(282, 163);
+            this.OptionPanel.Size = new System.Drawing.Size(393, 163);
             this.OptionPanel.TabIndex = 0;
             // 
             // OptionFilterPanel
@@ -326,7 +344,7 @@
             this.OptionFilterPanel.Controls.Add(this.OptionFilterLabel);
             this.OptionFilterPanel.Location = new System.Drawing.Point(3, 68);
             this.OptionFilterPanel.Name = "OptionFilterPanel";
-            this.OptionFilterPanel.Size = new System.Drawing.Size(276, 95);
+            this.OptionFilterPanel.Size = new System.Drawing.Size(387, 95);
             this.OptionFilterPanel.TabIndex = 3;
             // 
             // OptionFilterRadioButton2
@@ -382,7 +400,7 @@
             this.OptionVisibilityPanel.Controls.Add(this.OptionVisibilityCheckBox);
             this.OptionVisibilityPanel.Location = new System.Drawing.Point(3, 23);
             this.OptionVisibilityPanel.Name = "OptionVisibilityPanel";
-            this.OptionVisibilityPanel.Size = new System.Drawing.Size(276, 39);
+            this.OptionVisibilityPanel.Size = new System.Drawing.Size(387, 39);
             this.OptionVisibilityPanel.TabIndex = 2;
             // 
             // OptionVisibilityLabel
@@ -421,7 +439,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(728, 411);
+            this.ClientSize = new System.Drawing.Size(867, 411);
             this.Controls.Add(this.SidePanel);
             this.Controls.Add(this.TestLabel);
             this.Controls.Add(this.ElementSelectionPanel);
@@ -434,8 +452,8 @@
             this.SidePanel.ResumeLayout(false);
             this.ActionPanel.ResumeLayout(false);
             this.ActionPanel.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.ActionModePanel.ResumeLayout(false);
+            this.ActionModePanel.PerformLayout();
             this.ActionShiftPanel2.ResumeLayout(false);
             this.ActionShiftPanel2.PerformLayout();
             this.ActionShiftPanel1.ResumeLayout(false);
@@ -466,10 +484,10 @@
         private System.Windows.Forms.Label ActionLabel;
         private System.Windows.Forms.CheckBox OptionVisibilityCheckBox;
         private System.Windows.Forms.Label OptionLabel;
-        private System.Windows.Forms.Button ActionShiftButton;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.RadioButton ActionShiftRadioButton0;
-        private System.Windows.Forms.RadioButton ActionShiftRadioButton1;
+        private System.Windows.Forms.Button ActionResetButton;
+        private System.Windows.Forms.Panel ActionModePanel;
+        private System.Windows.Forms.RadioButton ActionModeRadioButton0;
+        private System.Windows.Forms.RadioButton ActionModeRadioButton1;
         private System.Windows.Forms.Panel ActionShiftPanel2;
         private System.Windows.Forms.TextBox ActionShiftTextBox2;
         private System.Windows.Forms.Label ActionShiftLabel2;
@@ -484,5 +502,6 @@
         private System.Windows.Forms.RadioButton OptionFilterRadioButton1;
         private System.Windows.Forms.RadioButton OptionFilterRadioButton0;
         private System.Windows.Forms.Label OptionFilterLabel;
+        private System.Windows.Forms.Button ActionShiftButton;
     }
 }

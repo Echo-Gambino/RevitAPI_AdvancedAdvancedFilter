@@ -14,6 +14,7 @@
     using Autodesk.Revit.UI;
     using Autodesk.Revit.UI.Events;
 
+    // using Color = System.Drawing.Color;
     using Point = System.Drawing.Point;
     using Panel = System.Windows.Forms.Panel;
     using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
@@ -60,14 +61,9 @@
         // Controls elements visible in modeless form
         ElementSelectionController selectionController;
         OptionController optionController;
+        ActionController actionController;
 
         #endregion Fields: Controllers
-
-        #region Fields: API Handler Requests
-        
-        int TestInt = 0;
-
-        #endregion Fields: API Handler Requests
 
         #endregion Fields
 
@@ -100,9 +96,6 @@
             this.eventHandler = eventHandler;
             this.elementProtectionUpdater = elementProtectionUpdater;
 
-            // Initialize Back-end Controllers
-            this.revitController = new RevitController(commandData);
-            this.dataController = new DataController();
             // Initialize Front-end Controllers
             this.selectionController = new ElementSelectionController(
                                             ElementSelectionPanel,
@@ -118,10 +111,31 @@
                                             OptionFilterRadioButton2);
             this.optionController = new OptionController(OptionPanel, optionVisibility, optionFilter);
 
+            ActionAxisController xAxis = new ActionAxisController(
+                ActionShiftPanel0, ActionShiftLabel0, ActionShiftTextBox0);
+
+            ActionAxisController yAxis = new ActionAxisController(
+                ActionShiftPanel1, ActionShiftLabel1, ActionShiftTextBox1);
+
+            ActionAxisController zAxis = new ActionAxisController(
+                ActionShiftPanel2, ActionShiftLabel2, ActionShiftTextBox2);
+
+            ActionModeController mode = new ActionModeController(
+                ActionModePanel, ActionModeRadioButton0, ActionModeRadioButton1);
+
+            List<ActionAxisController> xyz = new List<ActionAxisController>() { xAxis, yAxis, zAxis };
+
+            this.actionController = new ActionController(
+                ActionPanel, ActionResetButton, ActionShiftButton, xyz, mode);
+
+            // Initialize Back-end Controllers
+            this.revitController = new RevitController(commandData);
+            this.dataController = new DataController();
             this.requestHandler = new RequestHandler(
-                                            this.revitController,
-                                            this.dataController,
-                                            this.selectionController);
+                this.revitController,
+                this.dataController,
+                this.selectionController,
+                this.actionController);
 
             // Get elementList, not sure what to use it for
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
@@ -143,9 +157,9 @@
 
         private void ModelessForm_Load(object sender, EventArgs e)
         {
-            requestHandler.ResetAll();
+            this.requestHandler.ResetAll();
 
-            requestHandler.AddRequest(Request.UpdateTreeView);
+            this.requestHandler.AddRequest(Request.UpdateTreeView);
 
             // Set up Options
             List<System.EventHandler> visibilityHandler = new List<System.EventHandler>() { OptionVisibilityCheckBox_CheckedChanged };
@@ -183,6 +197,10 @@
                 default:
                     throw new InvalidEnumArgumentException("Error: filterMode is not Project, View, or Selection in this.optionController.GetFilterState()");
             }
+
+            // Set up actionController
+            this.actionController.Reset();
+
         }
 
         #endregion Essential Form Methods
@@ -299,6 +317,65 @@
 
         #endregion EventHandlers: Option
 
+        #region EventHandlers: Action
+
+        private void ActionShiftButton_Click(object sender, EventArgs e)
+        {
+            this.haltIdlingHandler = true;
+
+
+            // bool thing = actionController.TryGetAllInputs();
+
+            requestHandler.AddRequest(Request.ShiftSelected);
+
+            this.haltIdlingHandler = false;
+        }
+
+        private void ActionResetButton_Click(object sender, EventArgs e)
+        {
+            this.actionController.Reset();
+        }
+
+        private void ActionShiftTextBox0_TextChanged(object sender, EventArgs e)
+        {
+            ActonShiftTextBox_HandleTextChanged(ActionShiftTextBox0);
+        }
+
+        private void ActionShiftTextBox1_TextChanged(object sender, EventArgs e)
+        {
+            ActonShiftTextBox_HandleTextChanged(ActionShiftTextBox1);
+        }
+
+        private void ActionShiftTextBox2_TextChanged(object sender, EventArgs e)
+        {
+            ActonShiftTextBox_HandleTextChanged(ActionShiftTextBox2);
+        }
+
+        private void ActonShiftTextBox_HandleTextChanged(System.Windows.Forms.TextBox textBox)
+        {
+            bool parseSuccessful;
+            string text = textBox.Text;
+
+            parseSuccessful = Int32.TryParse(text, out int value);
+
+            if (parseSuccessful)
+                textBox.ForeColor = System.Drawing.Color.Black;
+            else
+                textBox.ForeColor = System.Drawing.Color.Red;
+
+            if (this.actionController.IsAllAxisEmpty()
+                && this.actionController.IsModeDefault())
+            {
+                this.actionController.DisableDefaults();
+            }
+            else
+            {
+                this.actionController.EnableDefaults();
+            }
+        }
+
+        #endregion EventHandlers: Action
+
         #endregion EventHandlers
 
         #region Supplementary Form Methods
@@ -397,6 +474,27 @@
                             {
                                 revitController.ShowSelectedElementIds(dataController.SelElements);
                             }
+
+                            break;
+                        case Request.ShiftSelected:
+
+                            List<int> xyz;
+                            bool shiftRelative;
+
+                            bool success = this.actionController.TryGetAllInputs(out xyz, out shiftRelative);
+
+                            if (success)
+                            {
+                                TaskDialog.Show("Debug", "I made it to the execution phase!");
+                                // Do Sucessful thing
+                                revitController.CopyAndMoveElements(
+                                    dataController.MovElements, xyz, shiftRelative);
+                            }
+                            else
+                            {
+                                requestHandler.AttemptRecovery(request);
+                            }
+
 
                             break;
                         case Request.Nothing:
@@ -634,6 +732,5 @@
         #endregion
 
         #endregion
-
     }
 }

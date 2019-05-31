@@ -58,7 +58,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormCore\ActionAxisController.cs" />
     <Compile Include="FormCore\ActionController.cs" />
+    <Compile Include="FormCore\ActionModeController.cs" />
     <Compile Include="FormCore\RequestHandler.cs" />
     <Compile Include="FormCore\Common.cs" />
     <Compile Include="Custom\TreeCheckList.cs" />

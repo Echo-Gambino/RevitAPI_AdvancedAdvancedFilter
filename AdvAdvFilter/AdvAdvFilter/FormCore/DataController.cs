@@ -33,6 +33,7 @@
 
         private List<ElementId> allElements;
         private List<ElementId> selElements;
+        private List<ElementId> movElements;
 
         #endregion Fields
 
@@ -49,12 +50,32 @@
             get { return this.selElements; }
         }
 
+        public List<ElementId> MovElements
+        {
+            set
+            {
+                if (value == null)
+                    this.movElements.Clear();
+                else if (value.Count == 0)
+                    this.movElements.Clear();
+                else
+                    this.movElements = value;
+            }
+            get
+            {
+                if (this.movElements == null)
+                    this.movElements = new List<ElementId>();
+                return this.movElements;
+            }
+        }
+
         #endregion Parameters
 
         public DataController()
         {
             this.allElements = new List<ElementId>();
             this.selElements = new List<ElementId>();
+            this.movElements = new List<ElementId>();
         }
 
         public bool UpdateAllElements(List<ElementId> newAllElements)
@@ -100,10 +121,5 @@
 
             return listChanged;
         }
-
-
-
-
-
     }
 }
