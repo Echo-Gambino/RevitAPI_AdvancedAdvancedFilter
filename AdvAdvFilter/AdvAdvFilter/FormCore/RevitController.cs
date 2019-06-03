@@ -436,9 +436,9 @@
                         {
                             TaskDialog.Show("Debug", "Unknown detected");
 
-                            // SetUnknownPosition(e, xyzValues, shiftRelative);
+                            SetUnknownPosition(e, xyzValues, shiftRelative);
 
-                            transactionSuccessful = false;
+                            //transactionSuccessful = false;
                             break;
                         }
                     }
@@ -550,7 +550,7 @@
 
             return true;
         }
-        /*
+        
         public bool SetUnknownPosition(Element element, List<int> coords, bool shiftRelative)
         {
             // Get x, y, and z value (in feet and inches)
@@ -563,9 +563,37 @@
             ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
             // ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
 
+            List<string> zParamNames = new List<string>()
+            {
+                "Height Offset From Level"
+            };
+
+            List<Parameter> parameters = GetParameters(element, zParamNames);
+
+            if (parameters.Count == 0)
+            {
+                TaskDialog.Show("Warning!",
+                   String.Format("Warning: SetPointPosition(...) attempted to " +
+                               "retrieve zParameter from element {0} but failed.\n" +
+                               "The command shall abort this command.",
+                               element.Name));
+                return false;
+            }
+            
+            double elevationDouble;
+            string elevationString;
+            foreach (Parameter p in parameters)
+            {
+                // Get the the new elevation value for the given parameter
+                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                elevationString = ConvertFeetInchToString(elevationDouble);
+                // Apply the elevation value into the parameter
+                p.SetValueString(elevationString);
+            }
+            
             return true;
         }
-        */
+        
         private List<Parameter> GetParameters(Element element, List<string> paramNames)
         {
             List<Parameter> output = new List<Parameter>();
