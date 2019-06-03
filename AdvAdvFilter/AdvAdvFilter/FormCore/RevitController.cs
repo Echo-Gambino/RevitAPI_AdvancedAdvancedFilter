@@ -428,13 +428,16 @@
                         }
                         else if (eCurve != null)
                         {
-                            SetCurvePosition(e, xyzValues, shiftRelative);
-
                             TaskDialog.Show("Debug", "eCurve detected");
+
+                            SetCurvePosition(e, xyzValues, shiftRelative);
                         }
                         else
                         {
                             TaskDialog.Show("Debug", "Unknown detected");
+
+                            // SetUnknownPosition(e, xyzValues, shiftRelative);
+
                             transactionSuccessful = false;
                             break;
                         }
@@ -503,28 +506,66 @@
 
         public bool SetCurvePosition(Element element, List<int> coords, bool shiftRelative)
         {
-            // Get the x, y, and z value in feet and inches
-            double xValue = coords[0];
-            double yValue = coords[1];
-            double zValue = coords[2];
+            // Get x, y, and z value (in feet and inches)
+            double xValue = ConvertMM2FeetInch(coords[0]);
+            double yValue = ConvertMM2FeetInch(coords[1]);
+            double zValue = ConvertMM2FeetInch(coords[2]);
 
             // Apply the new x and y values
             XYZ newXY = new XYZ(xValue, yValue, 0);
             ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
             // ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
 
-            StringBuilder sb = new StringBuilder();
-            IList<Parameter> param = element.GetOrderedParameters();
-            sb.Append(String.Format("Element {0}'s parameters", element.Name));
-            foreach (Parameter p in param)
+            List<string> zParamNames = new List<string>()
             {
-                sb.Append(String.Format("    {0}\n", p.Definition.Name));
+                // "z Offset Value"
+                "Base Offset",
+                "Top Offset",
+                "Start Level Offset",
+                "End Level Offset"
+            };
+
+            List<Parameter> parameters = GetParameters(element, zParamNames);
+
+            if (parameters.Count == 0)
+            {
+                TaskDialog.Show("Warning!",
+                   String.Format("Warning: SetPointPosition(...) attempted to " +
+                               "retrieve zParameter from element {0} but failed.\n" +
+                               "The command shall abort this command.",
+                               element.Name));
+                return false;
             }
-            TaskDialog.Show("Debug", sb.ToString());
 
-            return false;
+            double elevationDouble;
+            string elevationString;
+            foreach (Parameter p in parameters)
+            {
+                // Get the the new elevation value for the given parameter
+                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                elevationString = ConvertFeetInchToString(elevationDouble);
+                // Apply the elevation value into the parameter
+                p.SetValueString(elevationString);
+            }
+
+            return true;
         }
+        /*
+        public bool SetUnknownPosition(Element element, List<int> coords, bool shiftRelative)
+        {
+            // Get x, y, and z value (in feet and inches)
+            double xValue = ConvertMM2FeetInch(coords[0]);
+            double yValue = ConvertMM2FeetInch(coords[1]);
+            double zValue = ConvertMM2FeetInch(coords[2]);
 
+            // Apply the new x and y values
+            XYZ newXY = new XYZ(xValue, yValue, 0);
+            ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            // ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+
+            return true;
+        }
+        */
         private List<Parameter> GetParameters(Element element, List<string> paramNames)
         {
             List<Parameter> output = new List<Parameter>();
@@ -536,6 +577,8 @@
                 if (parameters == null)
                     continue;
                 else if (parameters.Count == 0)
+                    continue;
+                else if (parameters[0].IsReadOnly)
                     continue;
 
                 output.Add(parameters[0]);
