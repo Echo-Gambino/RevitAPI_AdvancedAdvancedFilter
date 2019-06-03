@@ -404,11 +404,6 @@
 
                 bool transactionSuccessful = true;
 
-                if (copyAndShift)
-                {
-                    TaskDialog.Show("Debug", "copying and shifting!");
-                }
-
                 foreach (ElementId id in elementsToCopy)
                 {
                     Element e = this.GetElement(id);
@@ -416,39 +411,55 @@
                     Location eLoc = e.Location;
                     if (eLoc == null)
                     {
-                        TaskDialog.Show("Debug", "Error: No location found from element");
                         transactionSuccessful = false;
                         break;
                     }
+
+                    List<string> zParamNames;
 
                     LocationPoint ePoint = eLoc as LocationPoint;
                     LocationCurve eCurve = eLoc as LocationCurve;
                     if (ePoint != null)
                     {
-                        TaskDialog.Show("Debug", "ePoint detected");
+                        // SetPointPosition(e, xyzValues, copyAndShift);
 
-                        SetPointPosition(e, xyzValues, copyAndShift);
+                        zParamNames = new List<string>()
+                        {
+                            "Top Offset",
+                            "Base Offset",
+                            "Label Elevation",
+                            "Offset"
+                        };
                     }
                     else if (eCurve != null)
                     {
-                        TaskDialog.Show("Debug", "eCurve detected");
+                        // SetCurvePosition(e, xyzValues, copyAndShift);
 
-                        SetCurvePosition(e, xyzValues, copyAndShift);
+                        zParamNames = new List<string>()
+                        {
+                            // "z Offset Value"
+                            "Base Offset",
+                            "Top Offset",
+                            "Start Level Offset",
+                            "End Level Offset"
+                        };
+
                     }
                     else
                     {
-                        TaskDialog.Show("Debug", "Unknown detected");
+                        // SetUnknownPosition(e, xyzValues, copyAndShift);
 
-                        SetUnknownPosition(e, xyzValues, copyAndShift);
-
-                        //transactionSuccessful = false;
-                        break;
+                        zParamNames = new List<string>()
+                        {
+                            "Height Offset From Level"
+                        };
                     }
+
+                    SetPosition(e, xyzValues, zParamNames, copyAndShift);
                 }
 
                 if (transactionSuccessful)
                 {
-                    TaskDialog.Show("Debug", "Transaction Successful!");
                     tran.Commit();
                 }
                 else
@@ -457,6 +468,68 @@
                 }
             }
             // ElementTransformUtils.CopyElements(this.doc, elementsToCopy, )
+        }
+
+        public bool SetPosition(
+            Element element,
+            List<int> coords,
+            List<string> zParamNames,
+            bool copyAndShift
+            )
+        {
+            // Get x, y, and z value (in feet and inches)
+            double xValue = ConvertMM2FeetInch(coords[0]);
+            double yValue = ConvertMM2FeetInch(coords[1]);
+            double zValue = ConvertMM2FeetInch(coords[2]);
+
+            XYZ newXY = new XYZ(xValue, yValue, 0);
+
+            if (copyAndShift)
+            {
+                ICollection<ElementId> eId = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+                if (eId.Count == 0)
+                {
+                    TaskDialog.Show("Warning!",
+                       String.Format("Warning: SetPointPosition(...) attempted to " +
+                                   "copy and move from element {0} but failed.\n" +
+                                   "The command shall abort this command.",
+                                   element.Name));
+                    return false;
+                }
+                // Attempt to get elements from this
+                element = this.GetElement(eId.ToList()[0]);
+            }
+            else
+            {
+                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            }
+
+            // Get the parameter for Z value
+            List<Parameter> parameters = GetParameters(element, zParamNames);
+
+            // Do a check if parameters are valid
+            if (parameters.Count == 0)
+            {
+                TaskDialog.Show("Warning!",
+                   String.Format("Warning: SetPointPosition(...) attempted to " +
+                               "retrieve zParameter from element {0} but failed.\n" +
+                               "The command shall abort this command.",
+                               element.Name));
+                return false;
+            }
+
+            double elevationDouble;
+            string elevationString;
+            foreach (Parameter p in parameters)
+            {
+                // Get the the new elevation value for the given parameter
+                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                elevationString = ConvertFeetInchToString(elevationDouble);
+                // Apply the elevation value into the parameter
+                p.SetValueString(elevationString);
+            }
+
+            return true;
         }
 
         public bool SetPointPosition(Element element, List<int> coords, bool copyAndShift)
