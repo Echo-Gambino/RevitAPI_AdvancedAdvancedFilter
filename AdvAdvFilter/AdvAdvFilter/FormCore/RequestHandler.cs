@@ -318,6 +318,13 @@
 
                     break;
                 case Request.Nothing:
+                    // Check if the revit has added or removed
+                    // the elements within the document that we have right now
+                    elementIds = revitController.GetAllElementIds(this.FilterBy);
+                    if (elementIds.Count != dataController.AllElements.Count)
+                    {
+                        this.AddRequest(Request.UpdateTreeView);
+                    }
 
                     // When the given Request holds no significance, try to perform polling and
                     // check if the Revit application changed states and values to update Modeless Form

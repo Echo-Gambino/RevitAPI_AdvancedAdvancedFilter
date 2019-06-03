@@ -135,6 +135,10 @@
                 {
                     continue;
                 }
+                catch (ArgumentNullException ex)
+                {
+                    continue;
+                }
             }
             return output;
         }
