@@ -33,7 +33,11 @@
 
         private List<ElementId> allElements;
         private List<ElementId> selElements;
+
+        // Fields related to movement
         private List<ElementId> movElements;
+        private bool shiftRelative;
+        private List<int> coords;
 
         #endregion Fields
 
@@ -69,13 +73,58 @@
             }
         }
 
+        public bool ShiftRelative
+        {
+            get { return this.shiftRelative; }
+            set { this.shiftRelative = value; }
+        }
+
+        public List<int> Coords
+        {
+            get
+            {
+                List<int> output;
+                if (this.coords == null)
+                {
+                    output = new List<int>() { 0, 0, 0 };
+                }
+                else if (this.coords.Count != 3)
+                {
+                    output = new List<int>() { 0, 0, 0 };
+                }
+                else
+                {
+                    output = this.coords;
+                }
+                return output;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    this.coords.Clear();
+                }
+                else if (value.Count != 3)
+                {
+                    throw new ArgumentException();
+                }
+                else
+                {
+                    this.coords = value;
+                }                        
+            }
+        }
+
         #endregion Parameters
 
         public DataController()
         {
             this.allElements = new List<ElementId>();
             this.selElements = new List<ElementId>();
+            // Fields related to movement
             this.movElements = new List<ElementId>();
+            this.shiftRelative = true;
+            this.coords = new List<int>() { 0, 0, 0 };
         }
 
         public bool UpdateAllElements(List<ElementId> newAllElements)

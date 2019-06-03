@@ -281,35 +281,33 @@
                         break;
                     }
 
-                    List<ElementId> movableElementIds = new List<ElementId>();
-                    List<string> movableCategories = new List<string>()
-                    {
-                        "Structural Columns",
-                        "Structural Connections",
-                        "Structural Framing",
-                        "Generic Models",
-                        "Stacked Walls",
-                        "Walls",
-                        "Floors"
-                    };
+                    List<ElementId> movableElementIds;
+                    List<int> coords;
+                    bool shiftRelative;
+                    bool success;
 
-                    // Filter by movables
-                    foreach (ElementId id in currSelected)
-                    {
-                        Category cat = revitController.GetCategory(revitController.GetElement(id));
-                        if (movableCategories.Contains(cat.Name))
-                        {
-                            movableElementIds.Add(id);
-                        }
-                    }
+                    movableElementIds = revitController.GetMovableElementIds(currSelected);
 
                     if (movableElementIds.Count != 0)
                     {
-                        dataController.MovElements = movableElementIds;
-                        request = Request.ShiftSelected;
+                        success = actionController.TryGetAllInputs(out coords, out shiftRelative);
+                        if (success)
+                        {                            
+                            actionController.DisablePrompt();
+                            dataController.MovElements = movableElementIds;
+                            dataController.Coords = coords;
+                            dataController.ShiftRelative = shiftRelative;
+                            request = Request.ShiftSelected;
+                        }
+                        else
+                        {
+                            actionController.PromptNotValidShifts();
+                            request = Request.Nothing;
+                        }
                     }
                     else
                     {
+                        actionController.PromptNotValidElements();
                         request = Request.Nothing;
                     }
 

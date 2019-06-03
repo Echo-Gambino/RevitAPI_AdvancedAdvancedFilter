@@ -126,7 +126,7 @@
             List<ActionAxisController> xyz = new List<ActionAxisController>() { xAxis, yAxis, zAxis };
 
             this.actionController = new ActionController(
-                ActionPanel, ActionResetButton, ActionShiftButton, xyz, mode);
+                ActionPanel, ActionResetButton, ActionShiftButton, ActionPromptLabel, xyz, mode);
 
             // Initialize Back-end Controllers
             this.revitController = new RevitController(commandData);
@@ -366,11 +366,21 @@
             if (this.actionController.IsAllAxisEmpty()
                 && this.actionController.IsModeDefault())
             {
+                this.actionController.DisableShift();
                 this.actionController.DisableDefaults();
             }
             else
             {
                 this.actionController.EnableDefaults();
+
+                if (actionController.TryGetAllInputs(out List<int> coords, out bool shift))
+                {
+                    this.actionController.EnableShift();
+                }
+                else
+                {
+                    this.actionController.DisableShift();
+                }
             }
         }
 
@@ -478,23 +488,13 @@
                             break;
                         case Request.ShiftSelected:
 
-                            List<int> xyz;
-                            bool shiftRelative;
+                            List<ElementId> movElementIds = dataController.MovElements;
+                            List<int> coords = dataController.Coords;
+                            bool shiftRelative = dataController.ShiftRelative;
 
-                            bool success = this.actionController.TryGetAllInputs(out xyz, out shiftRelative);
-
-                            if (success)
-                            {
-                                TaskDialog.Show("Debug", "I made it to the execution phase!");
-                                // Do Sucessful thing
-                                revitController.CopyAndMoveElements(
-                                    dataController.MovElements, xyz, shiftRelative);
-                            }
-                            else
-                            {
-                                requestHandler.AttemptRecovery(request);
-                            }
-
+                            TaskDialog.Show("Debug", "I made it to the execution phase!");
+                            // Do Successful thing
+                            revitController.CopyAndMoveElements(movElementIds, coords, shiftRelative);
 
                             break;
                         case Request.Nothing:

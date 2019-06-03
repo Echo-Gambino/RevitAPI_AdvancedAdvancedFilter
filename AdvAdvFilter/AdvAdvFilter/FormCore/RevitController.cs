@@ -353,6 +353,35 @@
 
         #region Movement / Shift Related Tasks
 
+        public List<ElementId> GetMovableElementIds(List<ElementId> elementIds)
+        {
+            List<ElementId> output = new List<ElementId>();
+            List<string> movableCategories = new List<string>()
+            {
+                "Structural Columns",
+                "Structural Connections",
+                "Structural Framing",
+                "Generic Models",
+                "Stacked Walls",
+                "Curtain Panels",
+                "Walls",
+                "Floors"
+            };
+
+            // Filter by movables
+            Category category;
+            foreach (ElementId id in elementIds)
+            {
+                category = this.GetCategory(this.GetElement(id));
+                if (movableCategories.Contains(category.Name))
+                {
+                    output.Add(id);
+                }
+            }
+
+            return output;
+        }
+
         public void CopyAndMoveElements(
             List<ElementId> elementIds,
             List<int> xyzValues,
@@ -360,20 +389,20 @@
             )
         {
             ICollection<ElementId> elementsToCopy = elementIds;
-            // XYZ coords = new XYZ();
-            // coords.
+
+            int xValue = xyzValues[0];
+            int yValue = xyzValues[1];
+            int zValue = xyzValues[2];
 
             if (!shiftRelative) return;
 
-            return; // This is just to make sure that the process gets to this code without any errors in code
+            // return; // This is just to make sure that the process gets to this code without any errors in code
 
-            using (Transaction tran = new Transaction(this.doc, "Show Elements"))
+            using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
             {
                 tran.Start();
 
                 bool transactionSuccessful = true;
-
-                XYZ coords = new XYZ();
 
                 if (shiftRelative)
                 {
@@ -384,6 +413,7 @@
                         Location eLoc = e.Location;
                         if (eLoc == null)
                         {
+                            TaskDialog.Show("Debug", "Error: No location found from element");
                             transactionSuccessful = false;
                             break;
                         }
@@ -392,31 +422,28 @@
                         LocationCurve eCurve = eLoc as LocationCurve;
                         if (ePoint != null)
                         {
-                            coords = new XYZ(
-                                ePoint.Point.X + xyzValues[0],
-                                ePoint.Point.Y + xyzValues[1],
-                                ePoint.Point.Z + xyzValues[2]);
+                            TaskDialog.Show("Debug", "ePoint detected");
+
+                            SetPointPosition(e, xyzValues, shiftRelative);
                         }
                         else if (eCurve != null)
                         {
+                            SetCurvePosition(e, xyzValues, shiftRelative);
+
                             TaskDialog.Show("Debug", "eCurve detected");
                         }
                         else
                         {
+                            TaskDialog.Show("Debug", "Unknown detected");
                             transactionSuccessful = false;
                             break;
                         }
-                        
-
-
-                        // coords.X
                     }
                 }
-                // foreach () { }
-                // ElementTransformUtils.Cop
 
                 if (transactionSuccessful)
                 {
+                    TaskDialog.Show("Debug", "Transaction Successful!");
                     tran.Commit();
                 }
                 else
@@ -427,11 +454,149 @@
             // ElementTransformUtils.CopyElements(this.doc, elementsToCopy, )
         }
 
-        /*
-        public void MoveElemeents(List<ElementId> elementIds)
+        public bool SetPointPosition(Element element, List<int> coords, bool shiftRelative)
         {
+            // Get x, y, and z value (in feet and inches)
+            double xValue = ConvertMM2FeetInch(coords[0]);
+            double yValue = ConvertMM2FeetInch(coords[1]);
+            double zValue = ConvertMM2FeetInch(coords[2]);
+
+            // Apply the new x and y values
+            XYZ newXY = new XYZ(xValue, yValue, 0);
+            ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+
+            List<string> zParamNames = new List<string>()
+            {
+                "Top Offset",
+                "Base Offset",
+                "Label Elevation",
+                "Offset"
+            };
+
+            // Get the parameter for Z value
+            List<Parameter> parameters = GetParameters(element, zParamNames);
+
+            // Do a check if parameters are valid
+            if (parameters.Count == 0)
+            {
+                TaskDialog.Show("Warning!",
+                   String.Format("Warning: SetPointPosition(...) attempted to " +
+                               "retrieve zParameter from element {0} but failed.\n" +
+                               "The command shall abort this command.",
+                               element.Name));
+                return false;
+            }
+
+            double elevationDouble;
+            string elevationString;
+            foreach (Parameter p in parameters)
+            {
+                // Get the the new elevation value for the given parameter
+                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                elevationString = ConvertFeetInchToString(elevationDouble);
+                // Apply the elevation value into the parameter
+                p.SetValueString(elevationString);
+            }
+
+            return true;
         }
-        */
+
+        public bool SetCurvePosition(Element element, List<int> coords, bool shiftRelative)
+        {
+            // Get the x, y, and z value in feet and inches
+            double xValue = coords[0];
+            double yValue = coords[1];
+            double zValue = coords[2];
+
+            // Apply the new x and y values
+            XYZ newXY = new XYZ(xValue, yValue, 0);
+            ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            // ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+
+            StringBuilder sb = new StringBuilder();
+            IList<Parameter> param = element.GetOrderedParameters();
+            sb.Append(String.Format("Element {0}'s parameters", element.Name));
+            foreach (Parameter p in param)
+            {
+                sb.Append(String.Format("    {0}\n", p.Definition.Name));
+            }
+            TaskDialog.Show("Debug", sb.ToString());
+
+            return false;
+        }
+
+        private List<Parameter> GetParameters(Element element, List<string> paramNames)
+        {
+            List<Parameter> output = new List<Parameter>();
+
+            foreach (string names in paramNames)
+            {
+                IList<Parameter> parameters = element.GetParameters(names);
+
+                if (parameters == null)
+                    continue;
+                else if (parameters.Count == 0)
+                    continue;
+
+                output.Add(parameters[0]);
+            }
+
+            return output;
+        }
+
+        #region Unit Conversions
+
+        private double ConvertMM2FeetInch(double millimeters)
+        {
+            double mmToFeetInch = UnitUtils.Convert(
+                millimeters,
+                DisplayUnitType.DUT_MILLIMETERS,
+                DisplayUnitType.DUT_FEET_FRACTIONAL_INCHES);
+
+            return mmToFeetInch;
+        }
+
+        private double ConvertFeetInch2MM(double feetInch)
+        {
+            double feetInchToMM = UnitUtils.Convert(
+                feetInch,
+                DisplayUnitType.DUT_FEET_FRACTIONAL_INCHES,
+                DisplayUnitType.DUT_MILLIMETERS);
+
+            return feetInchToMM;
+        }
+
+        private double ConvertStringToFeetInch(string feetInchString)
+        {
+            double feetInch = 0;
+
+            Units units = this.doc.GetUnits();
+            if (!UnitFormatUtils.TryParse(units, UnitType.UT_Length, feetInchString, out feetInch))
+            {
+                throw new FormatException();
+            }
+
+            return feetInch;
+        }
+
+        private string ConvertFeetInchToString(double feetInch)
+        {
+            Units units = this.doc.GetUnits();
+            string output = UnitFormatUtils.Format(units, UnitType.UT_Length, feetInch, true, true);
+
+            return output;
+        }
+
+        private string ConvertMM2FeetInchString(double millimeters)
+        {
+            double feetInch = ConvertMM2FeetInch(millimeters);
+            string output = ConvertFeetInchToString(feetInch);
+
+            return output;
+        }
+
+        #endregion Unit Conversions
+
         #endregion Movement / Shift Related Tasks
 
         #region Get ElementId Grouping

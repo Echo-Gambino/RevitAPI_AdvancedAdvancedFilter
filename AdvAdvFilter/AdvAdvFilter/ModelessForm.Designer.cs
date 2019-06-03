@@ -59,6 +59,7 @@
             this.OptionVisibilityLabel = new System.Windows.Forms.Label();
             this.OptionVisibilityCheckBox = new System.Windows.Forms.CheckBox();
             this.OptionLabel = new System.Windows.Forms.Label();
+            this.ActionPromptLabel = new System.Windows.Forms.Label();
             this.ElementSelectionPanel.SuspendLayout();
             this.SidePanel.SuspendLayout();
             this.ActionPanel.SuspendLayout();
@@ -80,7 +81,7 @@
             this.ElementSelectionPanel.Location = new System.Drawing.Point(12, 12);
             this.ElementSelectionPanel.MinimumSize = new System.Drawing.Size(300, 300);
             this.ElementSelectionPanel.Name = "ElementSelectionPanel";
-            this.ElementSelectionPanel.Size = new System.Drawing.Size(300, 390);
+            this.ElementSelectionPanel.Size = new System.Drawing.Size(300, 540);
             this.ElementSelectionPanel.TabIndex = 6;
             // 
             // ElementSelectionTreeView
@@ -91,7 +92,7 @@
             this.ElementSelectionTreeView.CheckBoxes = true;
             this.ElementSelectionTreeView.Location = new System.Drawing.Point(0, 3);
             this.ElementSelectionTreeView.Name = "ElementSelectionTreeView";
-            this.ElementSelectionTreeView.Size = new System.Drawing.Size(300, 368);
+            this.ElementSelectionTreeView.Size = new System.Drawing.Size(300, 518);
             this.ElementSelectionTreeView.TabIndex = 1;
             this.ElementSelectionTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCheck);
             this.ElementSelectionTreeView.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeCollapse);
@@ -102,7 +103,7 @@
             this.ElementSelectionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ElementSelectionLabel.AutoSize = true;
             this.ElementSelectionLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ElementSelectionLabel.Location = new System.Drawing.Point(3, 374);
+            this.ElementSelectionLabel.Location = new System.Drawing.Point(3, 524);
             this.ElementSelectionLabel.Name = "ElementSelectionLabel";
             this.ElementSelectionLabel.Size = new System.Drawing.Size(137, 16);
             this.ElementSelectionLabel.TabIndex = 0;
@@ -129,7 +130,7 @@
             this.SidePanel.MaximumSize = new System.Drawing.Size(400, 1000);
             this.SidePanel.MinimumSize = new System.Drawing.Size(250, 300);
             this.SidePanel.Name = "SidePanel";
-            this.SidePanel.Size = new System.Drawing.Size(400, 390);
+            this.SidePanel.Size = new System.Drawing.Size(400, 540);
             this.SidePanel.TabIndex = 8;
             // 
             // ActionPanel
@@ -137,6 +138,7 @@
             this.ActionPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.ActionPanel.Controls.Add(this.ActionPromptLabel);
             this.ActionPanel.Controls.Add(this.ActionShiftButton);
             this.ActionPanel.Controls.Add(this.ActionResetButton);
             this.ActionPanel.Controls.Add(this.ActionModePanel);
@@ -146,14 +148,14 @@
             this.ActionPanel.Controls.Add(this.ActionLabel);
             this.ActionPanel.Location = new System.Drawing.Point(4, 173);
             this.ActionPanel.Name = "ActionPanel";
-            this.ActionPanel.Size = new System.Drawing.Size(393, 214);
+            this.ActionPanel.Size = new System.Drawing.Size(393, 364);
             this.ActionPanel.TabIndex = 1;
             // 
             // ActionShiftButton
             // 
             this.ActionShiftButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ActionShiftButton.Location = new System.Drawing.Point(3, 188);
+            this.ActionShiftButton.Location = new System.Drawing.Point(3, 338);
             this.ActionShiftButton.Name = "ActionShiftButton";
             this.ActionShiftButton.Size = new System.Drawing.Size(387, 23);
             this.ActionShiftButton.TabIndex = 9;
@@ -165,7 +167,7 @@
             // 
             this.ActionResetButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.ActionResetButton.Location = new System.Drawing.Point(3, 157);
+            this.ActionResetButton.Location = new System.Drawing.Point(3, 307);
             this.ActionResetButton.Name = "ActionResetButton";
             this.ActionResetButton.Size = new System.Drawing.Size(387, 25);
             this.ActionResetButton.TabIndex = 8;
@@ -435,15 +437,25 @@
             this.OptionLabel.TabIndex = 0;
             this.OptionLabel.Text = "Options";
             // 
+            // ActionPromptLabel
+            // 
+            this.ActionPromptLabel.AutoSize = true;
+            this.ActionPromptLabel.ForeColor = System.Drawing.Color.Red;
+            this.ActionPromptLabel.Location = new System.Drawing.Point(3, 154);
+            this.ActionPromptLabel.Name = "ActionPromptLabel";
+            this.ActionPromptLabel.Size = new System.Drawing.Size(105, 13);
+            this.ActionPromptLabel.TabIndex = 10;
+            this.ActionPromptLabel.Text = "Generic Error Prompt";
+            // 
             // ModelessForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(867, 411);
+            this.ClientSize = new System.Drawing.Size(867, 561);
             this.Controls.Add(this.SidePanel);
             this.Controls.Add(this.TestLabel);
             this.Controls.Add(this.ElementSelectionPanel);
-            this.MinimumSize = new System.Drawing.Size(600, 450);
+            this.MinimumSize = new System.Drawing.Size(600, 600);
             this.Name = "ModelessForm";
             this.Text = "ModelessForm";
             this.Load += new System.EventHandler(this.ModelessForm_Load);
@@ -503,5 +515,6 @@
         private System.Windows.Forms.RadioButton OptionFilterRadioButton0;
         private System.Windows.Forms.Label OptionFilterLabel;
         private System.Windows.Forms.Button ActionShiftButton;
+        private System.Windows.Forms.Label ActionPromptLabel;
     }
 }

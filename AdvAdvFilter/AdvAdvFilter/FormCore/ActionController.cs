@@ -19,6 +19,7 @@
         private Panel panel;
         private Button resetButton;
         private Button shiftButton;
+        private Label promptLabel;
         // Custom made controllers
         private ActionAxisController xAxis;
         private ActionAxisController yAxis;
@@ -55,6 +56,7 @@
             Panel panel,
             Button resetButton,
             Button shiftButton,
+            Label promptLabel,
             List<ActionAxisController> xyz,
             ActionModeController mode
             )
@@ -64,6 +66,7 @@
             this.panel = panel ?? throw new ArgumentNullException();
             this.resetButton = resetButton ?? throw new ArgumentNullException();
             this.shiftButton = shiftButton ?? throw new ArgumentNullException();
+            this.promptLabel = promptLabel ?? throw new ArgumentNullException();
 
             this.xAxis = xyz[0];
             this.yAxis = xyz[1];
@@ -81,7 +84,9 @@
             this.zAxis.Reset();
             this.mode.Reset();
 
-            this.resetButton.Enabled = false;
+            this.DisableDefaults();
+            this.DisableShift();
+            this.DisablePrompt();
         }
 
         public void EnableDefaults()
@@ -102,6 +107,67 @@
         public void DisableShift()
         {
             this.shiftButton.Enabled = false;
+        }
+
+        public void EnablePrompt()
+        {
+            this.promptLabel.Visible = true;
+        }
+
+        public void DisablePrompt()
+        {
+            this.promptLabel.Visible = false;
+        }
+
+        public void PromptCustom(string text)
+        {
+            if (this.promptLabel.Text != text)
+            {
+                if (!this.promptLabel.Visible)
+                    this.promptLabel.Visible = true;
+
+                this.promptLabel.Text = text;
+            }
+            else
+            {
+                if (!this.promptLabel.Visible)
+                    this.promptLabel.Visible = true;
+            }
+        }
+
+        public void PromptNotValidElements()
+        {
+            StringBuilder errorMsg = new StringBuilder();
+            List<string> movableCategories = new List<string>()
+            {
+                "Structural Columns",
+                "Structural Connections",
+                "Structural Framing",
+                "Generic Models",
+                "Stacked Walls",
+                "Curtain Panels",
+                "Walls",
+                "Floors"
+            };
+
+            errorMsg.Append("Please select valid elements to move\n");
+            errorMsg.Append("Valid categories of elements:\n");
+            foreach (string c in movableCategories)
+            {
+                errorMsg.Append(String.Format("  {0}\n", c));
+            }
+
+            this.PromptCustom(errorMsg.ToString());
+        }
+
+        public void PromptNotValidShifts()
+        {
+            StringBuilder errorMsg = new StringBuilder();
+
+            errorMsg.Append("The input(s) of shifting the element(s) isn't valid\n");
+            errorMsg.Append("Please try again.\n");
+
+            this.PromptCustom(errorMsg.ToString());
         }
 
         #endregion Controls
