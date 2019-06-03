@@ -325,6 +325,13 @@
                     {
                         this.AddRequest(Request.UpdateTreeView);
                     }
+                    else
+                    {
+                        if (!elementIds.SequenceEqual(dataController.AllElements))
+                        {
+                            this.AddRequest(Request.UpdateTreeView);
+                        }
+                    }
 
                     // When the given Request holds no significance, try to perform polling and
                     // check if the Revit application changed states and values to update Modeless Form

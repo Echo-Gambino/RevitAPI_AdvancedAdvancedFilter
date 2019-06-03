@@ -330,6 +330,8 @@
             foreach (ElementId id in selection)
             {
                 Element e = this.doc.GetElement(id);
+                if (e == null) continue;
+
                 if (e.IsHidden(view))
                 {
                     showIds.Add(id);
