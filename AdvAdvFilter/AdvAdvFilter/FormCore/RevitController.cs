@@ -384,7 +384,7 @@
         public void CopyAndMoveElements(
             List<ElementId> elementIds,
             List<int> xyzValues,
-            bool shiftRelative
+            bool copyAndShift
             )
         {
             ICollection<ElementId> elementsToCopy = elementIds;
@@ -399,7 +399,7 @@
 
                 bool transactionSuccessful = true;
 
-                if (shiftRelative)
+                if (copyAndShift)
                 {
                     TaskDialog.Show("Debug", "copying and shifting!");
                 }
@@ -422,19 +422,19 @@
                     {
                         TaskDialog.Show("Debug", "ePoint detected");
 
-                        SetPointPosition(e, xyzValues, shiftRelative);
+                        SetPointPosition(e, xyzValues, copyAndShift);
                     }
                     else if (eCurve != null)
                     {
                         TaskDialog.Show("Debug", "eCurve detected");
 
-                        SetCurvePosition(e, xyzValues, shiftRelative);
+                        SetCurvePosition(e, xyzValues, copyAndShift);
                     }
                     else
                     {
                         TaskDialog.Show("Debug", "Unknown detected");
 
-                        SetUnknownPosition(e, xyzValues, shiftRelative);
+                        SetUnknownPosition(e, xyzValues, copyAndShift);
 
                         //transactionSuccessful = false;
                         break;

@@ -490,11 +490,11 @@
 
                             List<ElementId> movElementIds = dataController.MovElements;
                             List<int> coords = dataController.Coords;
-                            bool shiftRelative = dataController.CopyAndShift;
+                            bool copyAndShift = dataController.CopyAndShift;
 
                             TaskDialog.Show("Debug", "I made it to the execution phase!");
                             // Do Successful thing
-                            revitController.CopyAndMoveElements(movElementIds, coords, shiftRelative);
+                            revitController.CopyAndMoveElements(movElementIds, coords, copyAndShift);
 
                             break;
                         case Request.Nothing:
