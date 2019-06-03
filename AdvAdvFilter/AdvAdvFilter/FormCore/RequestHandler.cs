@@ -283,20 +283,20 @@
 
                     List<ElementId> movableElementIds;
                     List<int> coords;
-                    bool shiftRelative;
+                    bool copyAndShift;
                     bool success;
 
                     movableElementIds = revitController.GetMovableElementIds(currSelected);
 
                     if (movableElementIds.Count != 0)
                     {
-                        success = actionController.TryGetAllInputs(out coords, out shiftRelative);
+                        success = actionController.TryGetAllInputs(out coords, out copyAndShift);
                         if (success)
                         {                            
                             actionController.DisablePrompt();
                             dataController.MovElements = movableElementIds;
                             dataController.Coords = coords;
-                            dataController.ShiftRelative = shiftRelative;
+                            dataController.CopyAndShift = copyAndShift;
                             request = Request.ShiftSelected;
                         }
                         else

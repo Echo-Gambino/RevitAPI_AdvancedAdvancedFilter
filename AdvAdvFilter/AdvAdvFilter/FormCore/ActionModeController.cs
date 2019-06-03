@@ -16,8 +16,8 @@
         public enum ActionMode
         {
             None = 0,
-            Relative = 1,
-            Absolute = 2,
+            ShiftOnly = 1,
+            CopyAndShift = 2,
             Invalid = -1
         }
 
@@ -26,28 +26,28 @@
         #region Fields
 
         private Panel panel;
-        private RadioButton relative;
-        private RadioButton absolute;
+        private RadioButton shift;
+        private RadioButton copyAndShift;
 
         #endregion Fields
 
         public ActionModeController(
             Panel panel,
-            RadioButton relative,
-            RadioButton absolute
+            RadioButton shift,
+            RadioButton copyAndShift
             )
         {
             this.panel = panel ?? throw new ArgumentNullException();
-            this.relative = relative ?? throw new ArgumentNullException();
-            this.absolute = absolute ?? throw new ArgumentNullException();
+            this.shift = shift ?? throw new ArgumentNullException();
+            this.copyAndShift = copyAndShift ?? throw new ArgumentNullException();
         }
 
         #region Controls
 
         public void Reset()
         {
-            this.relative.Checked = true;
-            this.absolute.Checked = false;
+            this.shift.Checked = true;
+            this.copyAndShift.Checked = false;
         }
 
         #endregion Controls
@@ -57,8 +57,8 @@
         public ActionMode GetMode()
         {
             ActionMode mode = ActionMode.None;
-            bool relChecked = relative.Checked;
-            bool absChecked = absolute.Checked;
+            bool relChecked = shift.Checked;
+            bool absChecked = copyAndShift.Checked;
 
             // Check if the two radio buttons are in different states
             if (relChecked != absChecked)
@@ -67,12 +67,12 @@
                 if (relChecked)
                 {
                     // relChecked is true, then the mode is 'relative'
-                    mode = ActionMode.Relative;
+                    mode = ActionMode.ShiftOnly;
                 }
                 else
                 {
                     // If relChecked isn't true, mode must then be 'absolute'
-                    mode = ActionMode.Absolute;
+                    mode = ActionMode.CopyAndShift;
                 }
             }
             else

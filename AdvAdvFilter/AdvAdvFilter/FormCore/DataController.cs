@@ -36,7 +36,7 @@
 
         // Fields related to movement
         private List<ElementId> movElements;
-        private bool shiftRelative;
+        private bool copyAndShift;
         private List<int> coords;
 
         #endregion Fields
@@ -73,10 +73,10 @@
             }
         }
 
-        public bool ShiftRelative
+        public bool CopyAndShift
         {
-            get { return this.shiftRelative; }
-            set { this.shiftRelative = value; }
+            get { return this.copyAndShift; }
+            set { this.copyAndShift = value; }
         }
 
         public List<int> Coords
@@ -123,7 +123,7 @@
             this.selElements = new List<ElementId>();
             // Fields related to movement
             this.movElements = new List<ElementId>();
-            this.shiftRelative = true;
+            this.copyAndShift = true;
             this.coords = new List<int>() { 0, 0, 0 };
         }
 

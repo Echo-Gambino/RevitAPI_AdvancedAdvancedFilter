@@ -490,7 +490,7 @@
 
                             List<ElementId> movElementIds = dataController.MovElements;
                             List<int> coords = dataController.Coords;
-                            bool shiftRelative = dataController.ShiftRelative;
+                            bool shiftRelative = dataController.CopyAndShift;
 
                             TaskDialog.Show("Debug", "I made it to the execution phase!");
                             // Do Successful thing

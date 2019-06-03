@@ -174,7 +174,7 @@
 
         #region Supplementary
 
-        public bool TryGetAllInputs(out List<int> xyz, out bool shiftRelative)
+        public bool TryGetAllInputs(out List<int> xyz, out bool copyAndShift)
         {
             bool extractionSuccessful = false;
 
@@ -186,7 +186,7 @@
             ActionMode mode = this.mode.GetMode();
             List<int> newXYZ = new List<int>();
 
-            bool newShiftRelative = true;
+            bool newCopyAndShift = true;
 
             if (Int32.TryParse(xValue, out value))
             {
@@ -197,14 +197,14 @@
                     if (Int32.TryParse(zValue, out value))
                     {
                         newXYZ.Add(value);
-                        if (mode == ActionMode.Relative)
+                        if (mode == ActionMode.ShiftOnly)
                         {
-                            newShiftRelative = true;
+                            newCopyAndShift = false;
                             extractionSuccessful = true;
                         }
-                        else if (mode == ActionMode.Absolute)
+                        else if (mode == ActionMode.CopyAndShift)
                         {
-                            newShiftRelative = false;
+                            newCopyAndShift = true;
                             extractionSuccessful = true;
                         }
                     }
@@ -214,12 +214,12 @@
             if (extractionSuccessful)
             {
                 xyz = newXYZ;
-                shiftRelative = newShiftRelative;
+                copyAndShift = newCopyAndShift;
             }
             else
             {
                 xyz = new List<int>();
-                shiftRelative = false;
+                copyAndShift = false;
             }
 
             return extractionSuccessful;
@@ -236,7 +236,7 @@
 
         public bool IsModeDefault()
         {
-            ActionMode defaultMode = ActionMode.Relative;
+            ActionMode defaultMode = ActionMode.ShiftOnly;
             return (this.mode.GetMode() == defaultMode);
         }
 

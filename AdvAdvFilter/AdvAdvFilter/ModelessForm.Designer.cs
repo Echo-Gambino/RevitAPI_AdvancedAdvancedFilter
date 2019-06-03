@@ -34,6 +34,7 @@
             this.TestLabel = new System.Windows.Forms.Label();
             this.SidePanel = new System.Windows.Forms.Panel();
             this.ActionPanel = new System.Windows.Forms.Panel();
+            this.ActionPromptLabel = new System.Windows.Forms.Label();
             this.ActionShiftButton = new System.Windows.Forms.Button();
             this.ActionResetButton = new System.Windows.Forms.Button();
             this.ActionModePanel = new System.Windows.Forms.Panel();
@@ -59,7 +60,6 @@
             this.OptionVisibilityLabel = new System.Windows.Forms.Label();
             this.OptionVisibilityCheckBox = new System.Windows.Forms.CheckBox();
             this.OptionLabel = new System.Windows.Forms.Label();
-            this.ActionPromptLabel = new System.Windows.Forms.Label();
             this.ElementSelectionPanel.SuspendLayout();
             this.SidePanel.SuspendLayout();
             this.ActionPanel.SuspendLayout();
@@ -151,6 +151,16 @@
             this.ActionPanel.Size = new System.Drawing.Size(393, 364);
             this.ActionPanel.TabIndex = 1;
             // 
+            // ActionPromptLabel
+            // 
+            this.ActionPromptLabel.AutoSize = true;
+            this.ActionPromptLabel.ForeColor = System.Drawing.Color.Red;
+            this.ActionPromptLabel.Location = new System.Drawing.Point(3, 154);
+            this.ActionPromptLabel.Name = "ActionPromptLabel";
+            this.ActionPromptLabel.Size = new System.Drawing.Size(105, 13);
+            this.ActionPromptLabel.TabIndex = 10;
+            this.ActionPromptLabel.Text = "Generic Error Prompt";
+            // 
             // ActionShiftButton
             // 
             this.ActionShiftButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
@@ -191,10 +201,10 @@
             this.ActionModeRadioButton0.AutoSize = true;
             this.ActionModeRadioButton0.Location = new System.Drawing.Point(6, 5);
             this.ActionModeRadioButton0.Name = "ActionModeRadioButton0";
-            this.ActionModeRadioButton0.Size = new System.Drawing.Size(64, 17);
+            this.ActionModeRadioButton0.Size = new System.Drawing.Size(70, 17);
             this.ActionModeRadioButton0.TabIndex = 5;
             this.ActionModeRadioButton0.TabStop = true;
-            this.ActionModeRadioButton0.Text = "Relative";
+            this.ActionModeRadioButton0.Text = "Shift Only";
             this.ActionModeRadioButton0.UseVisualStyleBackColor = true;
             // 
             // ActionModeRadioButton1
@@ -202,10 +212,10 @@
             this.ActionModeRadioButton1.AutoSize = true;
             this.ActionModeRadioButton1.Location = new System.Drawing.Point(6, 28);
             this.ActionModeRadioButton1.Name = "ActionModeRadioButton1";
-            this.ActionModeRadioButton1.Size = new System.Drawing.Size(66, 17);
+            this.ActionModeRadioButton1.Size = new System.Drawing.Size(94, 17);
             this.ActionModeRadioButton1.TabIndex = 6;
             this.ActionModeRadioButton1.TabStop = true;
-            this.ActionModeRadioButton1.Text = "Absolute";
+            this.ActionModeRadioButton1.Text = "Copy and Shift";
             this.ActionModeRadioButton1.UseVisualStyleBackColor = true;
             // 
             // ActionShiftPanel2
@@ -436,16 +446,6 @@
             this.OptionLabel.Size = new System.Drawing.Size(61, 16);
             this.OptionLabel.TabIndex = 0;
             this.OptionLabel.Text = "Options";
-            // 
-            // ActionPromptLabel
-            // 
-            this.ActionPromptLabel.AutoSize = true;
-            this.ActionPromptLabel.ForeColor = System.Drawing.Color.Red;
-            this.ActionPromptLabel.Location = new System.Drawing.Point(3, 154);
-            this.ActionPromptLabel.Name = "ActionPromptLabel";
-            this.ActionPromptLabel.Size = new System.Drawing.Size(105, 13);
-            this.ActionPromptLabel.TabIndex = 10;
-            this.ActionPromptLabel.Text = "Generic Error Prompt";
             // 
             // ModelessForm
             // 
