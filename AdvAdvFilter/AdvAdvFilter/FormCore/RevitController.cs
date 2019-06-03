@@ -209,7 +209,7 @@
                 ViewType.EngineeringPlan,
                 ViewType.FloorPlan,
                 ViewType.CeilingPlan,
-                // ViewType.ThreeD,
+                ViewType.ThreeD,
                 ViewType.Elevation
             };
 
@@ -285,18 +285,21 @@
             foreach (ElementId id in allElements)
             {
                 Element e = this.doc.GetElement(id);
-                if (!selection.Contains(id))
+                if ((e as View) == null)
                 {
-                    if (e.CanBeHidden(view) && (!e.IsHidden(view)))
+                    if (!selection.Contains(id))
                     {
-                        hideIds.Add(id);
+                        if (e.CanBeHidden(view) && (!e.IsHidden(view)))
+                        {
+                            hideIds.Add(id);
+                        }
                     }
-                }
-                else
-                {
-                    if (e.IsHidden(view))
+                    else
                     {
-                        showIds.Add(id);
+                        if (e.IsHidden(view))
+                        {
+                            showIds.Add(id);
+                        }
                     }
                 }
             }
