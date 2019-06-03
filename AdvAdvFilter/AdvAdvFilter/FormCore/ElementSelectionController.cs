@@ -73,6 +73,8 @@
         private List<BranchTreeNode> categoryTypes;
         private List<LeafTreeNode> leafNodes;
 
+        private object treeLock = new object();
+
         #endregion
 
         #region Parameters
@@ -139,31 +141,35 @@
 
         public bool UpdateSelectedNodes(ICollection<ElementId> selected)
         {
-            List<ElementId> currSelection = selected.ToList<ElementId>();
             bool selectedChanged = false;
 
-            foreach (LeafTreeNode leaf in this.leafNodes)
+            lock (treeLock)
             {
-                if (selected.Contains(leaf.ElementId))
-                {
-                    if (!leaf.Checked)
-                    {
-                        leaf.Checked = true;
-                        UpdateAfterCheck(leaf);
-                        UpdateTotalSelectedItemsLabel();
+                List<ElementId> currSelection = selected.ToList<ElementId>();
 
-                        selectedChanged = true;
+                foreach (LeafTreeNode leaf in this.leafNodes)
+                {
+                    if (selected.Contains(leaf.ElementId))
+                    {
+                        if (!leaf.Checked)
+                        {
+                            leaf.Checked = true;
+                            UpdateAfterCheck(leaf);
+                            UpdateTotalSelectedItemsLabel();
+
+                            selectedChanged = true;
+                        }
                     }
-                }
-                else
-                {
-                    if (leaf.Checked)
+                    else
                     {
-                        leaf.Checked = false;
-                        UpdateAfterCheck(leaf);
-                        UpdateTotalSelectedItemsLabel();
+                        if (leaf.Checked)
+                        {
+                            leaf.Checked = false;
+                            UpdateAfterCheck(leaf);
+                            UpdateTotalSelectedItemsLabel();
 
-                        selectedChanged = true;
+                            selectedChanged = true;
+                        }
                     }
                 }
             }
@@ -324,15 +330,18 @@
                 typeof(ElementId)
             };
 
-            this.leafNodes.Clear();
+            lock (treeLock)
+            {
+                this.leafNodes.Clear();
 
-            UpdateLevel(elements, treeView.Nodes, rCon, updateList);
+                UpdateLevel(elements, treeView.Nodes, rCon, updateList);
 
-            SetupCategoryTypeNodes(treeView.Nodes);
+                SetupCategoryTypeNodes(treeView.Nodes);
 
-            SetupCheckedCounter(treeView.Nodes);
+                SetupCheckedCounter(treeView.Nodes);
 
-            UpdateTotalSelectedItemsLabel();
+                UpdateTotalSelectedItemsLabel();
+            }
         }
 
         /// <summary>

@@ -103,33 +103,38 @@
 
         #region Set conditions
 
-        public void HideUnselected()
+        public void HideUnselected(bool notUpdate = false)
         {
             this.actionCondition.hideUnselected = true;
+            if (notUpdate) return;
             this.actionQueue.Add(Request.SelectElementIds);
         }
 
-        public void ShowAll()
+        public void ShowAll(bool notUpdate = false)
         {
             this.actionCondition.hideUnselected = false;
+            if (notUpdate) return;
             this.actionQueue.Add(Request.SelectElementIds);
         }
 
-        public void FilterBySelection()
+        public void FilterBySelection(bool notUpdate = false)
         {
             this.actionCondition.filter = FilterMode.Selection;
+            if (notUpdate) return;
             this.actionQueue.Add(Request.UpdateTreeView);
         }
 
-        public void FilterByView()
+        public void FilterByView(bool notUpdate = false)
         {
             this.actionCondition.filter = FilterMode.View;
+            if (notUpdate) return;
             this.actionQueue.Add(Request.UpdateTreeView);
         }
 
-        public void FilterByProject()
+        public void FilterByProject(bool notUpdate = false)
         {
             this.actionCondition.filter = FilterMode.Project;
+            if (notUpdate) return;
             this.actionQueue.Add(Request.UpdateTreeView);
         }
 

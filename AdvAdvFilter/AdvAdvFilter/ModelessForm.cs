@@ -143,9 +143,6 @@
             // Execute method ModelessForm_FormClosed when the form is closing
             this.FormClosing += this.ModelessForm_FormClosed;
 
-            // Resume IdlingHandler
-            this.haltIdlingHandler = false;
-
         }
 
         private void ModelessForm_FormClosed(object sender, FormClosingEventArgs e)
@@ -157,9 +154,14 @@
 
         private void ModelessForm_Load(object sender, EventArgs e)
         {
+            // Stop IdlingHandler from executing during initialization
+            this.haltIdlingHandler = true;
+
             this.requestHandler.ResetAll();
 
             this.requestHandler.AddRequest(Request.UpdateTreeView);
+
+            this.requestHandler.AddRequest(Request.UpdateTreeViewSelection);
 
             // Set up Options
             List<System.EventHandler> visibilityHandler = new List<System.EventHandler>() { OptionVisibilityCheckBox_CheckedChanged };
@@ -175,11 +177,11 @@
             bool hideUnselected = this.optionController.GetVisibilityState();
             if (hideUnselected)
             {
-                requestHandler.HideUnselected();
+                requestHandler.HideUnselected(true);
             }
             else
             {
-                requestHandler.ShowAll();
+                requestHandler.ShowAll(true);
             }
 
             FilterMode filterMode = this.optionController.GetFilterState();
@@ -201,6 +203,8 @@
             // Set up actionController
             this.actionController.Reset();
 
+            // Resume IdlingHandler
+            this.haltIdlingHandler = false;
         }
 
         #endregion Essential Form Methods
