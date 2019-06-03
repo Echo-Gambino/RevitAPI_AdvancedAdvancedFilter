@@ -363,7 +363,6 @@
                 "Structural Framing",
                 "Generic Models",
                 "Stacked Walls",
-                "Curtain Panels",
                 "Walls",
                 "Floors"
             };
@@ -394,10 +393,6 @@
             int yValue = xyzValues[1];
             int zValue = xyzValues[2];
 
-            if (!shiftRelative) return;
-
-            // return; // This is just to make sure that the process gets to this code without any errors in code
-
             using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
             {
                 tran.Start();
@@ -406,41 +401,43 @@
 
                 if (shiftRelative)
                 {
-                    foreach (ElementId id in elementsToCopy)
+                    TaskDialog.Show("Debug", "copying and shifting!");
+                }
+
+                foreach (ElementId id in elementsToCopy)
+                {
+                    Element e = this.GetElement(id);
+
+                    Location eLoc = e.Location;
+                    if (eLoc == null)
                     {
-                        Element e = this.GetElement(id);
+                        TaskDialog.Show("Debug", "Error: No location found from element");
+                        transactionSuccessful = false;
+                        break;
+                    }
 
-                        Location eLoc = e.Location;
-                        if (eLoc == null)
-                        {
-                            TaskDialog.Show("Debug", "Error: No location found from element");
-                            transactionSuccessful = false;
-                            break;
-                        }
+                    LocationPoint ePoint = eLoc as LocationPoint;
+                    LocationCurve eCurve = eLoc as LocationCurve;
+                    if (ePoint != null)
+                    {
+                        TaskDialog.Show("Debug", "ePoint detected");
 
-                        LocationPoint ePoint = eLoc as LocationPoint;
-                        LocationCurve eCurve = eLoc as LocationCurve;
-                        if (ePoint != null)
-                        {
-                            TaskDialog.Show("Debug", "ePoint detected");
+                        SetPointPosition(e, xyzValues, shiftRelative);
+                    }
+                    else if (eCurve != null)
+                    {
+                        TaskDialog.Show("Debug", "eCurve detected");
 
-                            SetPointPosition(e, xyzValues, shiftRelative);
-                        }
-                        else if (eCurve != null)
-                        {
-                            TaskDialog.Show("Debug", "eCurve detected");
+                        SetCurvePosition(e, xyzValues, shiftRelative);
+                    }
+                    else
+                    {
+                        TaskDialog.Show("Debug", "Unknown detected");
 
-                            SetCurvePosition(e, xyzValues, shiftRelative);
-                        }
-                        else
-                        {
-                            TaskDialog.Show("Debug", "Unknown detected");
+                        SetUnknownPosition(e, xyzValues, shiftRelative);
 
-                            SetUnknownPosition(e, xyzValues, shiftRelative);
-
-                            //transactionSuccessful = false;
-                            break;
-                        }
+                        //transactionSuccessful = false;
+                        break;
                     }
                 }
 
@@ -457,7 +454,7 @@
             // ElementTransformUtils.CopyElements(this.doc, elementsToCopy, )
         }
 
-        public bool SetPointPosition(Element element, List<int> coords, bool shiftRelative)
+        public bool SetPointPosition(Element element, List<int> coords, bool copyAndShift)
         {
             // Get x, y, and z value (in feet and inches)
             double xValue = ConvertMM2FeetInch(coords[0]);
@@ -466,7 +463,26 @@
 
             // Apply the new x and y values
             XYZ newXY = new XYZ(xValue, yValue, 0);
-            ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            if (copyAndShift)
+            {
+                ICollection<ElementId> eId = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+                if (eId.Count == 0)
+                {
+                    TaskDialog.Show("Warning!",
+                       String.Format("Warning: SetPointPosition(...) attempted to " +
+                                   "copy and move from element {0} but failed.\n" +
+                                   "The command shall abort this command.",
+                                   element.Name));
+                    return false;
+                }
+                // Attempt to getelement from this
+                element = this.GetElement(eId.ToList()[0]);
+            }
+            else
+            {
+                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            }
+
 
             List<string> zParamNames = new List<string>()
             {
@@ -504,7 +520,7 @@
             return true;
         }
 
-        public bool SetCurvePosition(Element element, List<int> coords, bool shiftRelative)
+        public bool SetCurvePosition(Element element, List<int> coords, bool copyAndShift)
         {
             // Get x, y, and z value (in feet and inches)
             double xValue = ConvertMM2FeetInch(coords[0]);
@@ -513,8 +529,26 @@
 
             // Apply the new x and y values
             XYZ newXY = new XYZ(xValue, yValue, 0);
-            ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
-            // ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+            if (copyAndShift)
+            {
+                ICollection<ElementId> eId = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+                if (eId.Count == 0)
+                {
+                    TaskDialog.Show("Warning!",
+                       String.Format("Warning: SetPointPosition(...) attempted to " +
+                                   "copy and move from element {0} but failed.\n" +
+                                   "The command shall abort this command.",
+                                   element.Name));
+                    return false;
+                }
+                // Attempt to getelement from this
+                element = this.GetElement(eId.ToList()[0]);
+            }
+            else
+            {
+                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            }
+
 
             List<string> zParamNames = new List<string>()
             {
@@ -551,7 +585,7 @@
             return true;
         }
         
-        public bool SetUnknownPosition(Element element, List<int> coords, bool shiftRelative)
+        public bool SetUnknownPosition(Element element, List<int> coords, bool copyAndShift)
         {
             // Get x, y, and z value (in feet and inches)
             double xValue = ConvertMM2FeetInch(coords[0]);
@@ -560,8 +594,26 @@
 
             // Apply the new x and y values
             XYZ newXY = new XYZ(xValue, yValue, 0);
-            ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
-            // ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+
+            if (copyAndShift)
+            {
+                ICollection<ElementId> eId = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+                if (eId.Count == 0)
+                {
+                    TaskDialog.Show("Warning!",
+                       String.Format("Warning: SetPointPosition(...) attempted to " +
+                                   "copy and move from element {0} but failed.\n" +
+                                   "The command shall abort this command.",
+                                   element.Name));
+                    return false;
+                }
+                // Attempt to getelement from this
+                element = this.GetElement(eId.ToList()[0]);
+            }
+            else
+            {
+                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+            }
 
             List<string> zParamNames = new List<string>()
             {
