@@ -40,7 +40,6 @@
             this.Checked = status;
             return true;
         }
-
     }
 
     class LeafTreeNode : AdvTreeNode
@@ -159,7 +158,8 @@
                         {
                             leaf.Checked = true;
                             UpdateAfterCheck(leaf);
-                            UpdateTotalSelectedItemsLabel();
+                            // UpdateTotalSelectedItemsLabel();
+                            UpdateLabelTotals();
 
                             selectedChanged = true;
                         }
@@ -170,7 +170,8 @@
                         {
                             leaf.Checked = false;
                             UpdateAfterCheck(leaf);
-                            UpdateTotalSelectedItemsLabel();
+                            // UpdateTotalSelectedItemsLabel();
+                            UpdateLabelTotals();
 
                             selectedChanged = true;
                         }
@@ -210,7 +211,8 @@
                         {
                             leaf.Checked = !leaf.Checked;
                             UpdateAfterCheck(leaf);
-                            UpdateTotalSelectedItemsLabel();
+                            // UpdateTotalSelectedItemsLabel();
+                            UpdateLabelTotals();
                         }
                     }
                     else
@@ -219,7 +221,8 @@
                         {
                             leaf.Checked = !leaf.Checked;
                             UpdateAfterCheck(leaf);
-                            UpdateTotalSelectedItemsLabel();
+                            // UpdateTotalSelectedItemsLabel();
+                            UpdateLabelTotals();
                         }
                     }
                 }
@@ -342,9 +345,16 @@
 
                 SetupCategoryTypeNodes(treeView.Nodes);
 
-                SetupCheckedCounter(treeView.Nodes);
+                // SetupCheckedCounter(treeView.Nodes);
 
-                UpdateTotalSelectedItemsLabel();
+                foreach (AdvTreeNode node in treeView.Nodes)
+                {
+                    UpdateCounter(node);
+                }
+
+                // UpdateTotalSelectedItemsLabel();
+
+                UpdateLabelTotals();
             }
         }
 
@@ -509,130 +519,6 @@
         }
 
         #endregion
-
-        #region Update When Check
-
-        public void UpdateAfterCheck(AdvTreeNode e)
-        {
-            AdvTreeNode GetRoot(AdvTreeNode node)
-            {
-                AdvTreeNode tmpRoot = null;
-
-                if (node == null) return null;
-
-                tmpRoot = GetRoot(node.Parent as AdvTreeNode);
-
-                if (tmpRoot == null)
-                    tmpRoot = node;
-
-                return tmpRoot;
-            }
-
-            if (e == null)
-                return;
-
-            // Update their children if it has any
-            if (e.Nodes.Count > 0)
-                UpdateChildNodes(e, e.Checked);
-
-            // Update their parents if it has any
-            if (e.Parent != null)
-                UpdateParentNodes(e.Parent as AdvTreeNode, e.Checked);
-
-            AdvTreeNode root = GetRoot(e);
-
-            UpdateCheckedCounters(root);
-
-            return;
-        }
-
-        private void UpdateChildNodes(AdvTreeNode node, bool isChecked)
-        {
-            if (node == null)
-                return;
-
-            foreach (AdvTreeNode n in node.Nodes)
-            {
-                if (n.Checked == isChecked) continue;
-
-                // Update the status of n
-                n.Checked = isChecked;
-
-                // If n has children, then update them too
-                if (n.Nodes.Count > 0)
-                {
-                    UpdateChildNodes(n, isChecked);
-                }
-            }
-        }
-
-        private void UpdateParentNodes(AdvTreeNode parent, bool isChecked)
-        {
-            bool isAllChecked(TreeNodeCollection collection)
-            {
-                foreach (AdvTreeNode n in collection)
-                    if (!n.Checked) return false;
-                return true;
-            }
-
-            if (parent == null) return;
-
-            parent.Checked = isAllChecked(parent.Nodes);
-
-            // If parent's parent isn't null, continue the recursion up
-            if (parent.Parent != null)
-                UpdateParentNodes(parent.Parent as AdvTreeNode, isChecked);
-
-            return;
-        }
-
-        #endregion Update When Check
-
-        #region Update Counters
-
-        private int UpdateCheckedCounters(AdvTreeNode node)
-        {
-            int output = 0;
-
-            if (node.Name == "Instance")
-            {
-                if (node.Checked)
-                    output = 1;
-                else
-                    output = 0;
-            }
-            else
-            {
-                foreach (AdvTreeNode n in node.Nodes)
-                {
-                    output += UpdateCheckedCounters(n);
-                }
-
-                node.numCheckedLeafs = output;
-                node.UpdateCounter();
-
-            }
-
-            return output;
-        }
-
-        public void UpdateTotalSelectedItemsLabel()
-        {
-            int total = 0;
-            int max = 0;
-
-            TreeNodeCollection nodes = treeView.Nodes;
-
-            foreach (AdvTreeNode n in nodes)
-            {
-                total += UpdateCheckedCounters(n);
-                max += n.totalLeafs;
-            }
-
-            this.totalLabel.Text = string.Format("Total Selected Items: {0} / {1}", total, max);
-        }
-
-        #endregion Update Counters
 
         #region TMP STOW
 
@@ -918,9 +804,145 @@
 
         #endregion Collapse and Expand Nodes
 
-        // Update the treeView after a node had just been checked / unchecked
+        #region Update TreeView Upoun Check
 
-        // Update the counters for every node in treeView
+        public void UpdateAfterCheck(AdvTreeNode e)
+        {
+            AdvTreeNode GetRoot(AdvTreeNode node)
+            {
+                AdvTreeNode tmpRoot = null;
+
+                if (node == null) return null;
+
+                tmpRoot = GetRoot(node.Parent as AdvTreeNode);
+
+                if (tmpRoot == null)
+                    tmpRoot = node;
+
+                return tmpRoot;
+            }
+
+            if (e == null)
+                return;
+
+            // Update their children if it has any
+            if (e.Nodes.Count > 0)
+                UpdateChildNodes(e, e.Checked);
+
+            // Update their parents if it has any
+            if (e.Parent != null)
+                UpdateParentNodes(e.Parent as AdvTreeNode, e.Checked);
+
+            AdvTreeNode root = GetRoot(e);
+
+            // UpdateCheckedCounters(root);
+            UpdateCounter(root);
+
+            return;
+        }
+
+        private void UpdateChildNodes(AdvTreeNode node, bool isChecked)
+        {
+            if (node == null) return;
+
+            foreach (AdvTreeNode n in node.Nodes)
+            {
+                if (n.Checked == isChecked) continue;
+
+                // Update the status of n
+                n.Checked = isChecked;
+
+                // If n has children, then update them too
+                if (n.Nodes.Count > 0)
+                {
+                    UpdateChildNodes(n, isChecked);
+                }
+            }
+        }
+
+        private void UpdateParentNodes(AdvTreeNode parent, bool isChecked)
+        {
+            bool isAllChecked(TreeNodeCollection collection)
+            {
+                foreach (AdvTreeNode n in collection)
+                    if (!n.Checked) return false;
+                return true;
+            }
+
+            if (parent == null) return;
+
+            parent.Checked = isAllChecked(parent.Nodes);
+
+            // If parent's parent isn't null, continue the recursion up
+            if (parent.Parent != null)
+                UpdateParentNodes(parent.Parent as AdvTreeNode, isChecked);
+
+            return;
+        }
+
+
+        #endregion Update TreeView Upoun Check
+
+        #region Update Selected Node Count
+        
+        /// <summary>
+        /// Update the given node's selection counter along with their children as well.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public int UpdateCounter(AdvTreeNode node)
+        {
+            TreeNodeCollection collection = node.Nodes;
+            int numberChecked = 0;
+            
+            // If collection.Count == 0, then that must mean that this is a leaf node
+            if (collection.Count == 0)
+            {
+                // If node is checked set numberChecked = 1 instead of leaving it equal 0
+                if (node.Checked)
+                    numberChecked = 1;
+                return numberChecked;
+            }
+
+            // For each AdvTreeNode in the collection
+            foreach (AdvTreeNode n in collection)
+            {
+                // Add up the number of checked elements with a recursive call
+                numberChecked += UpdateCounter(n);
+            }
+
+            // Set the total elements selected (numberChecked) to numCheckedLeafs
+            node.numCheckedLeafs = numberChecked;
+            // Update the node's counter
+            node.UpdateCounter();
+
+            // Pass the total up to the caller
+            return numberChecked;
+        }
+
+        /// <summary>
+        /// Updates this.totalLabel to show the user how many elements are
+        /// selected out of the total elements in the treeView.
+        /// </summary>
+        public void UpdateLabelTotals()
+        {
+            TreeNodeCollection collection = treeView.Nodes;
+
+            int total = 0;
+            int max = 0;
+
+            // For each node in the collection, update tally up the checked and maximum checked leaves
+            foreach (AdvTreeNode node in collection)
+            {
+                total += node.numCheckedLeafs;
+                max += node.totalLeafs;
+            }
+
+            // Update totoallabel's text
+            this.totalLabel.Text = string.Format("Total Selected Items: {0} / {1}", total, max);
+        }
+
+        #endregion Update Selected Node Count
 
         // Update the total selected items label
 

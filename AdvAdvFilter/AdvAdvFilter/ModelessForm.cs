@@ -241,7 +241,9 @@
 
             selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
 
-            selectionController.UpdateTotalSelectedItemsLabel();
+            // selectionController.UpdateTotalSelectedItemsLabel();
+
+            selectionController.UpdateLabelTotals();
 
             requestHandler.AddRequest(Request.SelectElementIds);
 
