@@ -473,39 +473,6 @@
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="branch"></param>
-        public void ToggleCollapse(BranchTreeNode branch)
-        {
-            TreeNodeCollection subBranches = branch.Nodes;
-
-            bool allCollapsed = true;
-
-            foreach (AdvTreeNode sub in subBranches)
-            {
-                if (sub.IsExpanded)
-                {
-                    allCollapsed = false;
-                    break;
-                }
-            }
-
-            if (allCollapsed)
-            {
-                branch.ExpandAll();
-            }
-            else
-            {
-                foreach (AdvTreeNode sub in subBranches)
-                {
-                    sub.Collapse();
-                }
-            }
-
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="nodes"></param>
         /// <returns></returns>
         private int SetupCheckedCounter(TreeNodeCollection nodes)
@@ -902,6 +869,84 @@
         }
 
         #endregion
+
+        #region Functions
+
+        #region Collapse and Expand Nodes
+
+        /// <summary>
+        /// If the children of the branch is all collapsed, expand all the children.
+        /// else, collapse all the children
+        /// </summary>
+        /// <param name="branch"></param>
+        public void ToggleCollapse(BranchTreeNode branch)
+        {
+            // Returns true if every node in the collection is collapsed, else return false
+            bool AllCollapsed(TreeNodeCollection collection)
+            {
+                foreach (AdvTreeNode node in collection)
+                    if (node.IsExpanded) return false;
+                return true;
+            }
+
+            TreeNodeCollection children = branch.Nodes;
+
+            if (AllCollapsed(children))
+            {
+                // Expand all nodes under the branch
+                branch.ExpandAll();
+            }
+            else
+            {
+                // Individually collapse each child (without collapsing branch node)
+                foreach (AdvTreeNode node in children)
+                    node.Collapse();
+            }
+        }
+
+        /// <summary>
+        /// C
+        /// </summary>
+        /// <param name="children"></param>
+        /// <returns></returns>
+        public bool AllChildrenCollapsed(TreeNodeCollection children)
+        {
+            foreach (AdvTreeNode node in children)
+                if (node.IsExpanded) return false;
+            return true;
+        }
+
+        #endregion Collapse and Expand Nodes
+
+        // Update the treeView after a node had just been checked / unchecked
+
+        // Update the counters for every node in treeView
+
+        // Update the total selected items label
+
+        // Update TreeView Structure
+
+        #endregion Functions
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    class TreeStructure
+    {
+        #region Data
+
+        // TreeView data structure
+
+        #endregion Data
+
+        #region Functions
+
+        // Get 
+
+
+        #endregion Functions
 
     }
 
