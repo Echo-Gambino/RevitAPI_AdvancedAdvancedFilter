@@ -142,46 +142,6 @@
             return output;
         }
 
-        public bool UpdateSelectedNodes(ICollection<ElementId> selected)
-        {
-            bool selectedChanged = false;
-
-            lock (treeLock)
-            {
-                List<ElementId> currSelection = selected.ToList<ElementId>();
-
-                foreach (LeafTreeNode leaf in this.leafNodes)
-                {
-                    if (selected.Contains(leaf.ElementId))
-                    {
-                        if (!leaf.Checked)
-                        {
-                            leaf.Checked = true;
-                            UpdateAfterCheck(leaf);
-                            // UpdateTotalSelectedItemsLabel();
-                            UpdateLabelTotals();
-
-                            selectedChanged = true;
-                        }
-                    }
-                    else
-                    {
-                        if (leaf.Checked)
-                        {
-                            leaf.Checked = false;
-                            UpdateAfterCheck(leaf);
-                            // UpdateTotalSelectedItemsLabel();
-                            UpdateLabelTotals();
-
-                            selectedChanged = true;
-                        }
-                    }
-                }
-            }
-
-            return selectedChanged;
-        }
-
         public bool UpdateSelectedLeaves(ICollection<ElementId> selected)
         {
             bool updateSuccess = true;
@@ -233,6 +193,7 @@
             return updateSuccess;
         }
 
+        // TODO: should probably move this to datacontroller.
         /// <summary>
         /// 
         /// </summary>
@@ -251,75 +212,6 @@
         }
 
         #endregion Selected Elements
-
-        #region Unused Functions
-
-        public List<TreeNode> ToList(TreeNodeCollection collection)
-        {
-            List<TreeNode> list = new List<TreeNode>();
-
-            foreach (TreeNode node in collection)
-                list.Add(node);
-
-            return list;
-        }
-
-        public void ResetView()
-        {
-            this.categoryTypes = GetCategoryNodes();
-
-            foreach (BranchTreeNode node in this.categoryTypes)
-            {
-                if (!node.IsExpanded)
-                    node.Expand();
-                node.Collapse();
-                node.isAllCollapsed = true;
-            }
-            return;
-        }
-
-        public List<BranchTreeNode> GetCategoryNodes()
-        {
-            TreeNodeCollection collection = this.treeView.Nodes;
-            List<TreeNode> nodeList = this.ToList(collection);
-
-            List<BranchTreeNode> output = new List<BranchTreeNode>();
-
-            foreach (TreeNode node in nodeList)
-            {
-                if (node is BranchTreeNode cNode)
-                    output.Add(cNode);
-            }
-
-            return output;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="elements"></param>
-        /// <returns></returns>
-        private List<LeafTreeNode> GetNewLeafNodes(List<ElementId> elements)
-        {
-            List<LeafTreeNode> output = null;
-
-            if (elements == null)
-                return output;
-
-            output = new List<LeafTreeNode>();
-
-            LeafTreeNode leaf = null;
-            foreach (ElementId i in elements)
-            {
-                leaf = new LeafTreeNode();
-                leaf.ElementId = i;
-                output.Add(leaf);
-            }
-
-            return output;
-        }
-
-        #endregion Unused Functions
 
         #region UpdateTreeView
 
@@ -522,240 +414,6 @@
 
         #endregion
 
-        #region TMP STOW
-
-        public void SetLeafTreeNode(List<ElementId> elements)
-        {
-            if (this.leafNodes == null)
-                this.leafNodes = new List<LeafTreeNode>();
-
-            IEnumerable<ElementId> newElementIds;
-
-            if (this.leafNodes.Count != 0)
-            {
-                IEnumerable<LeafTreeNode> nodesWithValidElements
-                        = from LeafTreeNode node in this.leafNodes
-                          where elements.Contains(node.ElementId)
-                          select node;
-
-                IEnumerable<ElementId> leafNodeElementIds
-                        = from LeafTreeNode node in this.leafNodes
-                          select node.ElementId;
-
-                newElementIds
-                        = from ElementId eId in elements
-                          where (!leafNodeElementIds.Contains<ElementId>(eId))
-                          select eId;
-            }
-            else
-            {
-                newElementIds = elements;
-            }
-
-            LeafTreeNode newNode = null;
-
-            foreach (ElementId eId in newElementIds)
-            {
-                newNode = new LeafTreeNode();
-                newNode.ElementId = eId;
-                this.leafNodes.Add(newNode);
-            }
-        }
-
-        public void BuildTreeView()
-        {
-            TreeNodeCollection nodes = this.TreeView.Nodes;
-            nodes.Clear();
-
-            if (this.leafNodes == null)
-                return;
-
-            foreach (LeafTreeNode n in this.leafNodes)
-            {
-                nodes.Add(n);
-            }
-
-        }
-
-        public void TestSomething()
-        {
-            foreach (LeafTreeNode n in this.leafNodes)
-            {
-                if (n.Checked)
-                    n.Checked = false;
-                else
-                    n.Checked = true;
-            }
-        }
-
-        public void SetElementsToTreeView(List<Element> elements, Document doc)
-        {
-            string getTXT(Element e)
-            {               
-                string txt = "";
-                try
-                {
-                    txt += CommonMethods.GetElementCategory(e, doc) + " / ";
-                    txt += CommonMethods.GetElementFamily(e, doc) + " / ";
-                    txt += CommonMethods.GetElementType(e) + " / ";
-                    txt += CommonMethods.GetElementInstanceId(e);
-                }
-                catch (Exception ex)
-                {
-                    txt = ex.Message;
-                }
-
-                return txt;
-            }
-
-            bool isNodeInElements(string name)
-            {
-                foreach (Element e in elements)
-                {
-
-                    if (name == getTXT(e))
-                        return true;
-                }
-                return false;
-            }
-
-            TreeNodeCollection nodes = treeView.Nodes;
-
-            IEnumerable<TreeNode> nodesInElements
-                        = from TreeNode n in nodes
-                          where isNodeInElements(n.Text)
-                          select n;
-
-            if (nodesInElements.Count<TreeNode>() == elements.Count)
-                return;
-
-            nodes.Clear();
-
-            foreach (Element e in elements)
-            {
-                // string txt = e.Category.Name;
-                string txt = getTXT(e);
-
-                TreeNode n = new TreeNode();
-                n.Name = txt;
-                n.Text = txt;
-                nodes.Add(n);
-            }
-
-        }
-
-
-        public List<TreeNode> GetListOfCheckedLeaves(TreeNodeCollection collection)
-        {
-            return GetLeaves(collection, true);
-        }
-
-        public List<TreeNode> GetListOfAllLeaves(TreeNodeCollection collection)
-        {
-            return GetLeaves(collection, false);
-        }
-
-        public int GetNumberOfCheckedLeafs(TreeNodeCollection collection)
-        {
-            List<TreeNode> checkedLeaves = GetListOfCheckedLeaves(collection);
-            return checkedLeaves.Count;
-        }
-
-        #endregion
-
-        #endregion
-
-        #region PrivateMethods
-
-        private string getElementCategory(Element element)
-        {
-            string txt = element.Category.Name;
-            return txt;
-        }
-
-        private string getElementFamily(Element element)
-        {
-            string txt = "\t\t";
-
-            FamilyInstance famInst = element as FamilyInstance;
-            if (famInst != null)
-            {
-                Family fam = famInst.Symbol.Family;
-                txt = fam.Name;
-            }
-            else
-            {
-                Autodesk.Revit.DB.ElementId eType = element.GetTypeId();
-                //Autodesk.Revit.DB.ElementType type =
-                //Type eType = element.GetType();
-                //txt = eType.Name;
-                txt = "idk";
-            }
-
-            return txt;
-        }
-
-        private string getElementType(Element element)
-        {
-            string txt = element.Name;
-            return txt;
-        }
-
-        private string getElementInstanceId(Element element)
-        {
-            string txt = element.UniqueId;
-            return txt;
-        }
-
-        private List<TreeNode> ElementsToNodes(List<Element> elements)
-        {
-            List<TreeNode> categories = new List<TreeNode>();
-
-            foreach (Element e in elements)
-            {
-                TreeNode node = new TreeNode();
-                Category category = e.Category;
-
-                node.Name = category.Name;
-                node.Text = category.Name;
-
-                categories.Add(node);
-            }
-
-            return categories;
-        }
-        
-        private List<TreeNode> GetLeaves(TreeNodeCollection collection, bool pickChecked)
-        {
-            // Get a new empty list
-            List<TreeNode> allLeaves = new List<TreeNode>();
-
-            foreach (TreeNode node in collection)
-            {
-                // if node doesn't have any children (leaf node)...
-                if (node.Nodes.Count == 0)
-                {
-                    // if the method is only selecting checked nodes and
-                    // the node isn't check, continue onto the next node
-                    if (pickChecked && (!node.Checked))
-                        continue;
-                    // Add the node onto the list
-                    allLeaves.Add(node);
-                }
-                // if the node has children (non-leaf node)...
-                else
-                {
-                    // Recurse down, with node.Nodes being the collection to be evaluated
-                    List<TreeNode> Leaves = this.GetLeaves(node.Nodes, pickChecked);
-                    // Add Leaves onto allLeaves
-                    allLeaves = (allLeaves.Concat(Leaves)).ToList<TreeNode>();
-                }
-            }
-
-            // Pass allLeaves up as a return
-            return allLeaves;
-        }
-
         #endregion
 
         #region Functions
@@ -790,18 +448,6 @@
                 foreach (AdvTreeNode node in children)
                     node.Collapse();
             }
-        }
-
-        /// <summary>
-        /// C
-        /// </summary>
-        /// <param name="children"></param>
-        /// <returns></returns>
-        public bool AllChildrenCollapsed(TreeNodeCollection children)
-        {
-            foreach (AdvTreeNode node in children)
-                if (node.IsExpanded) return false;
-            return true;
         }
 
         #endregion Collapse and Expand Nodes
@@ -949,7 +595,6 @@
 
         #endregion Update Selected Node Count
 
-        // Update TreeView Structure
         #region Update TreeView Structure
 
 
