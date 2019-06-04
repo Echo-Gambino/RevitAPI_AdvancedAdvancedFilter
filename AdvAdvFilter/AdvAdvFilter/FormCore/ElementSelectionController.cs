@@ -186,48 +186,50 @@
         {
             bool updateSuccess = true;
 
-            IEnumerable<ElementId> leafNodeElementIds
-                        = from LeafTreeNode leaf in this.leafNodes
-                            select leaf.ElementId;
-
-            foreach (ElementId elementId in selected)
+            lock (treeLock)
             {
-                // If the leaf node doesn't exist in the selected elementIds,
-                // Then the leafNodes are outdated and the update won't work
-                if (!leafNodeElementIds.Contains(elementId))
-                {
-                    updateSuccess = false;
-                    break;
-                }
-            }
+                IEnumerable<ElementId> leafNodeElementIds
+                            = from LeafTreeNode leaf in this.leafNodes
+                              select leaf.ElementId;
 
-            if (updateSuccess)
-            {
-                foreach (LeafTreeNode leaf in this.leafNodes)
+                foreach (ElementId elementId in selected)
                 {
-                    if (selected.Contains(leaf.ElementId))
+                    // If the leaf node doesn't exist in the selected elementIds,
+                    // Then the leafNodes are outdated and the update won't work
+                    if (!leafNodeElementIds.Contains(elementId))
                     {
-                        if (!leaf.Checked)
-                        {
-                            leaf.Checked = !leaf.Checked;
-                            UpdateAfterCheck(leaf);
-                            // UpdateTotalSelectedItemsLabel();
-                            UpdateLabelTotals();
-                        }
-                    }
-                    else
-                    {
-                        if (leaf.Checked)
-                        {
-                            leaf.Checked = !leaf.Checked;
-                            UpdateAfterCheck(leaf);
-                            // UpdateTotalSelectedItemsLabel();
-                            UpdateLabelTotals();
-                        }
+                        updateSuccess = false;
+                        break;
                     }
                 }
-            }
 
+                if (updateSuccess)
+                {
+                    foreach (LeafTreeNode leaf in this.leafNodes)
+                    {
+                        if (selected.Contains(leaf.ElementId))
+                        {
+                            if (!leaf.Checked)
+                            {
+                                leaf.Checked = !leaf.Checked;
+                                UpdateAfterCheck(leaf);
+                                // UpdateTotalSelectedItemsLabel();
+                                UpdateLabelTotals();
+                            }
+                        }
+                        else
+                        {
+                            if (leaf.Checked)
+                            {
+                                leaf.Checked = !leaf.Checked;
+                                UpdateAfterCheck(leaf);
+                                // UpdateTotalSelectedItemsLabel();
+                                UpdateLabelTotals();
+                            }
+                        }
+                    }
+                }
+            }
             return updateSuccess;
         }
 
@@ -825,18 +827,21 @@
             if (e == null)
                 return;
 
-            // Update their children if it has any
-            if (e.Nodes.Count > 0)
-                UpdateChildNodes(e, e.Checked);
+            lock (treeLock)
+            {
+                // Update their children if it has any
+                if (e.Nodes.Count > 0)
+                    UpdateChildNodes(e, e.Checked);
 
-            // Update their parents if it has any
-            if (e.Parent != null)
-                UpdateParentNodes(e.Parent as AdvTreeNode, e.Checked);
+                // Update their parents if it has any
+                if (e.Parent != null)
+                    UpdateParentNodes(e.Parent as AdvTreeNode, e.Checked);
 
-            AdvTreeNode root = GetRoot(e);
+                AdvTreeNode root = GetRoot(e);
 
-            // UpdateCheckedCounters(root);
-            UpdateCounter(root);
+                // UpdateCheckedCounters(root);
+                UpdateCounter(root);
+            }
 
             return;
         }
@@ -944,9 +949,12 @@
 
         #endregion Update Selected Node Count
 
-        // Update the total selected items label
-
         // Update TreeView Structure
+        #region Update TreeView Structure
+
+
+
+        #endregion Update TreeView Structure
 
         #endregion Functions
 
