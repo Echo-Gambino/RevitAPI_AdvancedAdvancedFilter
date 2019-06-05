@@ -227,6 +227,11 @@
 
         #region Update TreeView Structure
 
+        /// <summary>
+        /// Updates the treeView's structure
+        /// </summary>
+        /// <param name="newElementIds"></param>
+        /// <param name="rCon"></param>
         public void UpdateTreeViewStructure(
             List<ElementId> newElementIds,
             RevitController rCon
@@ -267,6 +272,13 @@
 
         #region TreeNode Removal
 
+        /// <summary>
+        /// Removes the nodes from leafNodes and all branch nodes if all
+        /// their children was removed as a consequence to this.
+        /// </summary>
+        /// <param name="leafNodes"></param>
+        /// <param name="treeNodes"></param>
+        /// <param name="heirarchy"></param>
         private void TreeStructureRem(
             List<LeafTreeNode> leafNodes,
             TreeNodeCollection treeNodes,
@@ -349,11 +361,19 @@
             return;
         }
 
+        /// <summary>
+        /// Removes leaf nodes in the argument leafNodes from TreeNodeCollection treeNodes
+        /// and keeps the integrity of tree struture by removing branch nodes that do not
+        /// have any leafNodes below it
+        /// </summary>
+        /// <param name="leafNodes"></param>
+        /// <param name="treeNodes"></param>
         private void RemLeafNodes(
             List<LeafTreeNode> leafNodes,
             TreeNodeCollection treeNodes
             )
         {
+            // Gives the method an early out if there are no leafNodes to be added
             if (leafNodes.Count == 0) return;
 
             List<string> heirarchy = new List<string>()
@@ -364,25 +384,36 @@
                 "ElementType"
             };
 
+            // Call the recursive method UpdateTreeStructure
             TreeStructureRem(leafNodes, treeNodes, heirarchy);
         }
 
+        /// <summary>
+        /// From this.leafNodes, get a sub-list of leafNodes that has
+        /// the elementIds of IEnumberable elementIds
+        /// </summary>
+        /// <param name="elementIds"></param>
+        /// <returns></returns>
         private List<LeafTreeNode> RetrieveLeafNodes(
             IEnumerable<ElementId> elementIds)
         {
             List<LeafTreeNode> retrievedLeaves;
 
+            // Gets IEnumerable<LeafTreeNode> using a LINQ statement
             IEnumerable<LeafTreeNode> leavesToRemove
                 = from LeafTreeNode in this.leafNodes
                   where elementIds.Contains(LeafTreeNode.ElementId)
                   select LeafTreeNode;
 
+            // If resulting LINQ statement is null...
             if (leavesToRemove == null)
             {
+                // Set retrievedLeaves to a new list
                 retrievedLeaves = new List<LeafTreeNode>();
             }
             else
             {
+                // Set retrievedLeaves to be leavesToRemove but in a List
                 retrievedLeaves = leavesToRemove.ToList();
             }
 
@@ -533,6 +564,13 @@
             return leafNodesList;
         }
 
+        /// <summary>
+        /// Using the argument element and elementType, create a leafTreeNode
+        /// and fill its parameters using the given information
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="elementType"></param>
+        /// <returns></returns>
         private LeafTreeNode ConstructLeafNode(
             Element element,
             ElementType elementType
