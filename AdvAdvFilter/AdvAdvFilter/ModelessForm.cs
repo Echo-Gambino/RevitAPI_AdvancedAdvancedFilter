@@ -449,7 +449,8 @@
                             // Update the treeView element within the form
                             this.BeginInvoke(new Action(() =>
                             {
-                                selectionController.UpdateTreeView(dataController.AllElements, revitController);
+                                // selectionController.UpdateTreeView(dataController.AllElements, revitController);
+                                selectionController.UpdateTreeViewStructure(dataController.AllElements, revitController);
                             }));
 
                             break;
@@ -498,8 +499,7 @@
                             List<int> coords = dataController.Coords;
                             bool copyAndShift = dataController.CopyAndShift;
 
-                            TaskDialog.Show("Debug", "I made it to the execution phase!");
-                            // Do Successful thing
+                            // Copy and Move the Elements
                             revitController.CopyAndMoveElements(movElementIds, coords, copyAndShift);
 
                             break;
