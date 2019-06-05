@@ -279,6 +279,11 @@
                 RemLeafNodes(leafNodesToRem, this.treeView.Nodes);
                 // Update the category nodes
                 UpdateCategoryTypeNodes(this.treeView.Nodes);
+                // Update counter (not efficient!)
+                foreach (AdvTreeNode root in this.treeView.Nodes)
+                {
+                    UpdateCounter(root);
+                }
                 // Tally up the totals to be put on selection label
                 UpdateLabelTotals();
             }
