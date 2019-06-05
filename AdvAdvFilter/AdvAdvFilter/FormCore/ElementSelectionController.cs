@@ -6,6 +6,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using System.Windows.Forms;
+    using System.Drawing;
 
     using Element = Autodesk.Revit.DB.Element;
     using ElementId = Autodesk.Revit.DB.ElementId;
@@ -21,6 +22,9 @@
         public int totalLeafs;
         public string realText;
 
+        private Font regularFont;
+        private Font boldFont;
+
         public AdvTreeNode()
         {
             this.numCheckedLeafs = 0;
@@ -28,18 +32,23 @@
         }
 
         public string UpdateCounter()
-        {
+        {            
             this.Text = string.Format("[ {0}/{1} ] {2}", this.numCheckedLeafs, this.totalLeafs, this.realText);
             return this.Text;
         }
 
-        public bool UpdateIsChecked(bool status)
+        public void SelfDeterminedCheck()
         {
-            if (this.Checked == status)
-                return false;
-            this.Checked = status;
-            return true;
+            if (this.numCheckedLeafs >= this.totalLeafs)
+            {
+                this.Checked = true;
+            }
+            else
+            {
+                this.Checked = false;
+            }
         }
+
     }
 
     class LeafTreeNode : AdvTreeNode
@@ -154,7 +163,7 @@
     {
         public bool isAllCollapsed;
 
-        public BranchTreeNode()
+        public BranchTreeNode() 
         {
             this.isAllCollapsed = true;
         }
@@ -240,34 +249,39 @@
             if ((newElementIds == null) || (rCon == null))
                 throw new ArgumentNullException();
 
-            /// Get information that will be needed to perform the necessary actions
-            // Get list of old elementIds
-            IEnumerable<ElementId> oldElementIds
-                = from LeafTreeNode leaf in this.leafNodes
-                  select leaf.ElementId;
-            // Get list of elements to add onto the treeView
-            IEnumerable<ElementId> addList
-                = from ElementId eId in newElementIds
-                  where (!oldElementIds.Contains(eId))
-                  select eId;
-            // Get list of elementIds to remove from the treeView
-            IEnumerable<ElementId> remList
-                = from ElementId eId in oldElementIds
-                  where (!newElementIds.Contains(eId))
-                  select eId;
+            lock (treeLock)
+            {
+                /// Get information that will be needed to perform the necessary actions
+                // Get list of old elementIds
+                IEnumerable<ElementId> oldElementIds
+                    = from LeafTreeNode leaf in this.leafNodes
+                      select leaf.ElementId;
+                // Get list of elements to add onto the treeView
+                IEnumerable<ElementId> addList
+                    = from ElementId eId in newElementIds
+                      where (!oldElementIds.Contains(eId))
+                      select eId;
+                // Get list of elementIds to remove from the treeView
+                IEnumerable<ElementId> remList
+                    = from ElementId eId in oldElementIds
+                      where (!newElementIds.Contains(eId))
+                      select eId;
 
-            // Get list of leafNodes to add onto treeView using addList
-            List<LeafTreeNode> leafNodesToAdd = ConstructLeafNodeList(addList, rCon);
-            // Get list of leafNodes to remove from treeView using remList
-            List<LeafTreeNode> leafNodesToRem = RetrieveLeafNodes(remList);
+                // Get list of leafNodes to add onto treeView using addList
+                List<LeafTreeNode> leafNodesToAdd = ConstructLeafNodeList(addList, rCon);
+                // Get list of leafNodes to remove from treeView using remList
+                List<LeafTreeNode> leafNodesToRem = RetrieveLeafNodes(remList);
 
-            /// Execute actions that will modify the treeView
-            // Selectively add leaf nodes into the treeView without scrapping everything
-            AddLeafNodes(leafNodesToAdd, this.treeView.Nodes);
-            // Selectively remove leafnodes in the treeView
-            RemLeafNodes(leafNodesToRem, this.treeView.Nodes);
-            // Update the category nodes
-            UpdateCategoryTypeNodes(this.treeView.Nodes);
+                /// Execute actions that will modify the treeView
+                // Selectively add leaf nodes into the treeView without scrapping everything
+                AddLeafNodes(leafNodesToAdd, this.treeView.Nodes);
+                // Selectively remove leafnodes in the treeView
+                RemLeafNodes(leafNodesToRem, this.treeView.Nodes);
+                // Update the category nodes
+                UpdateCategoryTypeNodes(this.treeView.Nodes);
+                // Tally up the totals to be put on selection label
+                UpdateLabelTotals();
+            }
         }
 
         #region TreeNode Removal
@@ -630,6 +644,21 @@
 
         #endregion Update TreeView Structure
 
+        #region Refresh Selection
+        /*
+        public void RefreshSelection(TreeNodeCollection treeNodes)
+        {
+            foreach (BranchTreeNode branch in treeNodes)
+            {
+                
+
+            }
+
+            return;
+        }
+        */
+        #endregion Refresh Selection
+
         #region Collapse and Expand Nodes
 
         /// <summary>
@@ -647,18 +676,21 @@
                 return true;
             }
 
-            TreeNodeCollection children = branch.Nodes;
+            lock (treeLock)
+            {
+                TreeNodeCollection children = branch.Nodes;
 
-            if (AllCollapsed(children))
-            {
-                // Expand all nodes under the branch
-                branch.ExpandAll();
-            }
-            else
-            {
-                // Individually collapse each child (without collapsing branch node)
-                foreach (AdvTreeNode node in children)
-                    node.Collapse();
+                if (AllCollapsed(children))
+                {
+                    // Expand all nodes under the branch
+                    branch.ExpandAll();
+                }
+                else
+                {
+                    // Individually collapse each child (without collapsing branch node)
+                    foreach (AdvTreeNode node in children)
+                        node.Collapse();
+                }
             }
         }
 
@@ -815,15 +847,21 @@
         public List<ElementId> GetSelectedElementIds()
         {
             List<ElementId> output = null;
+            List<LeafTreeNode> leafNodes = null;
             int max = 5;
 
             while (max > 0)
             {
+                lock (treeLock)
+                {
+                    leafNodes = this.leafNodes;
+                }
+
                 max -= 1;
                 try
                 {
                     IEnumerable<ElementId> selected
-                                = from LeafTreeNode leaf in this.leafNodes
+                                = from LeafTreeNode leaf in leafNodes
                                   where leaf.Checked
                                   select leaf.ElementId;
                     output = selected.ToList<ElementId>();
@@ -852,44 +890,61 @@
         /// <returns></returns>
         public int UpdateCounter(AdvTreeNode node)
         {
-            TreeNodeCollection collection = node.Nodes;
+            TreeNodeCollection collection = null;
             int numberChecked = 0;
-            
-            // If collection.Count == 0, then that must mean that this is a leaf node
-            if (collection.Count == 0)
-            {
-                // If node is checked set numberChecked = 1 instead of leaving it equal 0
-                if (node.Checked)
-                    numberChecked = 1;
-                return numberChecked;
-            }
 
-            // For each AdvTreeNode in the collection
-            foreach (AdvTreeNode n in collection)
+            lock (treeLock)
             {
-                // Add up the number of checked elements with a recursive call
-                numberChecked += UpdateCounter(n);
-            }
+                collection = node.Nodes;
 
-            // Set the total elements selected (numberChecked) to numCheckedLeafs
-            node.numCheckedLeafs = numberChecked;
-            // Update the node's counter
-            node.UpdateCounter();
+                // If collection.Count == 0, then that must mean that this is a leaf node
+                if (collection.Count == 0)
+                {
+                    // If node is checked set numberChecked = 1 instead of leaving it equal 0
+                    if (node.Checked)
+                        numberChecked = 1;
+                    return numberChecked;
+                }
+
+                // For each AdvTreeNode in the collection
+                foreach (AdvTreeNode n in collection)
+                {
+                    // Add up the number of checked elements with a recursive call
+                    numberChecked += UpdateCounter(n);
+                }
+
+                // Set the total elements selected (numberChecked) to numCheckedLeafs
+                node.numCheckedLeafs = numberChecked;                
+                // Update the node's counter
+                node.UpdateCounter();
+                // If all of their the node's children are checked, then check itself, else uncheck
+                node.SelfDeterminedCheck();
+            }
 
             // Pass the total up to the caller
             return numberChecked;
+        }
+
+        public void UpdateTotals()
+        {
+            lock (treeLock)
+            {
+                UpdateLabelTotals();
+            }
         }
 
         /// <summary>
         /// Updates this.totalLabel to show the user how many elements are
         /// selected out of the total elements in the treeView.
         /// </summary>
-        public void UpdateLabelTotals()
+        private void UpdateLabelTotals()
         {
-            TreeNodeCollection collection = treeView.Nodes;
+            TreeNodeCollection collection = null;
 
             int total = 0;
             int max = 0;
+
+            collection = treeView.Nodes;
 
             // For each node in the collection, update tally up the checked and maximum checked leaves
             foreach (AdvTreeNode node in collection)

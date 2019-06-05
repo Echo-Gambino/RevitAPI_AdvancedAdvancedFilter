@@ -224,7 +224,7 @@
 
             if (branch != null)
             {
-                if (branch.Name == "System.String") // This is for "CategoryType" Only
+                if (branch.Parent == null) // This is for "CategoryType" Only
                 {
                     selectionController.ToggleCollapse(branch);
                     e.Cancel = true;
@@ -243,7 +243,7 @@
 
             // selectionController.UpdateTotalSelectedItemsLabel();
 
-            selectionController.UpdateLabelTotals();
+            selectionController.UpdateTotals();
 
             requestHandler.AddRequest(Request.SelectElementIds);
 
