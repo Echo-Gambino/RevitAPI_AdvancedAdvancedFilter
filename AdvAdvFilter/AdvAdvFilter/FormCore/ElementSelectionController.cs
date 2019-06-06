@@ -456,7 +456,8 @@
                 }
                 return;
             }
-
+            HashSet<LeafTreeNode> leafHash = new HashSet<LeafTreeNode>();
+            
             SortedDictionary<string, List<LeafTreeNode>> grouping = new SortedDictionary<string, List<LeafTreeNode>>();
             string paramName = heirarchy[0];
 

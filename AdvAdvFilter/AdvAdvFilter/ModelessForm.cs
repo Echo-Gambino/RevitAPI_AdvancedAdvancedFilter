@@ -577,7 +577,88 @@
 
         public void AppEvent_DocChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
-            
+            string txt = string.Format("{0} vs {1}",
+                dataController.AllElements.Count,
+                this.revitController.GetElementIdsFromDocument().Count);
+            TaskDialog.Show("title", txt);
+
+            ICollection<ElementId> addedElements =  args.GetAddedElementIds();
+
+            ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
+
+            StringBuilder addedText = new StringBuilder();
+            addedText.AppendLine("Added Elements");
+            foreach (ElementId eId in addedElements)
+            {
+                Element element = this.revitController.GetElement(eId);
+                
+                string name;
+                string catName;
+
+                name = element.Name;
+                if (element.Category == null)
+                {
+                    catName = "Category Null";
+                }
+                else
+                {
+                    catName = element.Category.Name;
+                }
+
+                // this.revitController.GetElementType(element);
+
+                addedText.AppendFormat("{0}\n", eId);
+                addedText.AppendFormat(" + {0}\n", name);
+                addedText.AppendFormat(" + {0}\n", catName);
+            }
+            addedText.AppendLine("");
+
+            TaskDialog.Show("Debug - Added Elements", addedText.ToString());
+
+            StringBuilder deletedText = new StringBuilder();
+            deletedText.AppendLine("Deleted Elements");
+            foreach (ElementId eId in deletedElements)
+            {
+                
+                Element element = this.revitController.GetElement(eId);
+                /*
+                string name;
+                string catName;
+
+                name = element.Name;
+                if (element.Category == null)
+                {
+                    catName = "Category Null";
+                }
+                else
+                {
+                    catName = element.Category.Name;
+                }
+
+                // this.revitController.GetElementType(element);
+
+                deletedText.AppendFormat("{0}\n", eId);
+                deletedText.AppendFormat(" + {0}\n", name);
+                deletedText.AppendFormat(" + {0}\n", catName);
+                */
+
+                string name;
+                if (element == null)
+                {
+                    name = "No name";
+                }
+                else
+                {
+                    name = element.Name;
+                }
+
+                deletedText.AppendFormat("{0}\n", eId);
+                deletedText.AppendFormat(" + {0}\n", name);
+
+            }
+            deletedText.AppendLine("");
+
+            TaskDialog.Show("Debug - Deleted Elements", deletedText.ToString());
 
             return;
         }
