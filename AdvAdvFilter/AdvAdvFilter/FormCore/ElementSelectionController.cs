@@ -828,7 +828,7 @@
         #region Get Selection From TreeView
 
         /// <summary>
-        /// 
+        /// Get the elementIds of all those that are selected in the list
         /// </summary>
         /// <returns></returns>
         public List<ElementId> GetSelectedElementIds()
@@ -837,20 +837,25 @@
             List<LeafTreeNode> leafNodes = null;
             int max = 5;
 
+            // While max is still greater than 0...
             while (max > 0)
             {
+                // Get a copy of this.leafNodes without dataraces
                 lock (treeLock)
                 {
-                    leafNodes = this.leafNodes;
+                    leafNodes = new List<LeafTreeNode>(this.leafNodes);
                 }
 
+                // max counter decremented (signifying the program will make one attempt)
                 max -= 1;
                 try
                 {
+                    // LINQ statement: Get all the elementIds of the leafNodes that are 'Checked'
                     IEnumerable<ElementId> selected
                                 = from LeafTreeNode leaf in leafNodes
                                   where leaf.Checked
                                   select leaf.ElementId;
+                    // Convert the resulting LINQ statement into a list
                     output = selected.ToList<ElementId>();
                     break;
                 }
@@ -863,6 +868,7 @@
                     continue;
                 }
             }
+            
             return output;
         }
 
