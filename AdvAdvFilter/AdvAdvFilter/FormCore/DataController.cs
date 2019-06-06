@@ -127,6 +127,8 @@
             this.coords = new List<int>() { 0, 0, 0 };
         }
 
+        #region Auxiliary Methods
+
         /// <summary>
         /// Updates the elements of this.allElements with newAllElements
         /// </summary>
@@ -204,6 +206,10 @@
 
             return result;
         }
+
+        #endregion Auxiliary Methods
+
+
 
     }
 }

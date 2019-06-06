@@ -221,7 +221,11 @@
                                 {
                                     // Subscribe to idling event to update UI when element selection changes.
                                     Main.UiCtrlApp.Idling +=
-                                        Main.ActiveModelessForm.SelectionChanged_UIAppEvent_WhileIdling;
+                                        Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
+                                    Main.UiCtrlApp.ControlledApplication.DocumentChanged +=
+                                        new EventHandler<Autodesk.Revit.DB.Events.DocumentChangedEventArgs>
+                                            (Main.ActiveModelessForm.AppEvent_DocChangedEventHandler);
+                                    
                                 }
                                 catch (Exception ex)
                                 {
@@ -261,7 +265,7 @@
                                     {
                                         // Deregister handlers and nullify active framing form.
                                         Main.UiCtrlApp.Idling -=
-                                            Main.ActiveModelessForm.SelectionChanged_UIAppEvent_WhileIdling;
+                                            Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
 
                                         Main.ActiveModelessForm = null;
                                     }

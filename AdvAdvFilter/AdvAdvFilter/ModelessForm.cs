@@ -12,6 +12,7 @@
 
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
+    using Autodesk.Revit.DB.Events;
     using Autodesk.Revit.UI.Events;
 
     // using Color = System.Drawing.Color;
@@ -19,6 +20,7 @@
     using Panel = System.Windows.Forms.Panel;
     using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
     using Request = AdvAdvFilter.RequestHandler.Request;
+
 
     public partial class ModelessForm : System.Windows.Forms.Form
     {
@@ -411,7 +413,7 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        public void SelectionChanged_UIAppEvent_WhileIdling(object sender, IdlingEventArgs args)
+        public void UIAppEvent_IdlingEventHandler(object sender, IdlingEventArgs args)
         {
 
             try
@@ -573,6 +575,13 @@
 
         #endregion Idling API Handler Methods
 
+        public void AppEvent_DocChangedEventHandler(object sender, DocumentChangedEventArgs args)
+        {
+            
+
+            return;
+        }
+
         #region Not Need Attention
 
         /// <summary>
@@ -659,7 +668,7 @@
                 this.elementProtectionUpdater.ProtectedElementIds.Clear();
 
                 // terminate event handler for SelectionChanged_UIAppEvent_WhileIdling
-                Main.UiCtrlApp.Idling -= Main.ActiveModelessForm.SelectionChanged_UIAppEvent_WhileIdling;
+                Main.UiCtrlApp.Idling -= Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
 
                 this.Invoke(new Action(() =>
                 {
