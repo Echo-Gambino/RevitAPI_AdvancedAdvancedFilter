@@ -342,7 +342,7 @@
                     currSelected = revitController.GetElementIdsFromSelection();
                     if (currSelected != null)
                     {
-                        if (!selectionController.IsListEqual(elementIds, currSelected))
+                        if (!dataController.IsListEqual(elementIds, currSelected))
                         {
                             request = Request.UpdateTreeViewSelection;
                         }

@@ -216,24 +216,6 @@
             this.leafNodes = new List<LeafTreeNode>();
         }
 
-        // TODO: should probably move this to datacontroller.
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="list1"></param>
-        /// <param name="list2"></param>
-        /// <returns></returns>
-        public bool IsListEqual(List<ElementId> list1, List<ElementId> list2)
-        {
-            bool b1 = list1.All(e => list2.Contains(e));
-            bool b2 = list2.All(e => list1.Contains(e));
-            bool b3 = (list1.Count == list2.Count);
-
-            bool result = b1 && b2 && b3;
-
-            return result;
-        }
-
         #region Update TreeView Structure
 
         /// <summary>
