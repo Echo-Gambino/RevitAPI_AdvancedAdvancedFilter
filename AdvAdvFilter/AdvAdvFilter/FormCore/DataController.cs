@@ -127,33 +127,43 @@
             this.coords = new List<int>() { 0, 0, 0 };
         }
 
+        /// <summary>
+        /// Updates the elements of this.allElements with newAllElements
+        /// </summary>
+        /// <param name="newAllElements"></param>
+        /// <returns>true if this.allElements != newAllElements, else false</returns>
         public bool UpdateAllElements(List<ElementId> newAllElements)
         {
             bool listChanged = false;
 
+            // Perform tests to see if the list has been changed
             if ((newAllElements == null) && (this.allElements == null))
             {
-                listChanged = false;
+                listChanged = false; // If both are null, then they didn't change
             }
             else if (((newAllElements == null) && (this.allElements != null))
                 || ((newAllElements != null) && (this.allElements == null)))
             {
-                listChanged = true;
+                listChanged = true; // If one of them is null and the other not, then it changed
             }
             else
             {
+                // Perform a LINQ? statement
                 // listChanged = (!newAllElements.All(this.allElements.Contains));
                 listChanged = (!newAllElements.SequenceEqual(this.allElements));
             }
 
+            // If listChanged, then...
             if (listChanged)
             {
                 if (newAllElements != null)
                 {
+                    // If newAllElements isn't null, then update this.allElements
                     this.allElements = newAllElements;
                 }
                 else
                 {
+                    // If its null, then simply clear all items from this.allElements
                     this.allElements.Clear();
                 }
             }
@@ -161,10 +171,17 @@
             return listChanged;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newSelElements"></param>
+        /// <returns></returns>
         public bool UpdateSelElements(List<ElementId> newSelElements)
         {
+            // Check if the list has changed by doing something of a LINQ? statement
             bool listChanged = (!newSelElements.All(this.selElements.Contains));
 
+            // If the list has detected a change, then update this.selElements
             if (listChanged)
                 this.selElements = newSelElements;
 
