@@ -685,8 +685,15 @@
 
         #region Update TreeView Upon Check
 
+        /// <summary>
+        /// Update the treeView's checked status when the 
+        /// argument e's checked status has recently changed.
+        /// </summary>
+        /// <param name="e"></param>
         public void UpdateAfterCheck(AdvTreeNode e)
         {
+            // Recursively go up the tree until you reach the top (node.Parent == null)
+            // then select the node which its Parent is null
             AdvTreeNode GetRoot(AdvTreeNode node)
             {
                 AdvTreeNode tmpRoot = null;
@@ -701,8 +708,7 @@
                 return tmpRoot;
             }
 
-            if (e == null)
-                return;
+            if (e == null) return;
 
             lock (treeLock)
             {
@@ -714,6 +720,7 @@
                 if (e.Parent != null)
                     UpdateParentNodes(e.Parent as AdvTreeNode, e.Checked);
 
+                // Get the root of the TreeNode
                 AdvTreeNode root = GetRoot(e);
 
                 // UpdateCheckedCounters(root);
@@ -723,12 +730,20 @@
             return;
         }
 
+        /// <summary>
+        /// Update the nodes's children by the nodes's
+        /// checked status recursively until it reaches the bottom
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="isChecked"></param>
         private void UpdateChildNodes(AdvTreeNode node, bool isChecked)
         {
             if (node == null) return;
 
+            // For every node's children...
             foreach (AdvTreeNode n in node.Nodes)
             {
+                // If the child's check status is the same as the changes, then continue                
                 if (n.Checked == isChecked) continue;
 
                 // Update the status of n
@@ -742,6 +757,12 @@
             }
         }
 
+        /// <summary>
+        /// Update the parents of the node's checked status by recursively going up
+        /// until it reaches the top of the tree.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="isChecked"></param>
         private void UpdateParentNodes(AdvTreeNode parent, bool isChecked)
         {
             bool isAllChecked(TreeNodeCollection collection)
@@ -750,9 +771,10 @@
                     if (!n.Checked) return false;
                 return true;
             }
-
+            // If parent is null, then immediately exit
             if (parent == null) return;
 
+            // Check the parent node if all of the parent's children are checked
             parent.Checked = isAllChecked(parent.Nodes);
 
             // If parent's parent isn't null, continue the recursion up
