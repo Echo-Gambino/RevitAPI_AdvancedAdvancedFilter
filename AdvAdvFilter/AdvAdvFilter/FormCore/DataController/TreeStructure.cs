@@ -11,7 +11,6 @@
 
     public class TreeStructure
     {
-
         enum depth
         {
             CategoryType = 0,
@@ -24,10 +23,17 @@
 
         #region Fields
 
-        private ElementSet setTree;
         private Dictionary<ElementId, TreeNode> elementIdNodes;
+        private ElementSet setTree;
         private Document doc;
 
+        public HashSet<ElementId> VisibleNodes { get; set; }
+        public HashSet<ElementId> SelectedNodes { get; set; }
+
+        /*
+        private Dictionary<ElementId, HashSet<ElementId>> elementIdsInView;
+        private HashSet<ElementId> customElementIds;
+        */
         #endregion Fields
 
         #region Parameters
@@ -51,6 +57,18 @@
         }
 
         #region ElementTree Operations
+
+        #region Clear and reset
+
+        public void ClearAll()
+        {
+            this.elementIdNodes.Clear();
+
+            this.setTree.Branch.Clear();
+            this.setTree.Set.Clear();
+        }
+
+        #endregion Clear and reset
 
         #region Add Nodes To Tree
 
@@ -105,7 +123,7 @@
             }
 
             // Get the grouping on a paramName for all the nodes (CategoryType, Category, Family, ElementType)
-            grouping = GetGrouping(nodes, depth.ToString());
+            grouping = GetGroupingByNodeData(nodes, depth.ToString());
 
             // For each KeyValuePair in grouping...
             ElementSet newSet;
@@ -207,7 +225,7 @@
             }
 
             // Get the grouping on a paramName for all the nodes (CategoryType, Category, Family, ElementType)
-            grouping = GetGrouping(nodes, depth.ToString());
+            grouping = GetGroupingByNodeData(nodes, depth.ToString());
 
             // For each KeyValuePair in grouping...
             ElementSet newSet;
@@ -256,7 +274,7 @@
 
         #region Auxiliary Functions
 
-        private Dictionary<string, List<NodeData>> GetGrouping(List<NodeData> nodes, string paramName)
+        private Dictionary<string, List<NodeData>> GetGroupingByNodeData(List<NodeData> nodes, string paramName)
         {
             Dictionary<string, List<NodeData>> grouping = new Dictionary<string, List<NodeData>>();
 
@@ -273,7 +291,6 @@
 
             return grouping;
         }
-
 
         public TreeNode GenerateTreeNode(NodeData data)
         {
@@ -304,6 +321,9 @@
 
             // Set ElementId
             data.Id = elementId;
+
+            // Set OwnerViewId
+            data.OwnerViewId = element.OwnerViewId;
 
             // Set fields related to category
             Category category = element.Category;

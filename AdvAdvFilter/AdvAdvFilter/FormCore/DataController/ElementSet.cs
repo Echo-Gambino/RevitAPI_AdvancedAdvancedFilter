@@ -10,8 +10,14 @@
 
     public class ElementSet
     {
+        #region Field
+
         private Dictionary<string, ElementSet> branch;
         private HashSet<ElementId> set;
+
+        #endregion Field
+
+        #region Parameter
 
         public HashSet<ElementId> Set
         {
@@ -23,6 +29,8 @@
         {
             get { return this.branch; }
         }
+
+        #endregion Parameter
 
         public ElementSet()
         {
@@ -40,12 +48,20 @@
             return branch[key];
         }
 
+        /// <summary>
+        /// Add a list of elementIds into the ElementSet
+        /// </summary>
+        /// <param name="list"></param>
         public void AppendList(List<ElementId> list)
         {
             foreach (ElementId id in list)
                 this.set.Add(id);
         }
 
+        /// <summary>
+        /// Remove elements from the ElementSet that's found in list
+        /// </summary>
+        /// <param name="list"></param>
         public void RemoveList(List<ElementId> list)
         {
             foreach (ElementId id in list)
@@ -71,14 +87,19 @@
             return newBranch;
         }
 
-        public bool RemoveBranch(string key)
+        /// <summary>
+        /// Remove a 'branch' by its branchName
+        /// </summary>
+        /// <param name="branchName"></param>
+        /// <returns></returns>
+        public bool RemoveBranch(string branchName)
         {
-            if (key == null)
+            if (branchName == null)
                 throw new ArgumentNullException();
-            else if (!branch.ContainsKey(key))
+            else if (!branch.ContainsKey(branchName))
                 return false;
 
-            return branch.Remove(key);
+            return branch.Remove(branchName);
         }
 
         /// <summary>

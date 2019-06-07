@@ -41,6 +41,8 @@
         private List<ElementId> movElements;
         private bool copyAndShift;
         private List<int> coords;
+        // 
+        private TreeStructure elementTree;
 
         #endregion Fields
 
@@ -118,11 +120,16 @@
             }
         }
 
+        public TreeStructure ElementTree
+        {
+            get { return this.elementTree; }
+        }
+
         #endregion Parameters
 
         #region Constructor
 
-        public DataController()
+        public DataController(Document doc = null)
         {
             this.allElements = new List<ElementId>();
             this.selElements = new List<ElementId>();
@@ -130,10 +137,44 @@
             this.movElements = new List<ElementId>();
             this.copyAndShift = true;
             this.coords = new List<int>() { 0, 0, 0 };
+
+            if (doc != null)
+                this.elementTree = new TreeStructure(doc);        
         }
 
         #endregion Constructor
 
+        #region AllElements Operations
+
+        public void SetAllElements(List<ElementId> elementIds)
+        {
+            this.elementTree.ClearAll();
+
+            this.elementTree.AppendList(elementIds);
+
+        }
+
+        public void ClearAllElements()
+        {
+            this.elementTree.ClearAll();
+        }
+
+        public void AddToAllElements(List<ElementId> elementIds)
+        {
+            this.elementTree.AppendList(elementIds);
+        }
+
+        public void RemoveFromAllElements(List<ElementId> elementIds)
+        {
+            this.elementTree.RemoveList(elementIds);
+        }
+
+        public void GetAllElements()
+        {
+            List<ElementId> keyList = this.elementTree.ElementIdNodes.Keys.ToList();
+        }
+
+        #endregion AllElements Operations
 
 
         #region Auxiliary Methods

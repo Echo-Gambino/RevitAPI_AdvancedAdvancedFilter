@@ -132,7 +132,7 @@
 
             // Initialize Back-end Controllers
             this.revitController = new RevitController(commandData);
-            this.dataController = new DataController();
+            this.dataController = new DataController(commandData.Application.ActiveUIDocument.Document);
             this.requestHandler = new RequestHandler(
                 this.revitController,
                 this.dataController,

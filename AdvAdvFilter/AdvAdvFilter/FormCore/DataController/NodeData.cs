@@ -12,7 +12,8 @@
     {
         #region Fields
 
-        private ElementId id;
+        public ElementId Id { get; set; }
+        public ElementId OwnerViewId { get; set; }
         private string categoryType;
         private string category;
         private string family;
@@ -21,12 +22,6 @@
         #endregion Fields
 
         #region Parameters
-
-        public ElementId Id
-        {
-            get { return this.id; }
-            set { this.id = value; }
-        }
 
         public string CategoryType
         {

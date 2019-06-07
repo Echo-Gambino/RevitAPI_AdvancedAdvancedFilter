@@ -271,6 +271,17 @@
             }
         }
 
+        public void AddToTreeView(List<ElementId> newElementIds, TreeStructure treeData)
+        {
+            IEnumerable<TreeNode> addNodes
+                = from ElementId id in newElementIds
+                  where treeData.VisibleNodes.Contains(id)
+                  select treeData.ElementIdNodes[id];
+
+            AddNodes(addNodes);
+
+        }
+
         #region TreeNode Removal
 
         /// <summary>
