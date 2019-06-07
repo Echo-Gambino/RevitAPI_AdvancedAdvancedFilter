@@ -64,7 +64,7 @@
                 if (this.elementIdNodes.ContainsKey(id)) continue;
 
                 // Generate NodeData to be put into node
-                NodeData data = Dummy_GenerateNodeData(id, this.doc);
+                NodeData data = GenerateNodeData(id, this.doc);
                 // Generate the TreeNode that uses the information of NodeData to initialize
                 TreeNode node = GenerateTreeNode(data);
 
@@ -287,16 +287,43 @@
             return node;
         }
 
-        public NodeData Dummy_GenerateNodeData(ElementId elementId, Document doc)
+        private NodeData GenerateNodeData(ElementId elementId, Document doc)
         {
+            // Fail the execution if GenerateNodeData has elementId or doc as null
+            if ((elementId == null) || (doc == null))
+                throw new ArgumentNullException();
+
+            // Get elementId's element
+            Element element = doc.GetElement(elementId);
+
+            // If resulting element is null, fail the process, as it should always return not null
+            if (element == null) throw new InvalidOperationException();
+
+            // Generate NodeData
             NodeData data = new NodeData();
 
+            // Set ElementId
             data.Id = elementId;
 
-            data.CategoryType = elementId.CategoryType;
-            data.Category = elementId.Category;
-            data.Family = elementId.Family;
-            data.ElementType = elementId.ElementType;
+            // Set fields related to category
+            Category category = element.Category;
+            if (category != null)
+            {
+                data.CategoryType = category.CategoryType.ToString();
+                data.Category = category.ToString();
+            }
+
+            // Set fields related to elementType
+            ElementId typeId = element.GetTypeId();
+            if (typeId != null)
+            {
+                ElementType elementType = doc.GetElement(typeId) as ElementType;
+                if (elementType != null)
+                {
+                    data.Family = elementType.FamilyName;
+                    data.ElementType = elementType.Name;
+                }
+            }
 
             return data;
         }

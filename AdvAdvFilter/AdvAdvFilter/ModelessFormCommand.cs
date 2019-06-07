@@ -14,7 +14,7 @@
     [Journaling(JournalingMode.UsingCommandData)]
     class ModelessFormCommand : IExternalCommand
     {
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        public Result Execute(ExternalCommandData commandData, ref string message, Autodesk.Revit.DB.ElementSet elements)
         {
             try
             {

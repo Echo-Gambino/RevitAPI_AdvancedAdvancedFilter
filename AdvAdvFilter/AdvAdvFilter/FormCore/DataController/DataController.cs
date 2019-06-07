@@ -120,6 +120,8 @@
 
         #endregion Parameters
 
+        #region Constructor
+
         public DataController()
         {
             this.allElements = new List<ElementId>();
@@ -129,6 +131,10 @@
             this.copyAndShift = true;
             this.coords = new List<int>() { 0, 0, 0 };
         }
+
+        #endregion Constructor
+
+
 
         #region Auxiliary Methods
 
