@@ -244,8 +244,6 @@
 
             selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
 
-            // selectionController.UpdateTotalSelectedItemsLabel();
-
             selectionController.UpdateTotals();
 
             requestHandler.AddRequest(Request.SelectElementIds);
@@ -332,9 +330,6 @@
         {
             this.haltIdlingHandler = true;
 
-
-            // bool thing = actionController.TryGetAllInputs();
-
             requestHandler.AddRequest(Request.ShiftSelected);
 
             this.haltIdlingHandler = false;
@@ -416,7 +411,6 @@
         /// <param name="args"></param>
         public void UIAppEvent_IdlingEventHandler(object sender, IdlingEventArgs args)
         {
-
             try
             {
                 args.SetRaiseWithoutDelay();
@@ -432,8 +426,7 @@
                     {
                         this.firstStartup = false;
 
-                        List<ElementId> AllElementIds = revitController.GetAllElementIds(FilterMode.Project);
-
+                        List<ElementId> AllElementIds = revitController.GetAllElementIds(FilterMode.Project);                        
                         dataController.SetAllElements(AllElementIds);
                     }
 
@@ -458,11 +451,13 @@
                     {
                         case Request.UpdateTreeView:
 
+                            dataController.SetMode(filter);
+
                             // Update the treeView element within the form
                             this.BeginInvoke(new Action(() =>
                             {
-                                // selectionController.UpdateTreeView(dataController.AllElements, revitController);
-                                selectionController.UpdateTreeViewStructure(dataController.AllElements, revitController);
+                                // selectionController.UpdateTreeViewStructure(dataController.AllElements, revitController);
+                                selectionController.UpdateTreeViewStructure_New(dataController.ElementTree.SubSet, dataController.ElementTree);
                             }));
 
                             break;
@@ -487,10 +482,11 @@
 
                             revitController.MakeNewSelection(dataController.SelElements);
 
-                            List<ElementId> elementIds
-                                = revitController.GetAllElementIds(filter);
+                            //List<ElementId> elementIds
+                            //    = revitController.GetAllElementIds(filter);
+                            //dataController.UpdateAllElements(elementIds);
 
-                            dataController.UpdateAllElements(elementIds);
+                            dataController.SetMode(filter);
 
                             // Hide all elements 
                             if (requestHandler.UnselectedHidden)
@@ -587,14 +583,9 @@
 
         public void AppEvent_DocChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
-            /*
-            string txt = string.Format("{0} vs {1}",
-                dataController.AllElements.Count,
-                this.revitController.GetElementIdsFromDocument().Count);
-            TaskDialog.Show("title", txt);
-            */
-            ICollection<ElementId> addedElements =  args.GetAddedElementIds();
+            this.haltIdlingHandler = true;
 
+            ICollection<ElementId> addedElements =  args.GetAddedElementIds();
             ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
 
             // Add elements to TreeStructure
@@ -602,109 +593,9 @@
             // Remove elements to TreeStructure
             this.dataController.RemoveFromAllElements(deletedElements.ToList());
 
-            List<ElementId> AllElementIds = revitController.GetAllElementIds(FilterMode.Project);
+            requestHandler.AddRequest(Request.UpdateTreeView);
 
-            // Check if AllElementIds and SetTree is the same
-            bool same = true;
-
-            HashSet<ElementId> allElementSet = dataController.ElementTree.SetTree.Set;
-
-            if (allElementSet.Count != AllElementIds.Count)
-            {
-                same = false;
-            }
-            else
-            {
-                foreach (ElementId id in AllElementIds)
-                {
-                    if (!allElementSet.Contains(id))
-                    {
-                        same = false;
-                        break;
-                    }
-                }
-            }
-
-            if (same)
-                TaskDialog.Show("All Elements?", "The two containers of elementIds are the same!");
-            else
-                TaskDialog.Show("All Elements?", "The two containers of elementIds are not the same!");
-
-            /*
-            StringBuilder addedText = new StringBuilder();
-            addedText.AppendLine("Added Elements");
-            foreach (ElementId eId in addedElements)
-            {
-                Element element = this.revitController.GetElement(eId);
-                
-                string name;
-                string catName;
-
-                name = element.Name;
-                if (element.Category == null)
-                {
-                    catName = "Category Null";
-                }
-                else
-                {
-                    catName = element.Category.Name;
-                }
-
-                // this.revitController.GetElementType(element);
-
-                addedText.AppendFormat("{0}\n", eId);
-                addedText.AppendFormat(" + {0}\n", name);
-                addedText.AppendFormat(" + {0}\n", catName);
-            }
-            addedText.AppendLine("");
-
-            TaskDialog.Show("Debug - Added Elements", addedText.ToString());
-
-            StringBuilder deletedText = new StringBuilder();
-            deletedText.AppendLine("Deleted Elements");
-            foreach (ElementId eId in deletedElements)
-            {
-                
-                Element element = this.revitController.GetElement(eId);
-                
-                //string name;
-                //string catName;
-
-                //name = element.Name;
-                //if (element.Category == null)
-                //{
-                //    catName = "Category Null";
-                //}
-                //else
-                //{
-                //    catName = element.Category.Name;
-                //}
-
-                //// this.revitController.GetElementType(element);
-
-                //deletedText.AppendFormat("{0}\n", eId);
-                //deletedText.AppendFormat(" + {0}\n", name);
-                //deletedText.AppendFormat(" + {0}\n", catName);
-
-                string name;
-                if (element == null)
-                {
-                    name = "No name";
-                }
-                else
-                {
-                    name = element.Name;
-                }
-
-                deletedText.AppendFormat("{0}\n", eId);
-                deletedText.AppendFormat(" + {0}\n", name);
-
-            }
-            deletedText.AppendLine("");
-
-            TaskDialog.Show("Debug - Deleted Elements", deletedText.ToString());
-            */
-
+            this.haltIdlingHandler = false;
             return;
         }
 

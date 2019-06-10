@@ -27,5 +27,15 @@
             Invalid = -1
         }
 
+        public enum Depth
+        {
+            CategoryType = 0,
+            Category = 1,
+            Family = 2,
+            ElementType = 3,
+            Instance = 4,
+            Invalid = -1
+        };
+
     }
 }

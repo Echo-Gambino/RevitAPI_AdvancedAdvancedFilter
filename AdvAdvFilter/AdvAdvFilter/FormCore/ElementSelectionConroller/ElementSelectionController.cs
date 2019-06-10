@@ -16,6 +16,8 @@
     using Document = Autodesk.Revit.DB.Document;
     using ElementType = Autodesk.Revit.DB.ElementType;
 
+    using Depth = AdvAdvFilter.Common.Depth;
+
     class AdvTreeNode : TreeNode
     {
         public int numCheckedLeafs;
@@ -179,6 +181,8 @@
         private List<BranchTreeNode> categoryTypes;
         private List<LeafTreeNode> leafNodes;
 
+        private HashSet<ElementId> idsInTreeView;
+
         private object treeLock = new object();
 
         #endregion
@@ -214,6 +218,7 @@
 
             // this.categoryTypes = GetCategoryNodes();
             this.leafNodes = new List<LeafTreeNode>();
+            this.idsInTreeView = new HashSet<ElementId>();
         }
 
         #region Update TreeView Structure
@@ -423,6 +428,108 @@
 
         #endregion TreeNode Removal
 
+        private int TallyUpSelectedElements(
+            TreeNode node,
+            Depth depth,
+            Depth lowestDepth = Depth.Instance)
+        {
+            if (depth == lowestDepth)
+            {
+                MessageBox.Show(node.FullPath);
+                return 0;
+            }
+
+            Depth nextDepth = GetNextDepth(depth, lowestDepth);
+
+            foreach (TreeNode n in node.Nodes)
+            {
+                TallyUpSelectedElements(n, depth);
+            }
+            return 0;
+        }
+
+        public void UpdateTreeViewStructure_New(
+            HashSet<ElementId> newElementIds,
+            TreeStructure treeStructure
+            )
+        {
+            if (newElementIds == null) throw new ArgumentNullException();
+
+            lock (treeLock)
+            {
+                HashSet<ElementId> elementsToRem = new HashSet<ElementId>(idsInTreeView);
+                HashSet<ElementId> elementsToAdd = new HashSet<ElementId>(newElementIds);
+
+                elementsToRem.ExceptWith(newElementIds);
+                elementsToAdd.ExceptWith(idsInTreeView);
+
+                List<TreeNode> nodesToRem = GetTreeNodes(elementsToRem, treeStructure);
+                List<TreeNode> nodesToAdd = GetTreeNodes(elementsToAdd, treeStructure);
+
+                RemFromTreeStructure(nodesToRem, this.treeView.Nodes, Depth.CategoryType);
+                AddToTreeStructure(nodesToAdd, this.treeView.Nodes, Depth.CategoryType);
+
+                foreach (TreeNode n in this.treeView.Nodes)
+                {
+                    TallyUpSelectedElements(n, Depth.CategoryType);
+                }
+
+                idsInTreeView = newElementIds;
+            }
+        }
+
+        public List<TreeNode> GetTreeNodes(HashSet<ElementId> elementIds, TreeStructure tree)
+        {
+            List<TreeNode> treeNodes = new List<TreeNode>();
+
+            foreach (ElementId id in elementIds)
+            {
+                treeNodes.Add(tree.ElementIdNodes[id]);
+            }
+
+            return treeNodes;
+        }
+
+        #region TreeNode Rem
+
+        private void RemFromTreeStructure(
+            List<TreeNode> leafNodes,
+            TreeNodeCollection treeNodes,
+            Depth depth,
+            Depth lowestDepth = Depth.Instance
+            )
+        {
+            if (depth == lowestDepth)
+            {
+                foreach (TreeNode node in leafNodes)
+                    treeNodes.Remove(node);
+                return;
+            }
+
+            Depth nextDepth;
+            SortedDictionary<string, List<TreeNode>> grouping;
+
+            nextDepth = GetNextDepth(depth, lowestDepth);
+
+            grouping = GetGroupingByTreeNode(leafNodes, depth.ToString());
+
+            grouping.OrderBy(key => key.Key);
+            TreeNodeCollection nextCollection;
+            foreach (KeyValuePair<string, List<TreeNode>> kvp in grouping)
+            {
+                nextCollection = treeNodes[kvp.Key].Nodes;
+
+                RemFromTreeStructure(kvp.Value, nextCollection, nextDepth);
+
+                if (treeNodes[kvp.Key].Nodes.Count == 0)
+                {
+                    treeNodes.RemoveByKey(kvp.Key);
+                }
+            }
+        }
+
+        #endregion TreeNode Rem
+
         #region TreeNode Insertion
 
         /// <summary>
@@ -611,20 +718,102 @@
 
         #endregion TreeNode Insertion
 
+        #region TreeNode Add
+
+        private void AddToTreeStructure(
+            List<TreeNode> leafNodes,
+            TreeNodeCollection treeNodes,
+            Depth depth,
+            Depth lowestDepth = Depth.Instance
+            )
+        {
+            if (depth == lowestDepth)
+            {
+                foreach (TreeNode node in leafNodes)
+                    treeNodes.Add(node);
+                return;
+            }
+
+            Depth nextDepth;
+            SortedDictionary<string, List<TreeNode>> grouping;
+
+            nextDepth = GetNextDepth(depth, lowestDepth);
+
+            grouping = GetGroupingByTreeNode(leafNodes, depth.ToString());
+
+            grouping.OrderBy(key => key.Key);
+            TreeNodeCollection nextCollection;
+            foreach(KeyValuePair<string, List<TreeNode>> kvp in grouping)
+            {
+                if (!treeNodes.ContainsKey(kvp.Key))
+                {
+                    TreeNode branch = new TreeNode();
+                    branch.Name = kvp.Key;
+                    branch.Text = kvp.Key;
+                    treeNodes.Add(branch);
+                }
+
+                nextCollection = treeNodes[kvp.Key].Nodes;
+
+                AddToTreeStructure(kvp.Value, nextCollection, nextDepth);
+            }
+
+        }
+
+        /// <summary>
+        /// Gets the next lowest depth of the given depth and returns Depth.Invalid if depth == lowest
+        /// </summary>
+        /// <param name="depth"></param>
+        /// <param name="lowest"></param>
+        /// <returns></returns>
+        private Depth GetNextDepth(Depth depth, Depth lowest)
+        {
+            Depth next;
+
+            if (depth == Depth.Invalid)
+                throw new ArgumentException();
+            else if (depth == lowest)
+                next = Depth.Invalid;
+            else
+                next = (Depth)((int)depth + 1);
+
+            return next;
+        }
+
+        private SortedDictionary<string, List<TreeNode>> GetGroupingByTreeNode(List<TreeNode> nodes, string paramName)
+        {
+            SortedDictionary<string, List<TreeNode>> grouping = new SortedDictionary<string, List<TreeNode>>();
+
+            string key;
+            foreach (TreeNode n in nodes)
+            {
+                key = (n.Tag as NodeData).GetParameter(paramName);
+
+                if (!grouping.ContainsKey(key))
+                    grouping.Add(key, new List<TreeNode>());
+
+                grouping[key].Add(n);
+            }
+
+            return grouping;
+        }
+
+        #endregion TreeNode Add
+
         #region CategoryType Node Setup
 
         /// <summary>
         /// Set up the category type nodes in the treeView
         /// </summary>
-        /// <param name="categoryType"></param>
-        private void UpdateCategoryTypeNodes(TreeNodeCollection categoryType)
+        /// <param name="nodes"></param>
+        private void UpdateCategoryTypeNodes(TreeNodeCollection nodes)
         {
             // For each categoryType node...
-            foreach (BranchTreeNode cNode in categoryType)
+            foreach (TreeNode n in nodes)
             {
                 // Expand the its tree if it isn't already
-                if (!cNode.IsExpanded)
-                    cNode.Expand();
+                if (!n.IsExpanded)
+                    n.Expand();
             }
         }
 

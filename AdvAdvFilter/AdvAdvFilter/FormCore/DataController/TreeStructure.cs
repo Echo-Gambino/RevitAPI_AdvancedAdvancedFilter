@@ -10,10 +10,12 @@
     using Autodesk.Revit.DB;
 
     using FilterMode = AdvAdvFilter.Common.FilterMode;
+    using Depth = AdvAdvFilter.Common.Depth;
 
     public class TreeStructure
     {
-        public enum depth
+        /*
+        public enum Depth
         {
             CategoryType = 0,
             Category = 1,
@@ -22,11 +24,10 @@
             Instance = 4,
             Invalid = -1
         };
-
+        */
         #region Fields
 
         private Dictionary<ElementId, TreeNode> elementIdNodes;
-        private Dictionary<ElementId, HashSet<ElementId>> viewElementId;
         private ElementSet setTree;
         private Document doc;
 
@@ -67,8 +68,6 @@
 
             this.elementIdNodes = new Dictionary<ElementId, TreeNode>();
 
-            this.viewElementId = new Dictionary<ElementId, HashSet<ElementId>>();
-
             this.setTree = new ElementSet();
             this.setTree.Name = "All";
 
@@ -87,8 +86,6 @@
         public void ClearAll()
         {
             this.elementIdNodes.Clear();
-
-            this.viewElementId.Clear();
 
             this.setTree.Branch.Clear();
             this.setTree.Set.Clear();
@@ -121,31 +118,27 @@
 
                 // Add elementid and its corresponding node in this.elementIdNodes
                 this.elementIdNodes.Add(id, node);
-                // If viewElementId doesn't contain any entries corresponding to data.OwnerViewId, then create one
-                if (!this.viewElementId.ContainsKey(data.OwnerViewId))
-                    this.viewElementId.Add(data.OwnerViewId, new HashSet<ElementId>());                
-                this.viewElementId[data.OwnerViewId].Add(id);
             }
 
             // Update the internal tree structure
-            AddToTree(nodesToAdd, this.setTree, depth.CategoryType);
+            AddToTree(nodesToAdd, this.setTree, Depth.CategoryType);
         }
 
-        private void AddToTree(List<NodeData> nodes, ElementSet set, depth depth)
+        private void AddToTree(List<NodeData> nodes, ElementSet set, Depth depth)
         {
-            depth newDepth;
+            Depth newDepth;
             Dictionary<string, List<NodeData>> grouping;
 
             // Retrieve the next depth            
-            if (depth == depth.Invalid)
+            if (depth == Depth.Invalid)
             {
                 // If current depth is invalid, then throw an exception, the invalid depth indicates that something has gone wrong.
                 throw new ArgumentException();
             }
-            else if (depth == depth.Instance)
+            else if (depth == Depth.Instance)
             {
                 // current depth is the last depth, set nextDepth to depth.Invalid
-                newDepth = depth.Invalid;
+                newDepth = Depth.Invalid;
 
                 foreach (NodeData data in nodes)
                     set.Set.Add(data.Id);
@@ -154,7 +147,7 @@
             else
             {
                 // Get next depth down
-                newDepth = (depth)((int)depth + 1);
+                newDepth = (Depth)((int)depth + 1);
             }
 
             // Get the grouping on a paramName for all the nodes (CategoryType, Category, Family, ElementType)
@@ -221,16 +214,10 @@
 
                 // Remove the entry corresponding to 'id' in this.elementIdNodes
                 this.elementIdNodes.Remove(id);
-                this.viewElementId[data.OwnerViewId].Remove(id);
-                // If the number of entries corresponding to data.OwnerViewId is 0, then remove that dictionary key
-                if (this.viewElementId[data.OwnerViewId].Count == 0)
-                {
-                    this.viewElementId.Remove(data.OwnerViewId);
-                }
             }
 
             // Remove the all occurances of the ElementIds in nodesToRemove from the tree
-            RemoveFromTree(nodesToRemove, this.setTree, depth.CategoryType);
+            RemoveFromTree(nodesToRemove, this.setTree, Depth.CategoryType);
 
             List<string> branchesToRemove = new List<string>();
             foreach (KeyValuePair<string, ElementSet> kvp in this.setTree.Branch)
@@ -243,21 +230,21 @@
                 this.setTree.RemoveBranch(key);
         }
 
-        private void RemoveFromTree(List<NodeData> nodes, ElementSet set, depth depth)
+        private void RemoveFromTree(List<NodeData> nodes, ElementSet set, Depth depth)
         {
-            depth newDepth;
+            Depth newDepth;
             Dictionary<string, List<NodeData>> grouping;
 
             // Retrieve the next depth            
-            if (depth == depth.Invalid)
+            if (depth == Depth.Invalid)
             {
                 // If current depth is invalid, then throw an exception, the invalid depth indicates that something has gone wrong.
                 throw new ArgumentException();
             }
-            else if (depth == depth.Instance)
+            else if (depth == Depth.Instance)
             {
                 // current depth is the last depth, set nextDepth to depth.Invalid
-                newDepth = depth.Invalid;
+                newDepth = Depth.Invalid;
 
                 foreach (NodeData data in nodes)
                     set.Set.Remove(data.Id);
@@ -266,7 +253,7 @@
             else
             {
                 // Get next depth down
-                newDepth = (depth)((int)depth + 1);
+                newDepth = (Depth)((int)depth + 1);
             }
 
             // Get the grouping on a paramName for all the nodes (CategoryType, Category, Family, ElementType)
@@ -319,11 +306,9 @@
 
         #region SubSet Operations
 
-        public void SetSubSet (FilterMode mode)
+        public bool SetSubSet (FilterMode mode)
         {
-            if (this.currentMode == mode) return;
-
-            // FilteredElementCollector collector = new FilteredElementCollector(this.doc, this.setTree.Set);
+            if ((this.currentMode == mode) && (this.currentMode != FilterMode.View)) return false;
 
             switch (mode)
             {
@@ -331,11 +316,25 @@
                     this.subSet = this.setTree.Set;
                     break;
                 case FilterMode.View:
-                    ElementId viewId = this.doc.ActiveView.Id;
-                    if (this.viewElementId.ContainsKey(viewId))
-                        this.subSet = this.viewElementId[viewId];
-                    else
-                        this.subSet.Clear();
+                    List<ViewType> types = new List<ViewType>()
+                    {
+                        ViewType.EngineeringPlan,
+                        ViewType.FloorPlan,
+                        ViewType.CeilingPlan,
+                        ViewType.ThreeD,
+                        ViewType.Elevation
+                    };
+
+                    Autodesk.Revit.DB.View view = this.doc.ActiveView;
+
+                    if (!types.Contains(view.ViewType)) return false;
+
+                    FilteredElementCollector collection = new FilteredElementCollector(this.doc, view.Id).WhereElementIsNotElementType();
+                    this.subSet.Clear();
+                    foreach (ElementId id in collection.ToElementIds())
+                    {
+                        this.subSet.Add(id);
+                    }
                     break;
                 case FilterMode.Selection:
                     this.subSet = this.SelectedNodes;
@@ -345,6 +344,8 @@
             }
             
             this.currentMode = mode;
+
+            return true;
         }
 
         #endregion SubSet Operations
@@ -407,7 +408,7 @@
             if (category != null)
             {
                 data.CategoryType = category.CategoryType.ToString();
-                data.Category = category.ToString();
+                data.Category = category.Name;
             }
 
             // Set fields related to elementType

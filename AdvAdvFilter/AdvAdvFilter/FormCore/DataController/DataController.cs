@@ -54,7 +54,6 @@
 
         public List<ElementId> AllElements
         {
-            // get { return this.allElements; }
             get { return this.elementTree.SubSet.ToList<ElementId>();  }
         }
 

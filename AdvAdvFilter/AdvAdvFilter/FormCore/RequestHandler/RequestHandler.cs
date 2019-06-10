@@ -208,16 +208,18 @@
                 case Request.UpdateTreeView:
 
                     // Update / Refresh the revitController's view and get elements from that newly refreshed view
-                    revitController.UpdateView();
+                    // revitController.UpdateView();
                     // TODO: Make it so that revitController only gives filtered results (selection, view, project)
-                    elementIds = revitController.GetAllElementIds(this.actionCondition.filter);
-                    dataController.SetMode(this.actionCondition.filter);
-                    // If dataController failed to update all elements, then attempt a recovery and switch the request to nothing
-                    if (!dataController.UpdateAllElements(elementIds))
-                    {
-                        this.AttemptRecovery(request);
-                        request = Request.Nothing;
-                    }
+                    // elementIds = revitController.GetAllElementIds(this.actionCondition.filter);
+                    // dataController.SetMode(this.actionCondition.filter);
+                    // dataController.SetMode(this.actionCondition.filter);
+                    //elementIds = dataController.AllElements;
+                    //// If dataController failed to update all elements, then attempt a recovery and switch the request to nothing
+                    //if (!dataController.UpdateAllElements(elementIds))
+                    //{
+                    //    this.AttemptRecovery(request);
+                    //    request = Request.Nothing;
+                    //}
 
                     break;
                 case Request.SelectElementIds:
