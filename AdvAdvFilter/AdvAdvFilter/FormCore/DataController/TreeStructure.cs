@@ -9,6 +9,8 @@
 
     using Autodesk.Revit.DB;
 
+    using FilterMode = AdvAdvFilter.Common.FilterMode;
+
     public class TreeStructure
     {
         public enum depth
@@ -24,8 +26,11 @@
         #region Fields
 
         private Dictionary<ElementId, TreeNode> elementIdNodes;
+        private Dictionary<ElementId, HashSet<ElementId>> viewElementId;
         private ElementSet setTree;
         private Document doc;
+
+        private FilterMode currentMode;
 
         private HashSet<ElementId> subSet;
 
@@ -62,10 +67,17 @@
 
             this.elementIdNodes = new Dictionary<ElementId, TreeNode>();
 
+            this.viewElementId = new Dictionary<ElementId, HashSet<ElementId>>();
+
             this.setTree = new ElementSet();
             this.setTree.Name = "All";
 
+            this.currentMode = FilterMode.Invalid;
+
             this.subSet = new HashSet<ElementId>();
+
+            this.VisibleNodes = new HashSet<ElementId>();
+            this.SelectedNodes = new HashSet<ElementId>();
         }
 
         #region ElementTree Operations
@@ -76,8 +88,14 @@
         {
             this.elementIdNodes.Clear();
 
+            this.viewElementId.Clear();
+
             this.setTree.Branch.Clear();
             this.setTree.Set.Clear();
+
+            this.VisibleNodes.Clear();
+
+            this.SelectedNodes.Clear();
         }
 
         #endregion Clear and reset
@@ -100,8 +118,13 @@
 
                 // Add elementId to listOfElementIds to be added in the tree
                 nodesToAdd.Add(data);
+
                 // Add elementid and its corresponding node in this.elementIdNodes
                 this.elementIdNodes.Add(id, node);
+                // If viewElementId doesn't contain any entries corresponding to data.OwnerViewId, then create one
+                if (!this.viewElementId.ContainsKey(data.OwnerViewId))
+                    this.viewElementId.Add(data.OwnerViewId, new HashSet<ElementId>());                
+                this.viewElementId[data.OwnerViewId].Add(id);
             }
 
             // Update the internal tree structure
@@ -195,8 +218,15 @@
 
                 // Add 'data' onto the list of nodes to remove
                 nodesToRemove.Add(data);
+
                 // Remove the entry corresponding to 'id' in this.elementIdNodes
                 this.elementIdNodes.Remove(id);
+                this.viewElementId[data.OwnerViewId].Remove(id);
+                // If the number of entries corresponding to data.OwnerViewId is 0, then remove that dictionary key
+                if (this.viewElementId[data.OwnerViewId].Count == 0)
+                {
+                    this.viewElementId.Remove(data.OwnerViewId);
+                }
             }
 
             // Remove the all occurances of the ElementIds in nodesToRemove from the tree
@@ -289,6 +319,33 @@
 
         #region SubSet Operations
 
+        public void SetSubSet (FilterMode mode)
+        {
+            if (this.currentMode == mode) return;
+
+            // FilteredElementCollector collector = new FilteredElementCollector(this.doc, this.setTree.Set);
+
+            switch (mode)
+            {
+                case FilterMode.Project:
+                    this.subSet = this.setTree.Set;
+                    break;
+                case FilterMode.View:
+                    ElementId viewId = this.doc.ActiveView.Id;
+                    if (this.viewElementId.ContainsKey(viewId))
+                        this.subSet = this.viewElementId[viewId];
+                    else
+                        this.subSet.Clear();
+                    break;
+                case FilterMode.Selection:
+                    this.subSet = this.SelectedNodes;
+                    break;
+                default:
+                    break;
+            }
+            
+            this.currentMode = mode;
+        }
 
         #endregion SubSet Operations
 

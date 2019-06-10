@@ -12,23 +12,27 @@
     using TreeNode = System.Windows.Forms.TreeNode;
     using TreeNodeCollection = System.Windows.Forms.TreeNodeCollection;
 
+    using FilterMode = AdvAdvFilter.Common.FilterMode;
+
     /// <summary>
     /// DataController acts as a layer between the ModelessForm and the Revit Software
     ///     to make it more convenient to update and retrieve data, and provides
     ///     information if the update has made any significant change to the data.
     /// </summary>
-    class DataController
+    public class DataController
     {
 
         #region DataTypes
-
+        /*
         public enum FilterMode
         {
             Selection = 0,
             View = 1,
             Project = 2,
+            Custom = 3,
             Invalid = -1
         }
+        */
 
         #endregion DataTypes
 
@@ -50,7 +54,8 @@
 
         public List<ElementId> AllElements
         {
-            get { return this.allElements; }
+            // get { return this.allElements; }
+            get { return this.elementTree.SubSet.ToList<ElementId>();  }
         }
 
         public List<ElementId> SelElements
@@ -145,7 +150,14 @@
 
         #endregion Constructor
 
-        
+        #region Controls
+
+        public void SetMode(FilterMode mode)
+        {
+            this.elementTree.SetSubSet(mode);
+        }
+
+        #endregion Controls
 
         #region AllElements Operations
 

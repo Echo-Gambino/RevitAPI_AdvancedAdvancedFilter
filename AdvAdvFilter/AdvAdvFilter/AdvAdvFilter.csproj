@@ -61,6 +61,7 @@
     <Compile Include="FormCore\ActionController\ActionAxisController.cs" />
     <Compile Include="FormCore\ActionController\ActionController.cs" />
     <Compile Include="FormCore\ActionController\ActionModeController.cs" />
+    <Compile Include="FormCore\Common.cs" />
     <Compile Include="FormCore\DataController\ElementSet.cs" />
     <Compile Include="FormCore\DataController\NodeData.cs" />
     <Compile Include="FormCore\RequestHandler\RequestHandler.cs" />

@@ -18,13 +18,11 @@
     // using Color = System.Drawing.Color;
     using Point = System.Drawing.Point;
     using Panel = System.Windows.Forms.Panel;
-    using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
-    using Request = AdvAdvFilter.RequestHandler.Request;
-
+    using FilterMode = AdvAdvFilter.Common.FilterMode;
+    using Request = AdvAdvFilter.Common.Request;
 
     public partial class ModelessForm : System.Windows.Forms.Form
     {
-
         #region Fields
 
         #region Fields: Modeless Form

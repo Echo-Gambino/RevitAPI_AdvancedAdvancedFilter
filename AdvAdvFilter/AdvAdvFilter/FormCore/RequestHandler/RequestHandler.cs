@@ -13,27 +13,12 @@
     using Autodesk.Revit.UI;
     using Autodesk.Revit.UI.Events;
 
+    using FilterMode = AdvAdvFilter.Common.FilterMode;
+    using Request = AdvAdvFilter.Common.Request;
+
     class RequestHandler
     {
         #region Data Types
-        // Make an enum for all the possible requests
-        public enum Request
-        {
-            Nothing = 0,
-            UpdateTreeView = 1,
-            UpdateTreeViewSelection = 2,
-            SelectElementIds = 3,
-            ShiftSelected = 4,
-            Invalid = -1
-        }
-
-        public enum FilterMode
-        {
-            Selection = 0,
-            View = 1,
-            Project = 2,
-            Invalid = -1
-        }
 
         struct Condition
         {
@@ -226,6 +211,7 @@
                     revitController.UpdateView();
                     // TODO: Make it so that revitController only gives filtered results (selection, view, project)
                     elementIds = revitController.GetAllElementIds(this.actionCondition.filter);
+                    dataController.SetMode(this.actionCondition.filter);
                     // If dataController failed to update all elements, then attempt a recovery and switch the request to nothing
                     if (!dataController.UpdateAllElements(elementIds))
                     {

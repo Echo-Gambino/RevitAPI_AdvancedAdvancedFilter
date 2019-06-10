@@ -8,7 +8,7 @@
     using System.Threading.Tasks;
     using System.Windows.Forms;
 
-    class ActionModeController
+    public class ActionModeController
     {
 
         #region DataType

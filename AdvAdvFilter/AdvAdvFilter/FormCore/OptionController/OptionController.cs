@@ -8,7 +8,7 @@
     using System.Threading.Tasks;
     using System.Windows.Forms;
 
-    using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
+    using FilterMode = AdvAdvFilter.Common.FilterMode;
 
     class OptionController : Controller
     {

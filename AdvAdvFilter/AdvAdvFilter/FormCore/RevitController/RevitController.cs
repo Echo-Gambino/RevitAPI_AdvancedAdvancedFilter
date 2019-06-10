@@ -11,7 +11,7 @@
     using Autodesk.Revit.UI.Events;
 
     using MessageBox = System.Windows.Forms.MessageBox;
-    using FilterMode = AdvAdvFilter.RequestHandler.FilterMode;
+    using FilterMode = AdvAdvFilter.Common.FilterMode;
 
     /// <summary>
     /// RevitController performs any complex tasks regarding the 
