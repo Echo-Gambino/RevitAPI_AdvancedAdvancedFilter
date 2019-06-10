@@ -22,10 +22,6 @@
     {
         public int numCheckedLeafs;
         public int totalLeafs;
-        public string realText;
-
-        private Font regularFont;
-        private Font boldFont;
 
         public AdvTreeNode()
         {
@@ -35,7 +31,7 @@
 
         public string UpdateCounter()
         {            
-            this.Text = string.Format("[ {0}/{1} ] {2}", this.numCheckedLeafs, this.totalLeafs, this.realText);
+            this.Text = string.Format("[ {0}/{1} ] {2}", this.numCheckedLeafs, this.totalLeafs, this.Name);
             return this.Text;
         }
 
@@ -57,51 +53,47 @@
     {
         #region Fields
 
-        public ElementId ElementId;
-
-        private string categoryType;
-        private string category;
-        private string family;
-        private string elementType;
+        private NodeData data;
 
         #endregion Fields
 
         #region Parameters
 
+        public ElementId ElementId
+        {
+            get { return data.Id; }
+            set { this.data.Id = value; }
+        }
+
         public string CategoryType
         {
-            get { return this.categoryType; }
-            set { this.categoryType = AlwaysGetString(value, "CategoryType"); }
+            get { return this.data.CategoryType; }
+            set { this.data.CategoryType = AlwaysGetString(value, "CategoryType"); }
         }
 
         public string Category
         {
-            get { return this.category; }
-            set { this.category = AlwaysGetString(value, "Category"); }
+            get { return this.data.Category; }
+            set { this.data.Category = AlwaysGetString(value, "Category"); }
         }
 
         public string Family
         {
-            get { return this.family; }
-            set { this.family = AlwaysGetString(value, "Family"); }
+            get { return this.data.Family; }
+            set { this.data.Family = AlwaysGetString(value, "Family"); }
         }
 
         public string ElementType
         {
-            get { return this.elementType; }
-            set { this.elementType = AlwaysGetString(value, "ElementType"); }
+            get { return this.data.ElementType; }
+            set { this.data.ElementType = AlwaysGetString(value, "ElementType"); }
         }
 
         #endregion Parameters
 
-        public LeafTreeNode()
+        public LeafTreeNode(NodeData data)
         {
-            this.ElementId = null;
-
-            this.CategoryType = null;
-            this.Category = null;
-            this.Family = null;
-            this.ElementType = null;
+            this.data = data ?? throw new ArgumentNullException();
         }
 
         /// <summary>
@@ -140,16 +132,16 @@
             switch (parameterName)
             {
                 case "CategoryType":
-                    parameterValue = this.categoryType;
+                    parameterValue = this.CategoryType;
                     break;
                 case "Category":
-                    parameterValue = this.category;
+                    parameterValue = this.Category;
                     break;
                 case "Family":
-                    parameterValue = this.family;
+                    parameterValue = this.Family;
                     break;
                 case "ElementType":
-                    parameterValue = this.elementType;
+                    parameterValue = this.ElementType;
                     break;
                 default:
                     parameterValue = "null";
@@ -179,7 +171,8 @@
         private Label totalLabel;
         private TreeView treeView;
         private List<BranchTreeNode> categoryTypes;
-        private List<LeafTreeNode> leafNodes;
+        // private List<LeafTreeNode> leafNodes;
+        private Dictionary<ElementId, LeafTreeNode> leafNodes;
 
         private HashSet<ElementId> idsInTreeView;
 
@@ -217,7 +210,8 @@
             this.treeView = treeView;
 
             // this.categoryTypes = GetCategoryNodes();
-            this.leafNodes = new List<LeafTreeNode>();
+            // this.leafNodes = new List<LeafTreeNode>();
+            this.leafNodes = new Dictionary<ElementId, LeafTreeNode>();
             this.idsInTreeView = new HashSet<ElementId>();
         }
 
@@ -230,10 +224,10 @@
         /// <param name="rCon"></param>
         public void UpdateTreeViewStructure(
             List<ElementId> newElementIds,
-            RevitController rCon
+            TreeStructure tree
             )
         {
-            if ((newElementIds == null) || (rCon == null))
+            if (newElementIds == null)
                 throw new ArgumentNullException();
 
             lock (treeLock)
@@ -255,7 +249,7 @@
                       select eId;
 
                 // Get list of leafNodes to add onto treeView using addList
-                List<LeafTreeNode> leafNodesToAdd = ConstructLeafNodeList(addList, rCon);
+                List<LeafTreeNode> leafNodesToAdd = ConstructLeafNodeList(addList, tree);
                 // Get list of leafNodes to remove from treeView using remList
                 List<LeafTreeNode> leafNodesToRem = RetrieveLeafNodes(remList);
 
@@ -306,7 +300,7 @@
                     // Remove leaf in lastBranch
                     treeNodes.Remove(leaf);
                     // Remove leaf from leafNodes list
-                    this.leafNodes.Remove(leaf);
+                    this.leafNodes.Remove(leaf.ElementId);
                 }
                 return;
             }
@@ -344,7 +338,7 @@
                         // Remove leaf 
                         leaf.Remove();
                         // Remove leaf from leafNodes list
-                        this.leafNodes.Remove(leaf);
+                        this.leafNodes.Remove(leaf.ElementId);
                     }
 
                     continue;
@@ -403,10 +397,13 @@
         private List<LeafTreeNode> RetrieveLeafNodes(
             IEnumerable<ElementId> elementIds)
         {
-            List<LeafTreeNode> retrievedLeaves;
+            List<LeafTreeNode> retrievedLeaves = new List<LeafTreeNode>();
 
+            retrievedLeaves = (from ElementId id in elementIds
+                              select leafNodes[id]).ToList();
+            /*
             // Gets IEnumerable<LeafTreeNode> using a LINQ statement
-            IEnumerable<LeafTreeNode> leavesToRemove
+            IEnumerable < LeafTreeNode > leavesToRemove
                 = from LeafTreeNode in this.leafNodes
                   where elementIds.Contains(LeafTreeNode.ElementId)
                   select LeafTreeNode;
@@ -422,7 +419,7 @@
                 // Set retrievedLeaves to be leavesToRemove but in a List
                 retrievedLeaves = leavesToRemove.ToList();
             }
-
+            */
             return retrievedLeaves;
         }
 
@@ -559,7 +556,7 @@
                     // Add leaf in lastBranch
                     treeNodes.Add(leaf);
                     // Add leaf to leafNodes list for easy access
-                    this.leafNodes.Add(leaf);
+                    this.leafNodes.Add(leaf.ElementId, leaf);
                 }
                 return;
             }
@@ -597,7 +594,7 @@
                     branch = new BranchTreeNode();
                     branch.Name = kvp.Key;
                     branch.Text = kvp.Key;
-                    branch.realText = kvp.Key;
+                    // branch.realText = kvp.Key;
                     branch.totalLeafs = 0;
                     treeNodes.Add(branch);
                 }
@@ -652,20 +649,18 @@
         /// <returns></returns>
         private List<LeafTreeNode> ConstructLeafNodeList(
             IEnumerable<ElementId> elementIds,
-            RevitController rCon
+            TreeStructure tree
             )
         {
             // Construct leafNodes to add onto the treeView
             List<LeafTreeNode> leafNodesList = new List<LeafTreeNode>();
             LeafTreeNode leafNode;
-            Element element;
+            NodeData data;
 
             foreach (ElementId eId in elementIds)
             {
-                // Get the Revit element from elementId
-                element = rCon.Doc.GetElement(eId);
-                // Get the leafNode from element and elementType
-                leafNode = ConstructLeafNode(element, rCon.GetElementType(element));
+                data = tree.ElementIdNodes[eId].Tag as NodeData;
+                leafNode = new LeafTreeNode(data);
                 // Add leafNode into the leafNodesToAdd
                 leafNodesList.Add(leafNode);
             }
@@ -682,18 +677,19 @@
         /// <returns></returns>
         private LeafTreeNode ConstructLeafNode(
             Element element,
-            ElementType elementType
+            ElementType elementType,
+            TreeStructure tree
             )
         {
             if (element == null)
                 throw new ArgumentNullException();
 
-            LeafTreeNode leaf = new LeafTreeNode();
+            LeafTreeNode leaf = new LeafTreeNode(tree.ElementIdNodes[element.Id].Tag as NodeData);
 
             // Get leaf's essential information
             leaf.ElementId = element.Id;
             leaf.Text = element.Id.ToString();
-            leaf.realText = element.Id.ToString();
+            // leaf.realText = element.Id.ToString();
             leaf.Name = element.Id.ToString();
 
             // Get the category from element and attempts to

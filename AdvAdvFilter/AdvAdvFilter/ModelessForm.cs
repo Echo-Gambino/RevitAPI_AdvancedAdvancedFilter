@@ -456,8 +456,8 @@
                             // Update the treeView element within the form
                             this.BeginInvoke(new Action(() =>
                             {
-                                // selectionController.UpdateTreeViewStructure(dataController.AllElements, revitController);
-                                selectionController.UpdateTreeViewStructure_New(dataController.ElementTree.SubSet, dataController.ElementTree);
+                                selectionController.UpdateTreeViewStructure(dataController.AllElements, dataController.ElementTree);
+                                // selectionController.UpdateTreeViewStructure_New(dataController.ElementTree.SubSet, dataController.ElementTree);
                             }));
 
                             break;

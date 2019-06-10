@@ -225,7 +225,6 @@
                                     Main.UiCtrlApp.ControlledApplication.DocumentChanged +=
                                         new EventHandler<Autodesk.Revit.DB.Events.DocumentChangedEventArgs>
                                             (Main.ActiveModelessForm.AppEvent_DocChangedEventHandler);
-                                    
                                 }
                                 catch (Exception ex)
                                 {
