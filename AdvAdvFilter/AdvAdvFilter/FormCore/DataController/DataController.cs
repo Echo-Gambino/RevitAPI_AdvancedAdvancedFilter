@@ -129,8 +129,10 @@
 
         #region Constructor
 
-        public DataController(Document doc = null)
+        public DataController(Document doc)
         {
+            if (doc == null) throw new ArgumentNullException();
+
             this.allElements = new List<ElementId>();
             this.selElements = new List<ElementId>();
             // Fields related to movement
@@ -138,20 +140,19 @@
             this.copyAndShift = true;
             this.coords = new List<int>() { 0, 0, 0 };
 
-            if (doc != null)
-                this.elementTree = new TreeStructure(doc);        
+            this.elementTree = new TreeStructure(doc);
         }
 
         #endregion Constructor
+
+        
 
         #region AllElements Operations
 
         public void SetAllElements(List<ElementId> elementIds)
         {
             this.elementTree.ClearAll();
-
             this.elementTree.AppendList(elementIds);
-
         }
 
         public void ClearAllElements()
@@ -174,8 +175,8 @@
             List<ElementId> keyList = this.elementTree.ElementIdNodes.Keys.ToList();
         }
 
-        #endregion AllElements Operations
 
+        #endregion AllElements Operations
 
         #region Auxiliary Methods
 

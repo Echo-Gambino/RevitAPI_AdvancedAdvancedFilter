@@ -11,7 +11,7 @@
 
     public class TreeStructure
     {
-        enum depth
+        public enum depth
         {
             CategoryType = 0,
             Category = 1,
@@ -26,6 +26,8 @@
         private Dictionary<ElementId, TreeNode> elementIdNodes;
         private ElementSet setTree;
         private Document doc;
+
+        private HashSet<ElementId> subSet;
 
         public HashSet<ElementId> VisibleNodes { get; set; }
         public HashSet<ElementId> SelectedNodes { get; set; }
@@ -47,13 +49,23 @@
         public Document Doc
         { get { return this.doc; } }
 
+        public HashSet<ElementId> SubSet
+        {
+            get { return this.subSet; }
+        }
+
         #endregion Parameters
 
         public TreeStructure(Document doc)
         {
             this.doc = doc;
+
             this.elementIdNodes = new Dictionary<ElementId, TreeNode>();
+
             this.setTree = new ElementSet();
+            this.setTree.Name = "All";
+
+            this.subSet = new HashSet<ElementId>();
         }
 
         #region ElementTree Operations
@@ -134,7 +146,10 @@
 
                 // If newSet doesn't exist, then add a branch and set newSet to the newly created branch
                 if (newSet == null)
+                {
                     newSet = set.AddBranch(kvp.Key);
+                    set.Name = depth.ToString();
+                }
 
                 //----- Debug ------
                 /*
@@ -271,6 +286,11 @@
         #endregion Remove Nodes From Tree
 
         #endregion ElementTree Operations
+
+        #region SubSet Operations
+
+
+        #endregion SubSet Operations
 
         #region Auxiliary Functions
 

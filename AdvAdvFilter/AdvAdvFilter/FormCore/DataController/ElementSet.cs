@@ -14,6 +14,7 @@
 
         private Dictionary<string, ElementSet> branch;
         private HashSet<ElementId> set;
+        private string name;
 
         #endregion Field
 
@@ -30,12 +31,25 @@
             get { return this.branch; }
         }
 
+        public string Name
+        {
+            get { return this.name; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
+                this.name = value;
+            }
+
+        }
+
         #endregion Parameter
 
         public ElementSet()
         {
-            branch = new Dictionary<string, ElementSet>();
-            set = new HashSet<ElementId>();
+            this.branch = new Dictionary<string, ElementSet>();
+            this.set = new HashSet<ElementId>();
+            this.Name = "";
         }
 
         /// <summary>
