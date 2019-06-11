@@ -62,10 +62,12 @@
                 }
                 else
                 {
-                    IEnumerable<ElementId> nodesToDelete
+                    IEnumerable<ElementId> commonElementIds
                         = from ElementId id in value
                           where this.curElementIds.Contains(id)
                           select id;
+                    IEnumerable<ElementId> nodesToDelete = this.curElementIds.Except(commonElementIds);
+                    
                     this.nodesToDel = nodesToDelete.ToList();
                 }
             }

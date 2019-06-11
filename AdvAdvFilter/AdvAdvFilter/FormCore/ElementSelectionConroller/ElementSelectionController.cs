@@ -251,6 +251,7 @@
                 HashSet<ElementId> oldElementIds = this.treeController.CurElementIds;
                 if (oldElementIds == null) throw new ArgumentNullException("oldElementIds");
 
+                /*
                 var addList
                     = from ElementId id in newElementIds
                       where (!oldElementIds.Contains(id))
@@ -261,6 +262,10 @@
                       select id;
                 this.treeController.NodesToAdd = addList.ToList();
                 this.treeController.NodesToDel = delList.ToList();
+                */
+
+                this.treeController.NodesToAdd = newElementIds.ToList();
+                this.treeController.NodesToDel = newElementIds.ToList();
             }
 
             // Commit the following changes
