@@ -62,12 +62,11 @@
                 }
                 else
                 {
-                    IEnumerable<ElementId> commonElementIds
+                    IEnumerable<ElementId> nodesToDelete
                         = from ElementId id in value
                           where this.curElementIds.Contains(id)
                           select id;
-                    IEnumerable<ElementId> nodesToDelete = this.curElementIds.Except(commonElementIds);
-                    
+                    // IEnumerable<ElementId> nodesToDelete = this.curElementIds.Except(commonElementIds);
                     this.nodesToDel = nodesToDelete.ToList();
                 }
             }
@@ -93,6 +92,7 @@
             sb.AppendLine("cur " + this.curElementIds.Count.ToString());
             sb.AppendLine("del " + this.NodesToDel.Count.ToString());
             sb.AppendLine("add " + this.NodesToAdd.Count.ToString());
+            sb.AppendLine("total " + tree.ElementIdNodes.Count.ToString());
             MessageBox.Show(sb.ToString());
 
             Remove(this.NodesToDel, this.leafNodes);
@@ -118,8 +118,25 @@
 
             lock (treeLock)
             {
-                DelNodesInTree(elementIds, this.treeView.Nodes, nodeDict, Depth.CategoryType);
+                if (elementIds.Count == this.curElementIds.Count)
+                {
+                    ClearAll();
+                }
+                else
+                {
+                    DelNodesInTree(elementIds, this.treeView.Nodes, nodeDict, Depth.CategoryType);
+                }
             }
+        }
+
+        private void ClearAll()
+        {
+            // Clears all the treeView nodes
+            this.treeView.Nodes.Clear();
+            // Clears all the leafNode mappings
+            this.leafNodes.Clear();
+            // Clears the hashSet of currentElementIds
+            this.curElementIds.Clear();
         }
 
         private void Append(

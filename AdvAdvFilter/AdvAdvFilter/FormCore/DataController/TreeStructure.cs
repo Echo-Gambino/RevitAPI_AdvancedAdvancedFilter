@@ -316,7 +316,7 @@
             switch (mode)
             {
                 case FilterMode.Project:
-                    this.subSet = this.setTree.Set;
+                    this.subSet = new HashSet<ElementId>(this.setTree.Set);
                     break;
                 case FilterMode.View:
                     List<ViewType> types = new List<ViewType>()
@@ -340,7 +340,7 @@
                     }
                     break;
                 case FilterMode.Selection:
-                    this.subSet = this.SelectedNodes;
+                    this.subSet = new HashSet<ElementId>(this.SelectedNodes);
                     break;
                 default:
                     break;

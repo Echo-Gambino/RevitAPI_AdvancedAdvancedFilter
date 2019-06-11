@@ -607,10 +607,12 @@
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
 
+                    TaskDialog.Show("Thing", "Thing");
+
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
-                        selectionController.CommitTree(dataController.ElementTree, dataController.AllElements); //, addElements.ToList(), delElements.ToList());
+                        selectionController.CommitTree(dataController.ElementTree, dataController.AllElements); 
                     }));
                     break;
                 default:
@@ -627,12 +629,22 @@
             ICollection<ElementId> addedElements =  args.GetAddedElementIds();
             ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
 
+            HashSet<ElementId> subSet = this.dataController.ElementTree.SubSet;
+            var addList
+                = from ElementId id in addedElements
+                  where subSet.Contains(id)
+                  select id;
+            var delList
+                = from ElementId id in deletedElements
+                  where subSet.Contains(id)
+                  select id;
+
             // Add elements to TreeStructure
             this.dataController.AddToAllElements(addedElements.ToList());
 
             // Load up on the changes to be committed to selectionController
-            this.selectionController.NodesToAdd = addedElements.ToList();
-            this.selectionController.NodesToDel = deletedElements.ToList();
+            this.selectionController.NodesToAdd = addList.ToList();
+            this.selectionController.NodesToDel = delList.ToList();
 
             // Commit the changes into the treeView structure
             this.BeginInvoke(new Action(() =>
