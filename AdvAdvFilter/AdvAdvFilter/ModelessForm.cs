@@ -593,7 +593,7 @@
         }
 
         /// <summary>
-        /// 
+        /// Handles the form's request to execute instructions within a revit API context
         /// </summary>
         private void HandleRequest_IdlingHandler(Request request)
         {
@@ -606,9 +606,6 @@
                     bool changed = dataController.SetMode(filter);
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
-
-                    TaskDialog.Show("Thing", "Thing");
-
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
@@ -626,9 +623,11 @@
         {
             this.haltIdlingHandler = true;
 
+            // Retrieve the addedElement Ids and deletedElement Ids
             ICollection<ElementId> addedElements =  args.GetAddedElementIds();
             ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
 
+            // Filter added/deleted elements such that only the ones that are within dataController's subSet are selected
             HashSet<ElementId> subSet = this.dataController.ElementTree.SubSet;
             var addList
                 = from ElementId id in addedElements
