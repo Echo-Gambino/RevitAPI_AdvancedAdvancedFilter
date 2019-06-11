@@ -57,12 +57,17 @@
             get { return this.elementTree.SubSet;  }
         }
 
+        public HashSet<ElementId> SelElementIds
+        {
+            get { return this.elementTree.SelectedNodes; }
+        }
+        /*
         public List<ElementId> SelElements
         {
             set { this.selElements = value; }
             get { return this.selElements; }
         }
-
+        */
         public List<ElementId> MovElements
         {
             set
@@ -267,6 +272,14 @@
             bool result = b1 && b2 && b3;
 
             return result;
+        }
+
+        public bool DidSelectionChange(List<ElementId> revitSelection)
+        {
+            bool sameLength = (this.SelElementIds.Count == revitSelection.Count);
+            bool sameItems = this.SelElementIds.IsSupersetOf(revitSelection);
+
+            return sameLength && sameItems;
         }
 
         #endregion Auxiliary Methods

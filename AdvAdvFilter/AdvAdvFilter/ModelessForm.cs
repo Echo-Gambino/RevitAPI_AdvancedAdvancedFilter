@@ -612,6 +612,19 @@
                         selectionController.CommitTree(dataController.ElementTree, dataController.AllElements); 
                     }));
                     break;
+
+                case Request.UpdateTreeViewSelection:
+                    // Step 1: Update dataController's select element list
+                    List<ElementId> selectedElements = revitController.GetElementIdsFromSelection();
+                    dataController.UpdateSelElements(selectedElements);
+                    // Step 2: Select Elements
+
+                    // Step 3: (OPTIONAL) Hide the remaining elementIds
+
+
+
+                    break;
+
                 default:
                     break;
             }
