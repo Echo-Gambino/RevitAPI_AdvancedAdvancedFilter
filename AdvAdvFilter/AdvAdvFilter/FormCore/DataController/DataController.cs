@@ -52,9 +52,9 @@
 
         #region Parameters
 
-        public List<ElementId> AllElements
+        public HashSet<ElementId> AllElements
         {
-            get { return this.elementTree.SubSet.ToList<ElementId>();  }
+            get { return this.elementTree.SubSet;  }
         }
 
         public List<ElementId> SelElements
@@ -151,9 +151,9 @@
 
         #region Controls
 
-        public void SetMode(FilterMode mode)
+        public bool SetMode(FilterMode mode, bool force = false)
         {
-            this.elementTree.SetSubSet(mode);
+            return this.elementTree.SetSubSet(mode, force);
         }
 
         #endregion Controls

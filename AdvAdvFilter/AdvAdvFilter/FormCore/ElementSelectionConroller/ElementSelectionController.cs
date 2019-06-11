@@ -174,7 +174,9 @@
         // private List<LeafTreeNode> leafNodes;
         private Dictionary<ElementId, LeafTreeNode> leafNodes;
 
-        private HashSet<ElementId> idsInTreeView;
+        private HashSet<ElementId> elementIdsInTree;
+
+        TreeViewController treeController;
 
         private object treeLock = new object();
 
@@ -197,6 +199,18 @@
             get { return this.treeView; }
         }
 
+        public List<ElementId> NodesToAdd
+        {
+            get { return this.treeController.NodesToAdd; }
+            set { this.treeController.NodesToAdd = value; }
+        }
+
+        public List<ElementId> NodesToDel
+        {
+            get { return this.treeController.NodesToDel; }
+            set { this.treeController.NodesToDel = value; }
+        }
+
         #endregion
 
         public ElementSelectionController(
@@ -212,7 +226,9 @@
             // this.categoryTypes = GetCategoryNodes();
             // this.leafNodes = new List<LeafTreeNode>();
             this.leafNodes = new Dictionary<ElementId, LeafTreeNode>();
-            this.idsInTreeView = new HashSet<ElementId>();
+            this.elementIdsInTree = new HashSet<ElementId>();
+
+            this.treeController = new TreeViewController(treeView);
         }
 
         #region Update TreeView Structure
@@ -220,57 +236,181 @@
         /// <summary>
         /// Updates the treeView's structure
         /// </summary>
-        /// <param name="newElementIds"></param>
         /// <param name="rCon"></param>
-        public void UpdateTreeViewStructure(
-            List<ElementId> newElementIds,
-            TreeStructure tree
+        public void CommitTree(
+            TreeStructure tree,
+            HashSet<ElementId> newElementIds = null
             )
         {
-            if (newElementIds == null)
+            if (tree == null)
                 throw new ArgumentNullException();
 
-            lock (treeLock)
+            // Modify the change lists if the corresponding argument isn't null
+            if (newElementIds != null)
             {
-                /// Get information that will be needed to perform the necessary actions
-                // Get list of old elementIds
-                IEnumerable<ElementId> oldElementIds
-                    = from LeafTreeNode leaf in this.leafNodes
-                      select leaf.ElementId;
-                // Get list of elements to add onto the treeView
-                IEnumerable<ElementId> addList
-                    = from ElementId eId in newElementIds
-                      where (!oldElementIds.Contains(eId))
-                      select eId;
-                // Get list of elementIds to remove from the treeView
-                IEnumerable<ElementId> remList
-                    = from ElementId eId in oldElementIds
-                      where (!newElementIds.Contains(eId))
-                      select eId;
+                HashSet<ElementId> oldElementIds = this.treeController.CurElementIds;
+                if (oldElementIds == null) throw new ArgumentNullException("oldElementIds");
 
-                // Get list of leafNodes to add onto treeView using addList
-                List<LeafTreeNode> leafNodesToAdd = ConstructLeafNodeList(addList, tree);
-                // Get list of leafNodes to remove from treeView using remList
-                List<LeafTreeNode> leafNodesToRem = RetrieveLeafNodes(remList);
-
-                /// Execute actions that will modify the treeView
-                // Selectively add leaf nodes into the treeView without scrapping everything
-                AddLeafNodes(leafNodesToAdd, this.treeView.Nodes);
-                // Selectively remove leafnodes in the treeView
-                RemLeafNodes(leafNodesToRem, this.treeView.Nodes);
-                // Update the category nodes
-                UpdateCategoryTypeNodes(this.treeView.Nodes);
-                // Update counter (not efficient!)
-                foreach (AdvTreeNode root in this.treeView.Nodes)
-                {
-                    UpdateCounter(root);
-                }
-                // Tally up the totals to be put on selection label
-                UpdateLabelTotals();
+                var addList
+                    = from ElementId id in newElementIds
+                      where (!oldElementIds.Contains(id))
+                      select id;
+                var delList
+                    = from ElementId id in oldElementIds
+                      where (!newElementIds.Contains(id))
+                      select id;
+                this.treeController.NodesToAdd = addList.ToList();
+                this.treeController.NodesToDel = delList.ToList();
             }
+
+            // Commit the following changes
+            this.treeController.CommitChanges(tree);
+
+            return;
         }
 
         #region TreeNode Removal
+
+        private void TreeStructureAdd_New(
+            List<LeafTreeNode> leafNodes,
+            TreeNodeCollection treeNodes,
+            Depth depth,
+            Depth lowestDepth = Depth.Instance
+            )
+        {
+            if (depth == lowestDepth)
+            {
+                foreach (LeafTreeNode node in leafNodes)
+                {
+                    treeNodes.Add(node);
+                    this.leafNodes.Add(node.ElementId, node);
+                }
+                return;
+            }
+
+            Depth nextDepth;
+            SortedDictionary<string, List<LeafTreeNode>> grouping;
+
+            nextDepth = GetNextDepth(depth, lowestDepth);
+
+            grouping = new SortedDictionary<string, List<LeafTreeNode>>();
+
+            // Construct the dictionary to group the leaves together by a certain parameter,
+            // this is so that we don't send the whole list down in every concievable branch
+            string paramName = depth.ToString();
+            string paramValue;
+            foreach (LeafTreeNode leaf in leafNodes)
+            {
+                paramValue = leaf.GetParameter(paramName);
+
+                if (!grouping.ContainsKey(paramValue))
+                    grouping.Add(paramValue, new List<LeafTreeNode>());
+
+                grouping[paramValue].Add(leaf);
+            }
+
+            grouping.OrderBy(key => key.Key);
+            foreach (KeyValuePair<string, List<LeafTreeNode>> kvp in grouping)
+            {
+                BranchTreeNode branch;
+                // If treeNodes doesn't have a node with the name of the
+                // selected parameter value of a group of leaves,
+                // then make a node that has that name
+                if (!treeNodes.ContainsKey(kvp.Key))
+                {
+                    branch = new BranchTreeNode();
+                    branch.Name = kvp.Key;
+                    branch.Text = kvp.Key;
+                    // branch.realText = kvp.Key;
+                    branch.totalLeafs = 0;
+                    treeNodes.Add(branch);
+                }
+                else
+                {
+                    branch = treeNodes[kvp.Key] as BranchTreeNode;
+                }
+
+                // Update counter
+                branch.totalLeafs += kvp.Value.Count;
+                branch.UpdateCounter();
+
+                // Recurse into the node that has the node name of kvp.Key
+                TreeStructureAdd_New(kvp.Value, branch.Nodes, nextDepth);
+                // TreeStructureAdd(kvp.Value, treeNodes[kvp.Key].Nodes, newHeirarchy);
+            }
+        }
+
+        private void TreeStructureRem_New(
+            List<LeafTreeNode> leafNodes,
+            TreeNodeCollection treeNodes,
+            Depth depth,
+            Depth lowestDepth = Depth.Instance
+            )
+        {
+            if (depth == lowestDepth)
+            {
+                foreach (LeafTreeNode node in leafNodes)
+                {
+                    treeNodes.Remove(node);
+                    this.leafNodes.Remove(node.ElementId);
+                }
+                return;
+            }
+
+            Depth nextDepth;
+            SortedDictionary<string, List<LeafTreeNode>> grouping;
+
+            nextDepth = GetNextDepth(depth, lowestDepth);
+
+            grouping = new SortedDictionary<string, List<LeafTreeNode>>();
+
+            // Construct the dictionary to group the leaves together by a certain parameter,
+            // this is so that we don't send the whole list down in every concievable branch
+            string paramName = depth.ToString();
+            string paramValue;
+            foreach (LeafTreeNode leaf in leafNodes)
+            {
+                paramValue = leaf.GetParameter(paramName);
+
+                if (!grouping.ContainsKey(paramValue))
+                    grouping.Add(paramValue, new List<LeafTreeNode>());
+
+                grouping[paramValue].Add(leaf);
+            }
+
+            grouping.OrderBy(key => key.Key);
+            foreach (KeyValuePair<string, List<LeafTreeNode>> kvp in grouping)
+            {
+                // If treeNodes doesn't have a node with the name of the
+                // selected parameter value of a group of leaves,
+                // then delete all nodes with that parameter name
+                if (!treeNodes.ContainsKey(kvp.Key))
+                {
+                    foreach (LeafTreeNode leaf in leafNodes)
+                    {
+                        // Remove leaf 
+                        leaf.Remove();
+                        // Remove leaf from leafNodes list
+                        this.leafNodes.Remove(leaf.ElementId);
+                    }
+
+                    continue;
+                }
+
+                // Update counter
+                BranchTreeNode branch = treeNodes[kvp.Key] as BranchTreeNode;
+                branch.totalLeafs -= kvp.Value.Count;
+                branch.UpdateCounter();
+
+                // Recurse into the node that has the node name of kvp.Key
+                TreeStructureRem_New(kvp.Value, treeNodes[kvp.Key].Nodes, nextDepth);
+
+                if (treeNodes[kvp.Key].Nodes.Count == 0)
+                {
+                    treeNodes[kvp.Key].Remove();
+                }
+            }
+        }
 
         /// <summary>
         /// Removes the nodes from leafNodes and all branch nodes if all
@@ -400,7 +540,7 @@
             List<LeafTreeNode> retrievedLeaves = new List<LeafTreeNode>();
 
             retrievedLeaves = (from ElementId id in elementIds
-                              select leafNodes[id]).ToList();
+                              select this.leafNodes[id]).ToList();
             /*
             // Gets IEnumerable<LeafTreeNode> using a LINQ statement
             IEnumerable < LeafTreeNode > leavesToRemove
@@ -454,11 +594,11 @@
 
             lock (treeLock)
             {
-                HashSet<ElementId> elementsToRem = new HashSet<ElementId>(idsInTreeView);
+                HashSet<ElementId> elementsToRem = new HashSet<ElementId>(elementIdsInTree);
                 HashSet<ElementId> elementsToAdd = new HashSet<ElementId>(newElementIds);
 
                 elementsToRem.ExceptWith(newElementIds);
-                elementsToAdd.ExceptWith(idsInTreeView);
+                elementsToAdd.ExceptWith(elementIdsInTree);
 
                 List<TreeNode> nodesToRem = GetTreeNodes(elementsToRem, treeStructure);
                 List<TreeNode> nodesToAdd = GetTreeNodes(elementsToAdd, treeStructure);
@@ -471,7 +611,7 @@
                     TallyUpSelectedElements(n, Depth.CategoryType);
                 }
 
-                idsInTreeView = newElementIds;
+                elementIdsInTree = newElementIds;
             }
         }
 
@@ -994,7 +1134,7 @@
                 {
                     // If the leaf node doesn't exist in the selected elementIds,
                     // Then the leafNodes are outdated and the update won't work
-                    if (!leafNodeElementIds.Contains(elementId))
+                    if (!this.leafNodes.ContainsKey(elementId))
                     {
                         updateSuccess = false;
                         break;
@@ -1003,28 +1143,14 @@
 
                 if (updateSuccess)
                 {
-                    foreach (LeafTreeNode leaf in this.leafNodes)
+                    LeafTreeNode node;
+                    foreach (ElementId elementId in selected)
                     {
-                        if (selected.Contains(leaf.ElementId))
-                        {
-                            if (!leaf.Checked)
-                            {
-                                leaf.Checked = !leaf.Checked;
-                                UpdateAfterCheck(leaf);
-                                // UpdateTotalSelectedItemsLabel();
-                                UpdateLabelTotals();
-                            }
-                        }
-                        else
-                        {
-                            if (leaf.Checked)
-                            {
-                                leaf.Checked = !leaf.Checked;
-                                UpdateAfterCheck(leaf);
-                                // UpdateTotalSelectedItemsLabel();
-                                UpdateLabelTotals();
-                            }
-                        }
+                        node = this.leafNodes[elementId];
+                        node.Checked = !node.Checked;
+                        UpdateAfterCheck(node);
+                        UpdateLabelTotals();
+
                     }
                 }
             }
@@ -1042,7 +1168,7 @@
         public List<ElementId> GetSelectedElementIds()
         {
             List<ElementId> output = null;
-            List<LeafTreeNode> leafNodes = null;
+            Dictionary<ElementId, LeafTreeNode> leafNodes = null;
             int max = 5;
 
             // While max is still greater than 0...
@@ -1051,7 +1177,7 @@
                 // Get a copy of this.leafNodes without dataraces
                 lock (treeLock)
                 {
-                    leafNodes = new List<LeafTreeNode>(this.leafNodes);
+                    leafNodes = new Dictionary<ElementId, LeafTreeNode>(this.leafNodes);
                 }
 
                 // max counter decremented (signifying the program will make one attempt)

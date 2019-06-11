@@ -306,9 +306,12 @@
 
         #region SubSet Operations
 
-        public bool SetSubSet (FilterMode mode)
+        public bool SetSubSet (FilterMode mode, bool force = false)
         {
-            if ((this.currentMode == mode) && (this.currentMode != FilterMode.View)) return false;
+            if ((this.currentMode == mode)
+                && (this.currentMode != FilterMode.View) 
+                && (!force))
+                return false;
 
             switch (mode)
             {

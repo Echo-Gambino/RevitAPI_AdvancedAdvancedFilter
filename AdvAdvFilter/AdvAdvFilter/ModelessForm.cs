@@ -415,8 +415,21 @@
             {
                 args.SetRaiseWithoutDelay();
 
+                // If a thread has halted the idling handler, this if statement will
+                // make sure that the process does not pass through any further.
+                if (this.haltIdlingHandler) return;
+
+                // Initializer for everything the form needs within the Revit API context
+                FirstStartup_IdlingHandler();
+
+                Request request = GetNextRequest_IdlingHandler();
+
+                HandleRequest_IdlingHandler(request);
+
+                #region Stow
+                /*
                 if (!this.haltIdlingHandler)
-                {
+                {                    
                     // This is to get the essential objects to use the Revit API
                     UIApplication uiApp = sender as UIApplication;
                     UIDocument uiDoc = uiApp.ActiveUIDocument;
@@ -523,6 +536,8 @@
                             break;
                     }
                 }
+                */
+                #endregion STOW
             }
             catch (Exception ex)
             {
@@ -532,51 +547,75 @@
 
         #region Idling API Handler Methods
 
-        private void HandleHideUnselectedElementIds(List<ElementId> selElementIds)
+        /// <summary>
+        /// Initializes variables to upoun startup the idling handler, executes only one time per run
+        /// </summary>
+        private void FirstStartup_IdlingHandler()
         {
-            // revitController.HideUnselectedElementIds(selElementIds);
+            // Uses revitController! Only use it within API context!
 
-            ICollection<ElementId> ids = new FilteredElementCollector(this.doc).OfClass(typeof(FamilyInstance)).ToElementIds();
+            // If this isn't the first startup, then exit out immediately
+            if (!this.firstStartup) return;
+            // Disable first startup
+            this.firstStartup = false;
 
-            List<ElementId> hideIds = new List<ElementId>();
-            foreach (var id in ids)
+            // Get all elementIds and cache it into dataController
+            List<ElementId> allElementIds = revitController.GetAllElementIds(FilterMode.Project);
+
+            this.dataController.SetAllElements(allElementIds);
+
+            this.dataController.SetMode(requestHandler.FilterBy);
+
+            this.selectionController.NodesToAdd = dataController.AllElements.ToList();
+            this.selectionController.NodesToDel = dataController.AllElements.ToList();
+        }
+
+        /// <summary>
+        /// Gets the next request from the requestHandler, unless its overrided by an update in treeView
+        /// </summary>
+        /// <returns></returns>
+        private Request GetNextRequest_IdlingHandler()
+        {
+            Request request;
+
+            int viewChanged = revitController.UpdateView();
+
+            if (viewChanged == 1)
             {
-                if (!selElementIds.Contains(id))
-                {
-                    hideIds.Add(id);
-                }
+                request = Request.UpdateTreeView;
+            }
+            else
+            {
+                request = requestHandler.GetRequest();
             }
 
-            using (var tran = new Transaction(doc, "Test"))
+            return request;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void HandleRequest_IdlingHandler(Request request)
+        {
+            FilterMode filter = requestHandler.FilterBy;
+
+            switch (request)
             {
-                tran.Start();
+                case Request.UpdateTreeView:
+                    // Step 1: Update all viewable elements for the current view
+                    bool changed = dataController.SetMode(filter);
+                    // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
+                    if (!changed) return;
 
-                View3D view = revitController.UiDoc.ActiveView as View3D;
-                if (view != null)
-                {
-                    view.HideElements(hideIds);
-                }
-
-                tran.Commit();
+                    // Step 2: Update the treeView element outside of the API context
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        selectionController.CommitTree(dataController.ElementTree, dataController.AllElements); //, addElements.ToList(), delElements.ToList());
+                    }));
+                    break;
+                default:
+                    break;
             }
-
-            /*
-            List<ElementId> docElementIds = GetDocumentElementIds(FilterMode.Project);
-            Element element;
-
-            foreach (ElementId eId in docElementIds)
-            {
-                if (selElementIds.Contains(eId))
-                {
-                    selElementIds.Remove(eId);
-                    continue;
-                }
-
-                element = this.doc.GetElement(eId);
-                if (element.CanBeHidden())
-            }
-            */
-
         }
 
         #endregion Idling API Handler Methods
@@ -590,10 +629,19 @@
 
             // Add elements to TreeStructure
             this.dataController.AddToAllElements(addedElements.ToList());
+
+            // Load up on the changes to be committed to selectionController
+            this.selectionController.NodesToAdd = addedElements.ToList();
+            this.selectionController.NodesToDel = deletedElements.ToList();
+
+            // Commit the changes into the treeView structure
+            this.BeginInvoke(new Action(() =>
+            {
+                selectionController.CommitTree(dataController.ElementTree);
+            }));
+
             // Remove elements to TreeStructure
             this.dataController.RemoveFromAllElements(deletedElements.ToList());
-
-            requestHandler.AddRequest(Request.UpdateTreeView);
 
             this.haltIdlingHandler = false;
             return;
