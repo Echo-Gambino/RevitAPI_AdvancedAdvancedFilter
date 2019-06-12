@@ -15,6 +15,7 @@
             UpdateTreeViewSelection = 2,
             SelectElementIds = 3,
             ShiftSelected = 4,
+            ChangeElementVisibility = 5,
             Invalid = -1
         }
 

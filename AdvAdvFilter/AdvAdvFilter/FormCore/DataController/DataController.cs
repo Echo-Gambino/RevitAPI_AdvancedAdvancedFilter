@@ -43,6 +43,7 @@
 
         // Fields related to movement
         private List<ElementId> movElements;
+        private HashSet<ElementId> idsToHide;
         private bool copyAndShift;
         private List<int> coords;
         // 
@@ -51,6 +52,11 @@
         #endregion Fields
 
         #region Parameters
+
+        public View View
+        {
+            get { return this.elementTree.Doc.ActiveView; }
+        }
 
         public HashSet<ElementId> AllElements
         {
@@ -61,13 +67,19 @@
         {
             get { return this.elementTree.SelectedNodes; }
         }
-        /*
-        public List<ElementId> SelElements
+
+        public HashSet<ElementId> IdsToHide
         {
-            set { this.selElements = value; }
-            get { return this.selElements; }
+            get { return this.idsToHide; }
+            set
+            {
+                if (value == null)
+                    this.idsToHide.Clear();
+                else
+                    this.idsToHide = value;
+            }
         }
-        */
+
         public List<ElementId> MovElements
         {
             set
@@ -146,6 +158,9 @@
             this.selElements = new List<ElementId>();
             // Fields related to movement
             this.movElements = new List<ElementId>();
+
+            this.idsToHide = new HashSet<ElementId>();
+
             this.copyAndShift = true;
             this.coords = new List<int>() { 0, 0, 0 };
 

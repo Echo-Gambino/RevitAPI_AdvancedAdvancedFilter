@@ -273,87 +273,6 @@
 
         }
 
-        public void HideUnselectedElementIds(
-            List<ElementId> selection,
-            List<ElementId> allElements)
-        {
-            View view = this.View;
-            List<ElementId> hideIds = new List<ElementId>();
-            List<ElementId> showIds = new List<ElementId>();
-
-            // Construct hideIds and showIds
-            foreach (ElementId id in allElements)
-            {
-                Element e = this.doc.GetElement(id);
-                if ((e as View) == null)
-                {
-                    if (!selection.Contains(id))
-                    {
-                        if (e.CanBeHidden(view) && (!e.IsHidden(view)))
-                        {
-                            hideIds.Add(id);
-                        }
-                    }
-                    else
-                    {
-                        if (e.IsHidden(view))
-                        {
-                            showIds.Add(id);
-                        }
-                    }
-                }
-            }
-
-            using (Transaction tran = new Transaction(this.doc, "Test"))
-            {
-                tran.Start();
-                
-                if (view != null)
-                {
-                    if (hideIds.Count != 0)
-                        view.HideElements(hideIds);
-                    if (selection.Count != 0)
-                        view.UnhideElements(selection);
-                }
-
-                tran.Commit();
-            }
-
-        }
-
-        public void ShowSelectedElementIds(
-            List<ElementId> selection)
-        {
-            View view = this.View;
-            List<ElementId> showIds = new List<ElementId>();
-
-            foreach (ElementId id in selection)
-            {
-                Element e = this.doc.GetElement(id);
-                if (e == null) continue;
-
-                if (e.IsHidden(view))
-                {
-                    showIds.Add(id);
-                }
-            }
-
-            if (showIds.Count == 0) return;
-
-            using (Transaction tran = new Transaction(this.doc, "Show Elements"))
-            {
-                tran.Start();
-
-                if (view != null)
-                {
-                    view.UnhideElements(showIds);
-                }
-
-                tran.Commit();
-            }
-
-        }
-
         #endregion Selection Related Tasks
 
         #region Movement / Shift Related Tasks
@@ -823,6 +742,170 @@
         }
 
         #endregion Get ElementInformation
+
+        #region Element Visibility
+
+        public void HideUnselectedElementIds(
+            List<ElementId> selection,
+            List<ElementId> allElements)
+        {
+            View view = this.View;
+            List<ElementId> hideIds = new List<ElementId>();
+            List<ElementId> showIds = new List<ElementId>();
+
+            // Construct hideIds and showIds
+            foreach (ElementId id in allElements)
+            {
+                Element e = this.doc.GetElement(id);
+                if ((e as View) == null)
+                {
+                    if (!selection.Contains(id))
+                    {
+                        if (e.CanBeHidden(view) && (!e.IsHidden(view)))
+                        {
+                            hideIds.Add(id);
+                        }
+                    }
+                    else
+                    {
+                        if (e.IsHidden(view))
+                        {
+                            showIds.Add(id);
+                        }
+                    }
+                }
+            }
+
+            using (Transaction tran = new Transaction(this.doc, "Test"))
+            {
+                tran.Start();
+
+                if (view != null)
+                {
+                    if (hideIds.Count != 0)
+                        view.HideElements(hideIds);
+                    if (selection.Count != 0)
+                        view.UnhideElements(selection);
+                }
+
+                tran.Commit();
+            }
+
+        }
+
+        public void ShowSelectedElementIds(
+            List<ElementId> selection)
+        {
+            View view = this.View;
+            List<ElementId> showIds = new List<ElementId>();
+
+            foreach (ElementId id in selection)
+            {
+                Element e = this.doc.GetElement(id);
+                if (e == null) continue;
+
+                if (e.IsHidden(view))
+                {
+                    showIds.Add(id);
+                }
+            }
+
+            if (showIds.Count == 0) return;
+
+            using (Transaction tran = new Transaction(this.doc, "Show Elements"))
+            {
+                tran.Start();
+
+                if (view != null)
+                {
+                    view.UnhideElements(showIds);
+                }
+
+                tran.Commit();
+            }
+
+        }
+
+        public void HideElementIds(HashSet<ElementId> elementIds, TreeStructure tree)
+        {
+            View view = this.View;
+
+            if (view == null) return;
+
+            // Get all the elementIds to hide
+            IEnumerable<Element> elements
+                = from ElementId id in elementIds
+                    select this.doc.GetElement(id);
+            IEnumerable<ElementId> elementIdsToHide
+                = from Element e in elements
+                  where (e as View == null)
+                  && (e.CanBeHidden(view))
+                  && (!e.IsHidden(view))
+                  select e.Id;
+
+            if (elementIdsToHide.Count<ElementId>() == 0) return;
+
+            // Update treeStructure of what the current hidden elementIds are
+            foreach (ElementId id in elementIdsToHide)
+            {
+                if (!tree.HiddenNodes.ContainsKey(view.Id))
+                {
+                    tree.HiddenNodes.Add(view.Id, new HashSet<ElementId>());
+                }
+                tree.HiddenNodes[view.Id].Add(id);
+            }
+
+            using (Transaction tran = new Transaction(this.doc, "Hide Elements"))
+            {
+                tran.Start();
+
+                view.HideElements(elementIdsToHide.ToList());
+
+                tran.Commit();
+            }
+        }
+
+        public void ShowElementIds(HashSet<ElementId> elementIds, TreeStructure tree)
+        {
+            View view = this.View;
+
+            if (view == null) return;
+
+            // Get all the elementIds to show
+            IEnumerable<Element> elements
+                = from ElementId id in elementIds
+                  select this.doc.GetElement(id);
+            IEnumerable<ElementId> elementIdsToShow
+                = from Element e in elements
+                  where e.IsHidden(view)
+                  select e.Id;
+
+            if (elementIdsToShow.Count<ElementId>() == 0) return;
+
+            // Update treeStructure of what the current hidden elementIds are
+            foreach (ElementId id in elementIdsToShow)
+            {
+                if (!tree.HiddenNodes.ContainsKey(view.Id))
+                    continue;
+
+                tree.HiddenNodes[view.Id].Remove(id);
+
+                if (tree.HiddenNodes[view.Id].Count == 0)
+                    tree.HiddenNodes.Remove(view.Id);
+            }
+
+            using (Transaction tran = new Transaction(this.doc, "Show Elements"))
+            {
+                tran.Start();
+
+                view.UnhideElements(elementIdsToShow.ToList());
+
+                tran.Commit();
+            }
+
+        }
+
+        #endregion Element Visibility
 
         #endregion Public Methods
 

@@ -11,6 +11,7 @@
 
     using FilterMode = AdvAdvFilter.Common.FilterMode;
     using Depth = AdvAdvFilter.Common.Depth;
+    using View = Autodesk.Revit.DB.View;
 
     public class TreeStructure
     {
@@ -35,8 +36,9 @@
 
         private HashSet<ElementId> subSet;
 
-        public HashSet<ElementId> VisibleNodes { get; set; }
+        private Dictionary<ElementId, HashSet<ElementId>> hiddenNodes;
         public HashSet<ElementId> SelectedNodes { get; set; }
+
 
         /*
         private Dictionary<ElementId, HashSet<ElementId>> elementIdsInView;
@@ -60,6 +62,18 @@
             get { return this.subSet; }
         }
 
+        public Dictionary<ElementId, HashSet<ElementId>> HiddenNodes
+        {
+            get { return this.hiddenNodes; }
+            set
+            {
+                if (value == null)
+                    this.hiddenNodes.Clear();
+                else
+                    this.hiddenNodes = value;
+            }
+        }
+
         #endregion Parameters
 
         public TreeStructure(Document doc)
@@ -75,7 +89,7 @@
 
             this.subSet = new HashSet<ElementId>();
 
-            this.VisibleNodes = new HashSet<ElementId>();
+            this.HiddenNodes = new Dictionary<ElementId, HashSet<ElementId>>();
             this.SelectedNodes = new HashSet<ElementId>();
         }
 
@@ -90,8 +104,7 @@
             this.setTree.Branch.Clear();
             this.setTree.Set.Clear();
 
-            this.VisibleNodes.Clear();
-
+            this.HiddenNodes.Clear();
             this.SelectedNodes.Clear();
         }
 
@@ -358,16 +371,19 @@
                         ViewType.Elevation
                     };
 
-                    Autodesk.Revit.DB.View view = this.doc.ActiveView;
+                    View view = this.doc.ActiveView;
 
                     if (!types.Contains(view.ViewType)) return false;
 
                     FilteredElementCollector collection = new FilteredElementCollector(this.doc, view.Id).WhereElementIsNotElementType();
+
                     this.subSet.Clear();
+
                     foreach (ElementId id in collection.ToElementIds())
                     {
                         this.subSet.Add(id);
                     }
+
                     break;
                 case FilterMode.Selection:
                     this.subSet = new HashSet<ElementId>(this.SelectedNodes);

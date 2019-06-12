@@ -277,11 +277,18 @@
 
             if (OptionVisibilityCheckBox.Checked)
             {
-                requestHandler.HideUnselected();
+                HashSet<ElementId> idsToHide = new HashSet<ElementId>(dataController.AllElements.Except(dataController.SelElementIds));
+                dataController.IdsToHide = idsToHide;
+
+                requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
+                // requestHandler.HideUnselected();
             }
             else
             {
-                requestHandler.ShowAll();
+                dataController.IdsToHide.Clear();
+
+                requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
+                // requestHandler.ShowAll();
             }
 
             this.haltIdlingHandler = false;
@@ -641,11 +648,31 @@
                 case Request.SelectElementIds:
                     // Step 1: Make a new selection in Revit
                     revitController.MakeNewSelection(dataController.SelElementIds.ToList());
-                    // Step 2:
+
+                    // Step 2: OPTIONAL
                     if (optionController.GetVisibilityState())
                     {
-                        // requestHandler.ImmediateRequest();
+                        // Step 2.1: Get selected and all elemnts from dataController
+                        HashSet<ElementId> sel = dataController.SelElementIds;
+                        HashSet<ElementId> all = dataController.AllElements;
+                        // Step 2.2: Get the elementIds that are supposed to be hidden by (hid = all - sel)
+                        HashSet<ElementId> hid = new HashSet<ElementId>(all.Except(sel));
+                        // Step 2.3: Set dataController's requested ids to hide (NOT ACTUAL HIDDEN ELEMENTIDS) to hid
+                        dataController.IdsToHide = hid;
+                        // Step 2.4: Immediately override the next request by Requesting ChangeElementVisibility
+                        requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
                     }
+
+                    break;
+
+                case Request.ChangeElementVisibility:
+                    // Step 1: Get ids to Hide and Show
+                    HashSet<ElementId> idsToHide = dataController.IdsToHide;
+                    HashSet<ElementId> idsToShow = new HashSet<ElementId>(dataController.AllElements.Except(idsToHide));
+                    // Step 2: Hide elementIds
+                    revitController.HideElementIds(idsToHide, dataController.ElementTree);
+                    // Step 3: Show elementIds
+                    revitController.ShowElementIds(idsToShow, dataController.ElementTree);
 
                     break;
 
@@ -794,6 +821,7 @@
             }
         }
 
+        /*
         /// <summary>
         /// modifications to the form
         /// </summary>
@@ -831,7 +859,8 @@
                 ErrorReport.Report(ex);
             }
         }
-
+        */
+        /*
         /// <summary>
         /// highlights the elements in the list passed in the args parameter
         /// </summary>
@@ -856,7 +885,7 @@
                 ErrorReport.Report(ex);
             }
         }
-
+        */
         #endregion
 
         #endregion
