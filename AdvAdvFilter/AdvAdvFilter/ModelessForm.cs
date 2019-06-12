@@ -237,10 +237,6 @@
 
             this.haltIdlingHandler = true;
 
-            // selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
-            // mselectionController.UpdateTotals();
-            // requestHandler.AddRequest(Request.SelectElementIds);
-
             // Step 1: Get node's full path
             string fullPath = e.Node.FullPath;
             // Step 2: Tokenize the path by seperating out the '\'s
@@ -615,6 +611,12 @@
             return request;
         }
 
+        private bool RevitSelectionChanged()
+        {
+            List<ElementId> newSelection = revitController.GetElementIdsFromSelection();
+            return dataController.DidSelectionChange(newSelection);
+        }
+
         /// <summary>
         /// Handles the form's request to execute instructions within a revit API context
         /// </summary>
@@ -638,18 +640,39 @@
 
                 case Request.UpdateTreeViewSelection:
                     // Step 1: Update dataController's select element list
-                    List<ElementId> selectedElements = revitController.GetElementIdsFromSelection();
-                    dataController.UpdateSelElements(selectedElements);
-                    // Step 2: Select Elements
+                    List<ElementId> newSelection = revitController.GetElementIdsFromSelection();
+                    HashSet<ElementId> oldSelection = dataController.SelElementIds;
+                    // Step 2: Construct add and remove hashsets
+                    HashSet<ElementId> addSelection = new HashSet<ElementId>(newSelection.Except(oldSelection));
+                    HashSet<ElementId> remSelection = new HashSet<ElementId>(oldSelection.Except(newSelection));
+                    // Step 3: Update selection by 'adding' and 'removing' selected treeNodes by checking and unchecking them
+                    selectionController.UpdateSelectionByElementId(addSelection, true);
+                    selectionController.UpdateSelectionByElementId(remSelection, false);
+                    // Step 4: Update dataController efficiently
+                    // Mathematical visualization: SelElements = (currentSelection ^ revitSelection) U additionalSelection
+                    dataController.SelElementIds.IntersectWith(newSelection);
+                    dataController.SelElementIds.UnionWith(addSelection);
 
                     // Step 3: (OPTIONAL) Hide the remaining elementIds
+                    if (optionController.GetVisibilityState())
+                    {
+                        // Step 3.1: Get selected and all elemnts from dataController
+                        HashSet<ElementId> sel = dataController.SelElementIds;
+                        HashSet<ElementId> all = dataController.AllElements;
+                        // Step 3.2: Get the elementIds that are supposed to be hidden by (hid = all - sel)
+                        HashSet<ElementId> hid = new HashSet<ElementId>(all.Except(sel));
+                        // Step 3.3: Set dataController's requested ids to hide (NOT ACTUAL HIDDEN ELEMENTIDS) to hid
+                        dataController.IdsToHide = hid;
+                        // Step 3.4: Immediately override the next request by Requesting ChangeElementVisibility
+                        requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
+                    }
                     break;
 
                 case Request.SelectElementIds:
                     // Step 1: Make a new selection in Revit
                     revitController.MakeNewSelection(dataController.SelElementIds.ToList());
 
-                    // Step 2: OPTIONAL
+                    // Step 2: (OPTIONAL) Hide the remaining elementIds
                     if (optionController.GetVisibilityState())
                     {
                         // Step 2.1: Get selected and all elemnts from dataController
@@ -662,7 +685,6 @@
                         // Step 2.4: Immediately override the next request by Requesting ChangeElementVisibility
                         requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
                     }
-
                     break;
 
                 case Request.ChangeElementVisibility:
@@ -676,6 +698,14 @@
 
                     break;
 
+                case Request.Nothing:
+
+                    if (RevitSelectionChanged())
+                    {
+                        requestHandler.AddRequest(Request.UpdateTreeViewSelection);
+                    }
+
+                    break;
                 default:
                     break;
             }

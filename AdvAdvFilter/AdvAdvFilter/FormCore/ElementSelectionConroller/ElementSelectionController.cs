@@ -1034,6 +1034,8 @@
                     treeNodes.Add(node);
                 }
 
+                if (treeNodes.Count == 0) return;
+
                 UpdateSelection(treeNodes, checkedStatus);
             }
         }

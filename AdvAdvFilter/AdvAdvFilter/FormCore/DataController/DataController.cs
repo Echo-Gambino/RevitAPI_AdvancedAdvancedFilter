@@ -303,7 +303,7 @@
             bool sameLength = (this.SelElementIds.Count == revitSelection.Count);
             bool sameItems = this.SelElementIds.IsSupersetOf(revitSelection);
 
-            return sameLength && sameItems;
+            return !(sameLength && sameItems);
         }
 
         #endregion Auxiliary Methods
