@@ -216,11 +216,6 @@
 
         #region EventHandlers: ElementSelection
 
-        private void ElementSelectionTreeView_BeforeExpand(object sender, TreeViewCancelEventArgs e)
-        {
-            // .. Don't know what to use it for yet, keeping it here just in case
-        }
-
         private void ElementSelectionTreeView_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
             BranchTreeNode branch = e.Node as BranchTreeNode;
@@ -242,9 +237,30 @@
 
             this.haltIdlingHandler = true;
 
-            selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
+            // selectionController.UpdateAfterCheck(e.Node as AdvTreeNode);
+            // mselectionController.UpdateTotals();
+            // requestHandler.AddRequest(Request.SelectElementIds);
 
-            selectionController.UpdateTotals();
+            // Step 1: Get node's full path
+            string fullPath = e.Node.FullPath;
+            // Step 2: Tokenize the path by seperating out the '\'s
+            List<string> pathTokens = fullPath.Split('\\').ToList();
+            // Step 3: Get all elements that has that same path
+            HashSet<ElementId> elementIds = dataController.GetElementIdsByPath(pathTokens);
+            elementIds.IntersectWith(dataController.AllElements);
+            // Step 4: Apply the change to the nodes with the corresponding elementIds
+            selectionController.UpdateSelectionByElementId(elementIds, e.Node.Checked);
+
+            if (e.Node.Checked)
+            {
+                // Step 5a: Add elementIds onto curSelection
+                dataController.SelElementIds.UnionWith(elementIds);
+            }
+            else
+            {
+                // Step 5b: Remove elementIds from curSelection
+                dataController.SelElementIds.ExceptWith(elementIds);
+            }
 
             requestHandler.AddRequest(Request.SelectElementIds);
 
@@ -620,8 +636,16 @@
                     // Step 2: Select Elements
 
                     // Step 3: (OPTIONAL) Hide the remaining elementIds
+                    break;
 
-
+                case Request.SelectElementIds:
+                    // Step 1: Make a new selection in Revit
+                    revitController.MakeNewSelection(dataController.SelElementIds.ToList());
+                    // Step 2:
+                    if (optionController.GetVisibilityState())
+                    {
+                        // requestHandler.ImmediateRequest();
+                    }
 
                     break;
 

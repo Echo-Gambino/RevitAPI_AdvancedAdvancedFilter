@@ -96,7 +96,6 @@
             this.ElementSelectionTreeView.TabIndex = 1;
             this.ElementSelectionTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCheck);
             this.ElementSelectionTreeView.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeCollapse);
-            this.ElementSelectionTreeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeExpand);
             // 
             // ElementSelectionLabel
             // 

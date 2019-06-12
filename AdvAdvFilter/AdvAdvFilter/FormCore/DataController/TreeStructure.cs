@@ -304,6 +304,36 @@
 
         #endregion ElementTree Operations
 
+        #region ElementTree Queries
+
+        public HashSet<ElementId> GetElementIdsByPath(List<string> path)
+        {
+            ElementSet set = this.setTree;
+            foreach (string token in path)
+            {
+                // If the set is null, the token might be an elementId.
+                if (set.GetElementSet(token) == null)
+                {
+                    IEnumerable<ElementId> query = from ElementId id in set.Set
+                                                    where (id.ToString() == token)
+                                                    select id;
+
+                    if (query.Count<ElementId>() != 0)
+                    {
+                        return new HashSet<ElementId>(query);
+                    }
+
+                    throw new NullReferenceException("this.setTree.GetElementSet(token)");
+                }
+
+                set = set.GetElementSet(token);
+            }
+
+            return new HashSet<ElementId>(set.Set);
+        }
+
+        #endregion ElementTree Queries
+
         #region SubSet Operations
 
         public bool SetSubSet (FilterMode mode, bool force = false)

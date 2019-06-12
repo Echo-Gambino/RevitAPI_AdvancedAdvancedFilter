@@ -74,6 +74,8 @@
 
         public HashSet<ElementId> CurElementIds { get { return this.curElementIds; } }
 
+        public Dictionary<ElementId, TreeNode> LeafNodes { get { return this.leafNodes; } }
+
         #endregion Parameters
 
         public TreeViewController(TreeView treeView)

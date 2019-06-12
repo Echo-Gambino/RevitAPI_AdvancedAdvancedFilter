@@ -211,6 +211,16 @@
             set { this.treeController.NodesToDel = value; }
         }
 
+        public HashSet<ElementId> AllElementIds
+        {
+            get { return this.treeController.CurElementIds; }
+        }
+
+        public Dictionary<ElementId, TreeNode> LeafNodes
+        {
+            get { return this.treeController.LeafNodes; }
+        }
+
         #endregion
 
         public ElementSelectionController(
@@ -1010,6 +1020,73 @@
         #endregion Collapse and Expand Nodes
 
         #region Update TreeView Upon Check
+
+        public void UpdateSelectionByElementId(HashSet<ElementId> elementIds, bool checkedStatus)
+        {
+            lock (treeLock)
+            {
+                List<TreeNode> treeNodes = new List<TreeNode>();
+
+                TreeNode node;
+                foreach (ElementId id in elementIds)
+                {
+                    node = this.LeafNodes[id];
+                    treeNodes.Add(node);
+                }
+
+                UpdateSelection(treeNodes, checkedStatus);
+            }
+        }
+
+        private void UpdateSelection(List<TreeNode> treeNodes, bool checkedStatus)
+        {
+            if (treeNodes == null)
+                throw new ArgumentNullException("treeNodes");
+            else if (treeNodes.Count == 0)
+                throw new ArgumentException("treeNodes");
+
+            List<TreeNode> nextNodes = new List<TreeNode>();
+            bool recurse = true;
+
+            if (treeNodes[0].Parent == null) recurse = false;
+
+            foreach (TreeNode node in treeNodes)
+            {
+                if (ShouldBeChecked(node, checkedStatus))
+                {
+                    if (!node.Checked) node.Checked = true;
+                }
+                else
+                {
+                    if (node.Checked) node.Checked = false;
+                }
+
+                if (!nextNodes.Contains(node.Parent))
+                    nextNodes.Add(node.Parent);
+            }
+
+            if (recurse) UpdateSelection(nextNodes, checkedStatus);
+
+            return;
+        }
+
+        private bool ShouldBeChecked(TreeNode treeNode, bool checkedStatus)
+        {
+            if (treeNode.Nodes.Count == 0) return checkedStatus;
+
+            bool result = true;
+
+            foreach (TreeNode node in treeNode.Nodes)
+            {
+                if (node.Checked == false)
+                {
+                    result = false;
+                    break;
+                }
+            }
+            
+            return result;
+        }
 
         /// <summary>
         /// Update the treeView's checked status when the 

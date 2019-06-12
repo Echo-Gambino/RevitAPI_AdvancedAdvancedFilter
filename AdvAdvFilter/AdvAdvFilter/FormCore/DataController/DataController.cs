@@ -194,6 +194,15 @@
 
         #endregion AllElements Operations
 
+        #region ElementId Getters
+
+        public HashSet<ElementId> GetElementIdsByPath(List<string> path)
+        {
+            return elementTree.GetElementIdsByPath(path);
+        }
+
+        #endregion ElementId Getters
+
         #region Auxiliary Methods
 
         /// <summary>
