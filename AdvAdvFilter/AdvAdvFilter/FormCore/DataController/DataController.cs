@@ -44,6 +44,7 @@
         // Fields related to movement
         private List<ElementId> movElements;
         private HashSet<ElementId> idsToHide;
+        private HashSet<ElementId> idsToMove;
         private bool copyAndShift;
         private List<int> coords;
         // 
@@ -77,6 +78,18 @@
                     this.idsToHide.Clear();
                 else
                     this.idsToHide = value;
+            }
+        }
+
+        public HashSet<ElementId> IdsToMove
+        {
+            get { return this.idsToMove; }
+            set
+            {
+                if (value == null)
+                    this.idsToMove.Clear();
+                else
+                    this.idsToMove = value;
             }
         }
 
@@ -298,12 +311,21 @@
             return result;
         }
 
+        /// <summary>
+        /// Returns true if the argument's HashSet is different from this.SelElementIds' HashSet, else false
+        /// </summary>
+        /// <param name="revitSelection"></param>
+        /// <returns></returns>
         public bool DidSelectionChange(HashSet<ElementId> revitSelection)
         {
+            // Check if they are the same length
             bool sameLength = (this.SelElementIds.Count == revitSelection.Count);
+            // If not, then prematurely return true
+            if (!sameLength) return true;
+            // Check if one is the superset of another AFTER confirming equal lengths
             bool sameItems = this.SelElementIds.IsSupersetOf(revitSelection);
-
-            return !(sameLength && sameItems);
+            // If one is not a superset of another when they have the same length, then they are not the same
+            return !sameItems;
         }
 
         #endregion Auxiliary Methods

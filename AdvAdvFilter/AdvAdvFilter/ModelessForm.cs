@@ -349,7 +349,29 @@
         {
             this.haltIdlingHandler = true;
 
-            requestHandler.AddRequest(Request.ShiftSelected);
+            // Attempt to parse from actionController
+            bool success = this.actionController.TryGetAllInputs(
+                out List<int> coords, out bool copyAndShift);
+
+            // If its a success...
+            if (success)
+            {
+                // Disable the error prompt for actionController
+                this.actionController.DisablePrompt();
+                // Get additonal data needed for dataController
+                HashSet<ElementId> selected = new HashSet<ElementId>(dataController.SelElementIds);
+                // Set data into the dataController
+                dataController.IdsToMove = selected;
+                dataController.Coords = coords;
+                dataController.CopyAndShift = copyAndShift;
+                // Request to shift the elements
+                requestHandler.AddRequest(Request.ShiftElements);
+            }
+            else
+            {
+                // Enable 'not valid' error prompts
+                this.actionController.PromptNotValidShifts();
+            }
 
             this.haltIdlingHandler = false;
         }
@@ -611,6 +633,10 @@
             return request;
         }
 
+        /// <summary>
+        /// Returns true if the HashSet of revit's current selection is different from dataController's current selection
+        /// </summary>
+        /// <returns></returns>
         private bool RevitSelectionChanged()
         {
             HashSet<ElementId> newSelection = new HashSet<ElementId>(revitController.GetElementIdsFromSelection());
@@ -712,8 +738,17 @@
 
                     break;
 
-                case Request.Nothing:
+                case Request.ShiftElements:
 
+                    HashSet<ElementId> idsToMove = dataController.IdsToMove;
+                    List<int> coords = dataController.Coords;
+                    bool copyAndShift = dataController.CopyAndShift;
+
+                    revitController.CopyAndMoveElements(idsToMove.ToList(), coords, copyAndShift);
+
+                    break;
+
+                case Request.Nothing:
                     if (RevitSelectionChanged())
                     {
                         requestHandler.AddRequest(Request.UpdateTreeViewSelection);
