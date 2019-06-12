@@ -298,7 +298,7 @@
             return result;
         }
 
-        public bool DidSelectionChange(List<ElementId> revitSelection)
+        public bool DidSelectionChange(HashSet<ElementId> revitSelection)
         {
             bool sameLength = (this.SelElementIds.Count == revitSelection.Count);
             bool sameItems = this.SelElementIds.IsSupersetOf(revitSelection);

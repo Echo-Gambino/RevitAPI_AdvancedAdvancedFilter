@@ -613,7 +613,8 @@
 
         private bool RevitSelectionChanged()
         {
-            List<ElementId> newSelection = revitController.GetElementIdsFromSelection();
+            HashSet<ElementId> newSelection = new HashSet<ElementId>(revitController.GetElementIdsFromSelection());
+            newSelection.IntersectWith(dataController.AllElements);
             return dataController.DidSelectionChange(newSelection);
         }
 
@@ -640,14 +641,27 @@
 
                 case Request.UpdateTreeViewSelection:
                     // Step 1: Update dataController's select element list
-                    List<ElementId> newSelection = revitController.GetElementIdsFromSelection();
+                    HashSet<ElementId> newSelection = new HashSet<ElementId>(revitController.GetElementIdsFromSelection());
+                    newSelection.IntersectWith(dataController.AllElements);
                     HashSet<ElementId> oldSelection = dataController.SelElementIds;
                     // Step 2: Construct add and remove hashsets
                     HashSet<ElementId> addSelection = new HashSet<ElementId>(newSelection.Except(oldSelection));
                     HashSet<ElementId> remSelection = new HashSet<ElementId>(oldSelection.Except(newSelection));
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("AddSelection");
+                    foreach (ElementId id in addSelection)
+                    {
+                        sb.AppendLine(id.ToString());
+                    }
+                    MessageBox.Show(sb.ToString());
+
                     // Step 3: Update selection by 'adding' and 'removing' selected treeNodes by checking and unchecking them
-                    selectionController.UpdateSelectionByElementId(addSelection, true);
-                    selectionController.UpdateSelectionByElementId(remSelection, false);
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        selectionController.UpdateSelectionByElementId(addSelection, true);
+                        selectionController.UpdateSelectionByElementId(remSelection, false);
+                    }));
                     // Step 4: Update dataController efficiently
                     // Mathematical visualization: SelElements = (currentSelection ^ revitSelection) U additionalSelection
                     dataController.SelElementIds.IntersectWith(newSelection);
