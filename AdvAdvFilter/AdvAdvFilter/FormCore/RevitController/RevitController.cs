@@ -279,9 +279,9 @@
 
         public List<ElementId> GetMovableElementIds(List<ElementId> elementIds)
         {
-            List<ElementId> output = new List<ElementId>();
-            List<string> movableCategories = new List<string>()
+            HashSet<string> movableCategories = new HashSet<string>()
             {
+                "Columns",
                 "Structural Columns",
                 "Structural Connections",
                 "Structural Framing",
@@ -291,18 +291,23 @@
                 "Floors"
             };
 
-            // Filter by movables
-            Category category;
-            foreach (ElementId id in elementIds)
-            {
-                category = this.GetCategory(this.GetElement(id));
-                if (movableCategories.Contains(category.Name))
-                {
-                    output.Add(id);
-                }
-            }
+            List<ElementId> output = FilterByCategory(elementIds, movableCategories);
 
             return output;
+        }
+
+        public List<ElementId> FilterByCategory(List<ElementId> elementIds, HashSet<string> categoryNames)
+        {
+            // Get elements from the set of elementIds
+            IEnumerable<Element> elements
+                = from ElementId id in elementIds
+                  select this.GetElement(id);
+            // Get elementIds from the elements that has the same category name as one of the given categoryNames
+            IEnumerable<ElementId> elementIdsWithCategoryNames
+                = from Element e in elements
+                    where categoryNames.Contains(this.GetCategory(e).Name)
+                    select e.Id;
+            return elementIdsWithCategoryNames.ToList();
         }
 
         public void CopyAndMoveElements(
@@ -340,7 +345,6 @@
                     LocationCurve eCurve = eLoc as LocationCurve;
                     if (ePoint != null)
                     {
-                        // SetPointPosition(e, xyzValues, copyAndShift);
 
                         zParamNames = new List<string>()
                         {
@@ -352,7 +356,6 @@
                     }
                     else if (eCurve != null)
                     {
-                        // SetCurvePosition(e, xyzValues, copyAndShift);
 
                         zParamNames = new List<string>()
                         {
@@ -366,7 +369,6 @@
                     }
                     else
                     {
-                        // SetUnknownPosition(e, xyzValues, copyAndShift);
 
                         zParamNames = new List<string>()
                         {

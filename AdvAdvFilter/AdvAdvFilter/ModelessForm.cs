@@ -738,11 +738,15 @@
 
                 case Request.ShiftElements:
                     // Step 1: Get all the needed information within dataController
-                    HashSet<ElementId> idsToMove = dataController.IdsToMove;
+                    List<ElementId> idsToMove = revitController.GetMovableElementIds(dataController.IdsToMove.ToList());
                     List<int> coords = dataController.Coords;
                     bool copyAndShift = dataController.CopyAndShift;
+
+                    if (idsToMove.Count == 0)
+                        this.actionController.PromptNotValidElements();
+
                     // Step 2: Copy and move the elements via the Revit Controller using the given information
-                    revitController.CopyAndMoveElements(idsToMove.ToList(), coords, copyAndShift);
+                    revitController.CopyAndMoveElements(idsToMove, coords, copyAndShift);
                     break;
 
                 case Request.Nothing:
