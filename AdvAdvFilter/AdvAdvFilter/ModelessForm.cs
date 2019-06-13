@@ -131,11 +131,7 @@
             // Initialize Back-end Controllers
             this.revitController = new RevitController(commandData);
             this.dataController = new DataController(this.doc);
-            this.requestHandler = new RequestHandler(
-                this.revitController,
-                this.dataController,
-                this.selectionController,
-                this.actionController);
+            this.requestHandler = new RequestHandler();
 
             // Get elementList, not sure what to use it for
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
@@ -276,15 +272,15 @@
                 HashSet<ElementId> idsToHide = new HashSet<ElementId>(dataController.AllElements.Except(dataController.SelElementIds));
                 dataController.IdsToHide = idsToHide;
 
-                requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
-                // requestHandler.HideUnselected();
+                // requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
+                requestHandler.HideUnselected( true );
             }
             else
             {
                 dataController.IdsToHide.Clear();
 
-                requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
-                // requestHandler.ShowAll();
+                // requestHandler.ImmediateRequest(Request.ChangeElementVisibility);
+                requestHandler.ShowAll( true );
             }
 
             this.haltIdlingHandler = false;
