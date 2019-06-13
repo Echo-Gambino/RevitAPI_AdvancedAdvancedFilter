@@ -672,13 +672,14 @@
                     HashSet<ElementId> addSelection = new HashSet<ElementId>(newSelection.Except(oldSelection));
                     HashSet<ElementId> remSelection = new HashSet<ElementId>(oldSelection.Except(newSelection));
 
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendLine("AddSelection");
-                    foreach (ElementId id in addSelection)
-                    {
-                        sb.AppendLine(id.ToString());
-                    }
-                    MessageBox.Show(sb.ToString());
+                    // DEBUG: Print out addSelection
+                    //StringBuilder sb = new StringBuilder();
+                    //sb.AppendLine("AddSelection");
+                    //foreach (ElementId id in addSelection)
+                    //{
+                    //    sb.AppendLine(id.ToString());
+                    //}
+                    //MessageBox.Show(sb.ToString());
 
                     // Step 3: Update selection by 'adding' and 'removing' selected treeNodes by checking and unchecking them
                     this.BeginInvoke(new Action(() =>
@@ -733,17 +734,15 @@
                     revitController.HideElementIds(idsToHide, dataController.ElementTree);
                     // Step 3: Show elementIds
                     revitController.ShowElementIds(idsToShow, dataController.ElementTree);
-
                     break;
 
                 case Request.ShiftElements:
-
+                    // Step 1: Get all the needed information within dataController
                     HashSet<ElementId> idsToMove = dataController.IdsToMove;
                     List<int> coords = dataController.Coords;
                     bool copyAndShift = dataController.CopyAndShift;
-
+                    // Step 2: Copy and move the elements via the Revit Controller using the given information
                     revitController.CopyAndMoveElements(idsToMove.ToList(), coords, copyAndShift);
-
                     break;
 
                 case Request.Nothing:
