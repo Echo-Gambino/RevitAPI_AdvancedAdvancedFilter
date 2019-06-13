@@ -310,6 +310,217 @@
             return elementIdsWithCategoryNames.ToList();
         }
 
+        public List<ElementId> CopyAndShiftElements(
+            List<ElementId> elementIds,
+            List<int> xyzValues,
+            bool copyAndShift
+            )
+        {
+            IEnumerable<Element> elements
+                = from ElementId id in elementIds
+                  select this.GetElement(id);
+            if (elements == null) throw new NullReferenceException("elements");
+
+            List<ElementId> elementsAffected;
+
+            elementsAffected = CopyShiftElements(elements.ToList(), xyzValues, copyAndShift);
+
+            return elementsAffected;
+        }
+
+        private List<ElementId> CopyShiftElements(ICollection<Element> elements, List<int> displacement, bool copy)
+        {
+            List<ElementId> elementsAffected = new List<ElementId>();
+
+            bool tranSuccess = true;
+
+            using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
+            {
+                tran.Start();
+
+                Location loc;
+                List<string> zParams;
+                foreach (Element elem in elements)
+                {
+                    loc = elem.Location;
+                    if (loc == null)
+                    {
+                        tranSuccess = false;
+                        break;
+                    }
+
+                    zParams = GetZParamFromLoc(loc);
+
+                    // Get x, y, and z value (in feet and inches)
+                    double xValue = ConvertMM2FeetInch(displacement[0]);
+                    double yValue = ConvertMM2FeetInch(displacement[1]);
+                    double zValue = ConvertMM2FeetInch(displacement[2]);
+
+                    XYZ newXY = new XYZ(xValue, yValue, 0);
+
+                    // Copy And Shift
+                    if (copy)
+                    {
+                        ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, elem.Id, newXY);
+                        if (elementsCopied.Count != 0)
+                        {
+                            foreach (ElementId id in elementsCopied)
+                            {
+                                elementsAffected.Add(id);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ElementTransformUtils.MoveElement(this.doc, elem.Id, newXY);
+                    }
+
+                    // Get the parameter for Z value
+                    List<Parameter> parameters = GetParameters(elem, zParams);
+
+                    if (parameters.Count != 0)
+                    {
+                        double elevationDouble;
+                        string elevationString;
+                        foreach (Parameter p in parameters)
+                        {
+                            // Get the the new elevation value for the given parameter
+                            elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                            elevationString = ConvertFeetInchToString(elevationDouble);
+                            // Apply the elevation value into the parameter
+                            p.SetValueString(elevationString);
+                        }
+                    }
+
+                }
+
+                if (tranSuccess)
+                    tran.Commit();
+                else
+                    tran.RollBack();
+            }
+            
+            return null;
+        }
+
+        private HashSet<ElementId> DisplaceElement(
+            Element element,
+            List<int> displacement,
+            bool copy
+            )
+        {
+            // These are the elements that are affected by the Displacement
+            HashSet<Element> affectedElements = new HashSet<Element>();
+
+            // Get x, y, and z value (in feet and inches)
+            double xValue = ConvertMM2FeetInch(displacement[0]);
+            double yValue = ConvertMM2FeetInch(displacement[1]);
+            double zValue = ConvertMM2FeetInch(displacement[2]);
+
+            // Get the object to help modify the XY value
+            XYZ newXY = new XYZ(xValue, yValue, 0);
+
+            if (copy)
+            {
+                // Copy and move the elemnts
+                ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+                if (elementsCopied.Count != 0)
+                {
+                    foreach (ElementId id in elementsCopied)
+                    {
+                        affectedElements.Add(this.GetElement(id));
+                    }
+                }
+            }
+            else
+            {
+                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+                affectedElements.Add(element);
+            }
+
+            List<string> zParams;
+            List<Parameter> parameters;
+            foreach (Element e in affectedElements)
+            {
+                if (e.Location == null) continue;
+
+                zParams = GetZParamFromLoc(e.Location);
+                parameters = GetParameters(element, zParams);
+
+                if (parameters.Count == 0) continue;
+
+                double elevationDouble;
+                string elevationString;
+                foreach (Parameter p in parameters)
+                {
+                    // Get the the new elevation value for the given parameter
+                    elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                    elevationString = ConvertFeetInchToString(elevationDouble);
+                    // Apply the elevation value into the parameter
+                    p.SetValueString(elevationString);
+                }                
+            }
+
+            return null;
+        }
+
+        private List<string> GetZParamFromLoc(Location loc)
+        {
+            List<string> zParams;
+
+            LocationPoint point = loc as LocationPoint;
+            LocationCurve curve = loc as LocationCurve; 
+
+            if (point != null)
+            {
+                zParams = new List<string>()
+                {
+                    "Top Offset",
+                    "Base Offset",
+                    "Label Elevation",
+                    "Offset"
+                };
+            }
+            else if (curve != null)
+            {
+                zParams = new List<string>()
+                {
+                    "Base Offset",
+                    "Top Offset",
+                    "Start Level Offset",
+                    "End Level Offset"
+                };
+            }
+            else
+            {
+                zParams = new List<string>()
+                {
+                    "Height Offset From Level"
+                };
+            }
+
+            return zParams;
+        }
+
+        private List<ElementId> OnlyShiftElements(List<Element> elements, List<int> displacement)
+        {
+            bool tranSuccess = false;
+
+            using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
+            {
+                tran.Start();
+
+
+
+                if (tranSuccess)
+                    tran.Commit();
+                else
+                    tran.RollBack();
+            }
+
+            return null;
+        }
+
         public void CopyAndMoveElements(
             List<ElementId> elementIds,
             List<int> xyzValues,
@@ -345,7 +556,6 @@
                     LocationCurve eCurve = eLoc as LocationCurve;
                     if (ePoint != null)
                     {
-
                         zParamNames = new List<string>()
                         {
                             "Top Offset",
@@ -356,7 +566,6 @@
                     }
                     else if (eCurve != null)
                     {
-
                         zParamNames = new List<string>()
                         {
                             // "z Offset Value"
@@ -365,11 +574,9 @@
                             "Start Level Offset",
                             "End Level Offset"
                         };
-
                     }
                     else
                     {
-
                         zParamNames = new List<string>()
                         {
                             "Height Offset From Level"
