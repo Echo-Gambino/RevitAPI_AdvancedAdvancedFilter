@@ -214,6 +214,7 @@
 
         private void ElementSelectionTreeView_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
+            /*
             BranchTreeNode branch = e.Node as BranchTreeNode;
 
             if (branch != null)
@@ -224,6 +225,7 @@
                     e.Cancel = true;
                 }
             }
+            */
         }
 
         private void ElementSelectionTreeView_AfterCheck(object sender, TreeViewEventArgs e)
