@@ -330,7 +330,7 @@
 
         private List<ElementId> CopyShiftElements(IEnumerable<Element> elements, List<int> displacement, bool copy)
         {
-            List<ElementId> elementsAffected = new List<ElementId>();
+            HashSet<ElementId> elementsAffected = new HashSet<ElementId>();
 
             bool tranSuccess = true;
 
@@ -358,22 +358,22 @@
 
                     XYZ newXY = new XYZ(xValue, yValue, 0);
 
+                    HashSet<ElementId> subElementsAffected ;
                     // Copy And Shift
                     if (copy)
                     {
                         ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, elem.Id, newXY);
-                        foreach (ElementId id in elementsCopied)
-                        {
-                            elementsAffected.Add(id);
-                        }
+                        subElementsAffected = new HashSet<ElementId>(elementsCopied);
                     }
                     else
                     {
                         ElementTransformUtils.MoveElement(this.doc, elem.Id, newXY);
-                        elementsAffected.Add(elem.Id);
+                        subElementsAffected = new HashSet<ElementId>();
+                        subElementsAffected.Add(elem.Id);
+                        
                     }
 
-                    foreach (ElementId id in elementsAffected)
+                    foreach (ElementId id in subElementsAffected)
                     {
                         Element tmpElement = this.GetElement(id);
                         // Get the parameter for Z value
@@ -389,13 +389,14 @@
                                 elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
                                 elevationString = ConvertFeetInchToString(elevationDouble);
 
-                                MessageBox.Show(elevationString);
-
                                 // Apply the elevation value into the parameter
                                 p.SetValueString(elevationString);
                             }
                         }
                     }
+
+                    elementsAffected.UnionWith(subElementsAffected);
+
                 }
 
                 if (tranSuccess)
@@ -403,8 +404,8 @@
                 else
                     tran.RollBack();
             }
-            
-            return elementsAffected;
+
+            return elementsAffected.ToList();
         }
 
         private HashSet<ElementId> DisplaceElement(
