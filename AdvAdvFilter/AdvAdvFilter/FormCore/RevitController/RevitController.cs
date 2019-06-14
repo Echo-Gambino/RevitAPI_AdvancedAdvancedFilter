@@ -312,8 +312,8 @@
 
         public List<ElementId> CopyAndShiftElements(
             List<ElementId> elementIds,
-            List<int> xyzValues,
-            bool copyAndShift
+            List<int> displacement,
+            bool copy
             )
         {
             IEnumerable<Element> elements
@@ -321,11 +321,96 @@
                   select this.GetElement(id);
             if (elements == null) throw new NullReferenceException("elements");
 
-            List<ElementId> elementsAffected;
+            HashSet<ElementId> affected;
 
-            elementsAffected = CopyShiftElements(elements, xyzValues, copyAndShift);
+            // elementsAffected = CopyShiftElements(elements, xyzValues, copyAndShift);
+            affected = DisplaceElements(elements, displacement, copy);
 
-            return elementsAffected;
+            return affected.ToList();
+        }
+
+        private HashSet<ElementId> DisplaceElements(
+            IEnumerable<Element> elements,
+            List<int> displacement,
+            bool copy
+            )
+        {
+            HashSet<ElementId> affected = new HashSet<ElementId>();
+
+            string tranName = copy ? "Copy and Move Elements" : "Move Elements";
+
+            Location loc;
+            HashSet<ElementId> subAffected;
+            foreach (Element elem in elements)
+            {
+                if (elem.Location != null) { loc = elem.Location; } else { continue; }
+
+                subAffected = DisplaceElement(elem, displacement, loc, copy);
+
+                affected.UnionWith(subAffected);
+            }
+
+            return affected;
+        }
+
+        private HashSet<ElementId> DisplaceElement(
+            Element element,
+            List<int> displacement,
+            Location location,
+            bool copy
+            )
+        {
+            HashSet<ElementId> affected = new HashSet<ElementId>();
+
+            // Get x, y, and z value (in feet and inches)
+            double xValue = ConvertMM2FeetInch(displacement[0]);
+            double yValue = ConvertMM2FeetInch(displacement[1]);
+            double zValue = ConvertMM2FeetInch(displacement[2]);
+            XYZ newXY = new XYZ(xValue, yValue, 0);
+
+            // Get z parameters to modify the z value
+            List<string> zParams = this.GetZParamFromLoc(location); 
+
+            string tranName = copy ? "Copy and Move Elements" : "Move Elements";
+            bool tranSuccess = true;
+
+            using (Transaction tran = new Transaction(this.doc, tranName))
+            {
+                tran.Start();
+
+                if (copy)
+                {
+                    ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
+                    affected.UnionWith(elementsCopied);
+                }
+                else
+                {
+                    ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
+                    affected.Add(element.Id);
+                }
+
+                foreach (ElementId id in affected)
+                {
+                    // Get the parameter for Z value
+                    List<Parameter> parameters = GetParameters(this.GetElement(id), zParams);
+
+                    double elevationDouble;
+                    string elevationString;
+                    foreach (Parameter p in parameters)
+                    {
+                        // Get the the new elevation value for the given parameter
+                        elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                        elevationString = ConvertFeetInchToString(elevationDouble);
+
+                        // Apply the elevation value into the parameter
+                        p.SetValueString(elevationString);
+                    }
+                }
+
+                if (tranSuccess) { tran.Commit(); } else { tran.RollBack(); }
+            }
+
+            return affected;
         }
 
         private List<ElementId> CopyShiftElements(IEnumerable<Element> elements, List<int> displacement, bool copy)
@@ -406,67 +491,6 @@
             }
 
             return elementsAffected.ToList();
-        }
-
-        private HashSet<ElementId> DisplaceElement(
-            Element element,
-            List<int> displacement,
-            bool copy
-            )
-        {
-            // These are the elements that are affected by the Displacement
-            HashSet<Element> affectedElements = new HashSet<Element>();
-
-            // Get x, y, and z value (in feet and inches)
-            double xValue = ConvertMM2FeetInch(displacement[0]);
-            double yValue = ConvertMM2FeetInch(displacement[1]);
-            double zValue = ConvertMM2FeetInch(displacement[2]);
-
-            // Get the object to help modify the XY value
-            XYZ newXY = new XYZ(xValue, yValue, 0);
-
-            if (copy)
-            {
-                // Copy and move the elemnts
-                ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
-                if (elementsCopied.Count != 0)
-                {
-                    foreach (ElementId id in elementsCopied)
-                    {
-                        affectedElements.Add(this.GetElement(id));
-                    }
-                }
-            }
-            else
-            {
-                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
-                affectedElements.Add(element);
-            }
-
-            List<string> zParams;
-            List<Parameter> parameters;
-            foreach (Element e in affectedElements)
-            {
-                if (e.Location == null) continue;
-
-                zParams = GetZParamFromLoc(e.Location);
-                parameters = GetParameters(element, zParams);
-
-                if (parameters.Count == 0) continue;
-
-                double elevationDouble;
-                string elevationString;
-                foreach (Parameter p in parameters)
-                {
-                    // Get the the new elevation value for the given parameter
-                    elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
-                    elevationString = ConvertFeetInchToString(elevationDouble);
-                    // Apply the elevation value into the parameter
-                    p.SetValueString(elevationString);
-                }                
-            }
-
-            return null;
         }
 
         private List<string> GetZParamFromLoc(Location loc)
