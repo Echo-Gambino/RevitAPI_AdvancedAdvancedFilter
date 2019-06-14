@@ -96,7 +96,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\..\..\..\ProgramData\Autodesk\Revit\Addins\2017\AdvAdvFilter.addin" />
+    <None Include="Resources\AAFilter - 32x32.png" />
+    <Content Include="Resources\AAFilter.png" />
     <Content Include="Resources\Duck.png" />
+    <None Include="Resources\FilterIMG.bmp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ModelessForm.resx">
@@ -106,6 +109,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -334,13 +334,23 @@
             // Use the data created in createModelessPushButtonData to create a PushButton
             PushButton createModelessFormPushButton = ribbonPanel.AddItem(createModelessPushButtonData) as PushButton;
 
-            // Add an image to the push button
-            createModelessFormPushButton.LargeImage
-                = System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
-                        AdvAdvFilter.Properties.Resources.Duck.GetHbitmap(),
-                        IntPtr.Zero,
-                        Int32Rect.Empty,
-                        BitmapSizeOptions.FromEmptyOptions());
+            System.Drawing.Bitmap bmp = AdvAdvFilter.Properties.Resources.AAFilter32x32;
+
+            System.Drawing.Imaging.BitmapData bmpData = bmp.LockBits(
+                new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
+                System.Drawing.Imaging.ImageLockMode.ReadOnly,
+                bmp.PixelFormat);
+
+            BitmapSource bmpSource = BitmapSource.Create(
+                bmpData.Width, bmpData.Height,
+                bmp.HorizontalResolution, bmp.VerticalResolution,
+                System.Windows.Media.PixelFormats.Pbgra32, null,
+                bmpData.Scan0, bmpData.Stride * bmpData.Height, bmpData.Stride);
+
+
+            createModelessFormPushButton.Image = bmpSource;
+            createModelessFormPushButton.LargeImage = bmpSource;
+            createModelessFormPushButton.ToolTipImage = bmpSource;
 
             // Add a tooltip to the push button
             createModelessFormPushButton.ToolTip = PUSHBUTTON_TOOLTIP;
