@@ -21,11 +21,11 @@
         #region Constants
 
         // Ribbon names
-        private static string RIBBON_TAB_NAME = "AA Filter";
-        private static string RIBBON_PANEL_NAME = "Adv. Adv. Filter";
+        private static string RIBBON_TAB_NAME = "Add-Ins";
+        private static string RIBBON_PANEL_NAME = "Adv.Adv. Filter";
 
         // Push button names & tooltips
-        private static string PUSHBUTTON_TEXT = "Advanced Advanced Filter";
+        private static string PUSHBUTTON_TEXT = "AA Filter";
         private static string PUSHBUTTON_TOOLTIP = "Filtering but advanced";
 
 
@@ -187,7 +187,8 @@
             }
 
             // Disable ribbon panel to prevent conflicting commands
-            foreach (RibbonPanel panel in Main.UiCtrlApp.GetRibbonPanels(RIBBON_TAB_NAME))
+            // foreach (RibbonPanel panel in Main.UiCtrlApp.GetRibbonPanels(RIBBON_TAB_NAME))
+            foreach (RibbonPanel panel in Main.UiCtrlApp.GetRibbonPanels(Tab.AddIns))
             {
                 panel.Enabled = false;
             }
@@ -305,10 +306,12 @@
         private void AddExtensionRibbon(UIControlledApplication app)
         {
             // Create the RibbonTab with the name RIBBON_TAB_NAME
-            app.CreateRibbonTab( RIBBON_TAB_NAME );
+            // app.CreateRibbonTab( RIBBON_TAB_NAME );
 
             // Place a panel into the tab of RIBBON_TAB_NAME
-            RibbonPanel ribbonPanel = app.CreateRibbonPanel( RIBBON_TAB_NAME, RIBBON_PANEL_NAME );
+            // RibbonPanel ribbonPanel = app.CreateRibbonPanel( RIBBON_TAB_NAME, RIBBON_PANEL_NAME );
+
+            RibbonPanel ribbonPanel = app.CreateRibbonPanel(Tab.AddIns, RIBBON_PANEL_NAME);
 
             // Call AddExtensionButtons to add buttons onto ribbonPanel
             this.AddExtensionButtons(ribbonPanel);
@@ -353,7 +356,8 @@
             try
             {
                 // Enable every individual ribbonPanel inside RIBBON_TAB_NAME
-                foreach (RibbonPanel ribbonPanel in uiApp.GetRibbonPanels(RIBBON_TAB_NAME))
+                // foreach (RibbonPanel ribbonPanel in uiApp.GetRibbonPanels(RIBBON_TAB_NAME))
+                foreach (RibbonPanel ribbonPanel in uiApp.GetRibbonPanels(Tab.AddIns))
                     ribbonPanel.Enabled = true;
             }
             catch (Exception ex)

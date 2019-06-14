@@ -6,3 +6,4 @@ C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debu
 C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.ModelessForm.resources
 C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.Properties.Resources.resources
 C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.csproj.GenerateResource.cache
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\obj\Debug\AdvAdvFilter.csprojAssemblyReference.cache
