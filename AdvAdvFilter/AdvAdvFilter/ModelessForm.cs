@@ -677,8 +677,8 @@
 
                     // DEBUG: Print out addSelection
                     //StringBuilder sb = new StringBuilder();
-                    //sb.AppendLine("AddSelection");
-                    //foreach (ElementId id in addSelection)
+                    //sb.AppendLine("RemSelection");
+                    //foreach (ElementId id in remSelection)
                     //{
                     //    sb.AppendLine(id.ToString());
                     //}
@@ -760,14 +760,14 @@
                         requestHandler.ImmediateRequest(Request.UpdateTreeView);
 
                     }
-
+                    /*
                     StringBuilder sb = new StringBuilder();
                     foreach (ElementId id in elementsAffected)
                     {
                         sb.AppendLine(id.ToString());
                     }
                     MessageBox.Show(sb.ToString());
-
+                    */
                     break;
 
                 case Request.Nothing:

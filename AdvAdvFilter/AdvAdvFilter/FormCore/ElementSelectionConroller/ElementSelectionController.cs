@@ -155,6 +155,7 @@
                 TreeNode node;
                 foreach (ElementId id in elementIds)
                 {
+                    if (!this.LeafNodes.ContainsKey(id)) continue;
                     // Get the node that corresponds to the elementId
                     node = this.LeafNodes[id];
                     // Add it to the list of treeNode
