@@ -323,12 +323,12 @@
 
             List<ElementId> elementsAffected;
 
-            elementsAffected = CopyShiftElements(elements.ToList(), xyzValues, copyAndShift);
+            elementsAffected = CopyShiftElements(elements, xyzValues, copyAndShift);
 
             return elementsAffected;
         }
 
-        private List<ElementId> CopyShiftElements(ICollection<Element> elements, List<int> displacement, bool copy)
+        private List<ElementId> CopyShiftElements(IEnumerable<Element> elements, List<int> displacement, bool copy)
         {
             List<ElementId> elementsAffected = new List<ElementId>();
 
@@ -362,36 +362,40 @@
                     if (copy)
                     {
                         ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, elem.Id, newXY);
-                        if (elementsCopied.Count != 0)
+                        foreach (ElementId id in elementsCopied)
                         {
-                            foreach (ElementId id in elementsCopied)
-                            {
-                                elementsAffected.Add(id);
-                            }
+                            elementsAffected.Add(id);
                         }
                     }
                     else
                     {
                         ElementTransformUtils.MoveElement(this.doc, elem.Id, newXY);
+                        elementsAffected.Add(elem.Id);
                     }
 
-                    // Get the parameter for Z value
-                    List<Parameter> parameters = GetParameters(elem, zParams);
-
-                    if (parameters.Count != 0)
+                    foreach (ElementId id in elementsAffected)
                     {
-                        double elevationDouble;
-                        string elevationString;
-                        foreach (Parameter p in parameters)
+                        Element tmpElement = this.GetElement(id);
+                        // Get the parameter for Z value
+                        List<Parameter> parameters = GetParameters(tmpElement, zParams);
+
+                        if (parameters.Count != 0)
                         {
-                            // Get the the new elevation value for the given parameter
-                            elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
-                            elevationString = ConvertFeetInchToString(elevationDouble);
-                            // Apply the elevation value into the parameter
-                            p.SetValueString(elevationString);
+                            double elevationDouble;
+                            string elevationString;
+                            foreach (Parameter p in parameters)
+                            {
+                                // Get the the new elevation value for the given parameter
+                                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
+                                elevationString = ConvertFeetInchToString(elevationDouble);
+
+                                MessageBox.Show(elevationString);
+
+                                // Apply the elevation value into the parameter
+                                p.SetValueString(elevationString);
+                            }
                         }
                     }
-
                 }
 
                 if (tranSuccess)
@@ -400,7 +404,7 @@
                     tran.RollBack();
             }
             
-            return null;
+            return elementsAffected;
         }
 
         private HashSet<ElementId> DisplaceElement(

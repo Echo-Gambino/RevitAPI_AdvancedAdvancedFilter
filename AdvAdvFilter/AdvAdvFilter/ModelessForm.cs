@@ -654,6 +654,9 @@
                 case Request.UpdateTreeView:
                     // Step 1: Update all viewable elements for the current view
                     bool changed = dataController.SetMode(filter);
+
+                    changed = true;
+
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
                     // Step 2: Update the treeView element outside of the API context
@@ -745,8 +748,26 @@
                     if (idsToMove.Count == 0)
                         this.actionController.PromptNotValidElements();
 
-                    // Step 2: Copy and move the elements via the Revit Controller using the given information
-                    revitController.CopyAndMoveElements(idsToMove, coords, copyAndShift);
+                    // Step 2: Copy and move the elements via the Revit Controller using the given information and get back the affected elementIds
+                    // revitController.CopyAndMoveElements(idsToMove, coords, copyAndShift);
+                    List<ElementId> elementsAffected = revitController.CopyAndShiftElements(idsToMove, coords, copyAndShift);
+
+                    if (copyAndShift)
+                    {
+                        this.dataController.AddToAllElements(elementsAffected);
+
+                        this.selectionController.NodesToAdd = elementsAffected;
+                        requestHandler.ImmediateRequest(Request.UpdateTreeView);
+
+                    }
+
+                    StringBuilder sb = new StringBuilder();
+                    foreach (ElementId id in elementsAffected)
+                    {
+                        sb.AppendLine(id.ToString());
+                    }
+                    MessageBox.Show(sb.ToString());
+
                     break;
 
                 case Request.Nothing:
