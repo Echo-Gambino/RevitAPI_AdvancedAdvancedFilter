@@ -275,8 +275,13 @@
 
         #endregion Selection Related Tasks
 
-        #region Movement / Shift Related Tasks
+        #region Filter ElementIds
 
+        /// <summary>
+        /// Filter the movable elementIds by a whitelist of movable category names
+        /// </summary>
+        /// <param name="elementIds"></param>
+        /// <returns></returns>
         public List<ElementId> GetMovableElementIds(List<ElementId> elementIds)
         {
             HashSet<string> movableCategories = new HashSet<string>()
@@ -296,6 +301,12 @@
             return output;
         }
 
+        /// <summary>
+        /// Get the elementIds that have the same category names as the set of categoryNames
+        /// </summary>
+        /// <param name="elementIds"></param>
+        /// <param name="categoryNames"></param>
+        /// <returns></returns>
         public List<ElementId> FilterByCategory(List<ElementId> elementIds, HashSet<string> categoryNames)
         {
             // Get elements from the set of elementIds
@@ -310,54 +321,95 @@
             return elementIdsWithCategoryNames.ToList();
         }
 
+        #endregion Filter ElementIds
+
+        #region Movement / Shift Related Tasks
+
+        /// <summary>
+        /// Moves the selected elements with an option to copy them as well
+        /// </summary>
+        /// <param name="elementIds"></param>
+        /// <param name="displacement"></param>
+        /// <param name="copy"></param>
+        /// <returns></returns>
         public List<ElementId> CopyAndShiftElements(
             List<ElementId> elementIds,
             List<int> displacement,
-            bool copy
+            bool copy = false
             )
         {
+            // Check for any arguments that is null
+            if (elementIds == null)
+                throw new ArgumentNullException("elementIds");
+            else if (displacement == null)
+                throw new ArgumentNullException("displacement");
+            else if (displacement.Count != 3)
+                throw new ArgumentException(String.Format("displacement has {0} items, must have 3 (x, y, z)", displacement.Count));
+
+            // If elementIds is empty, then return immediately with no elements affected by this method
+            if (elementIds.Count == 0) return new List<ElementId>();
+
+            // Get a full list of elements from elementIds
             IEnumerable<Element> elements
                 = from ElementId id in elementIds
                   select this.GetElement(id);
+            // If elements is somehow null, then throw an exception
             if (elements == null) throw new NullReferenceException("elements");
 
-            HashSet<ElementId> affected;
+            // Call back-end function to perform the operation
+            HashSet<ElementId> affected = DisplaceElements(elements, displacement, copy);
 
-            // elementsAffected = CopyShiftElements(elements, xyzValues, copyAndShift);
-            affected = DisplaceElements(elements, displacement, copy);
-
+            // Return affected in list form
             return affected.ToList();
         }
 
+        /// <summary>
+        /// Back-end facing method that displaces the elements by the given displacement values with an option to copy
+        /// </summary>
+        /// <param name="elements"></param>
+        /// <param name="displacement"></param>
+        /// <param name="copy"></param>
+        /// <returns></returns>
         private HashSet<ElementId> DisplaceElements(
             IEnumerable<Element> elements,
             List<int> displacement,
-            bool copy
+            bool copy = false
             )
         {
+            // Get a hashset to keep track of elementIds that are either affected by the shift, or newly created elements from a copy function
             HashSet<ElementId> affected = new HashSet<ElementId>();
-
-            string tranName = copy ? "Copy and Move Elements" : "Move Elements";
 
             Location loc;
             HashSet<ElementId> subAffected;
             foreach (Element elem in elements)
             {
+                // If the element's location exists, set loc to that location, if not, iterate to the next element
                 if (elem.Location != null) { loc = elem.Location; } else { continue; }
 
+                // Get the elements that are affected from displacing that element
+                // (in case that more than one elements are newly created, thus affected)
                 subAffected = DisplaceElement(elem, displacement, loc, copy);
 
+                // Add the elements of subAffected onto affected
                 affected.UnionWith(subAffected);
             }
 
             return affected;
         }
 
+        /// <summary>
+        /// Back-end facing method that displaces one element by the given displacement values with an option to copy
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="displacement"></param>
+        /// <param name="location"></param>
+        /// <param name="copy"></param>
+        /// <returns></returns>
         private HashSet<ElementId> DisplaceElement(
             Element element,
             List<int> displacement,
             Location location,
-            bool copy
+            bool copy = false
             )
         {
             HashSet<ElementId> affected = new HashSet<ElementId>();
@@ -366,12 +418,16 @@
             double xValue = ConvertMM2FeetInch(displacement[0]);
             double yValue = ConvertMM2FeetInch(displacement[1]);
             double zValue = ConvertMM2FeetInch(displacement[2]);
+
+            // Generate object to modify the x and y value
             XYZ newXY = new XYZ(xValue, yValue, 0);
 
             // Get z parameters to modify the z value
-            List<string> zParams = this.GetZParamFromLoc(location); 
+            List<string> zParams = this.GetZParamFromLoc(location);
 
+            // if method is copying, then tranName = "Copy and Move Elements", else, "Move Elements"
             string tranName = copy ? "Copy and Move Elements" : "Move Elements";
+            // set transSuccess to true, used to determine whether or not to roll back the changes made to this element
             bool tranSuccess = true;
 
             using (Transaction tran = new Transaction(this.doc, tranName))
@@ -380,19 +436,22 @@
 
                 if (copy)
                 {
+                    // If copied, then gather the elements that are newly created from the copy and add it into affected
                     ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
                     affected.UnionWith(elementsCopied);
                 }
                 else
                 {
+                    // If not copied, then get the current element's id and add it into affected
                     ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
                     affected.Add(element.Id);
                 }
 
+                List<Parameter> parameters;
                 foreach (ElementId id in affected)
                 {
                     // Get the parameter for Z value
-                    List<Parameter> parameters = GetParameters(this.GetElement(id), zParams);
+                    parameters = GetParameters(this.GetElement(id), zParams);
 
                     double elevationDouble;
                     string elevationString;
@@ -401,98 +460,23 @@
                         // Get the the new elevation value for the given parameter
                         elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
                         elevationString = ConvertFeetInchToString(elevationDouble);
-
                         // Apply the elevation value into the parameter
                         p.SetValueString(elevationString);
                     }
                 }
 
+                // If the transation is a success, commit the changes, else, roll back (undo) the changes made
                 if (tranSuccess) { tran.Commit(); } else { tran.RollBack(); }
             }
 
             return affected;
         }
 
-        private List<ElementId> CopyShiftElements(IEnumerable<Element> elements, List<int> displacement, bool copy)
-        {
-            HashSet<ElementId> elementsAffected = new HashSet<ElementId>();
-
-            bool tranSuccess = true;
-
-            using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
-            {
-                tran.Start();
-
-                Location loc;
-                List<string> zParams;
-                foreach (Element elem in elements)
-                {
-                    loc = elem.Location;
-                    if (loc == null)
-                    {
-                        tranSuccess = false;
-                        break;
-                    }
-
-                    zParams = GetZParamFromLoc(loc);
-
-                    // Get x, y, and z value (in feet and inches)
-                    double xValue = ConvertMM2FeetInch(displacement[0]);
-                    double yValue = ConvertMM2FeetInch(displacement[1]);
-                    double zValue = ConvertMM2FeetInch(displacement[2]);
-
-                    XYZ newXY = new XYZ(xValue, yValue, 0);
-
-                    HashSet<ElementId> subElementsAffected ;
-                    // Copy And Shift
-                    if (copy)
-                    {
-                        ICollection<ElementId> elementsCopied = ElementTransformUtils.CopyElement(this.doc, elem.Id, newXY);
-                        subElementsAffected = new HashSet<ElementId>(elementsCopied);
-                    }
-                    else
-                    {
-                        ElementTransformUtils.MoveElement(this.doc, elem.Id, newXY);
-                        subElementsAffected = new HashSet<ElementId>();
-                        subElementsAffected.Add(elem.Id);
-                        
-                    }
-
-                    foreach (ElementId id in subElementsAffected)
-                    {
-                        Element tmpElement = this.GetElement(id);
-                        // Get the parameter for Z value
-                        List<Parameter> parameters = GetParameters(tmpElement, zParams);
-
-                        if (parameters.Count != 0)
-                        {
-                            double elevationDouble;
-                            string elevationString;
-                            foreach (Parameter p in parameters)
-                            {
-                                // Get the the new elevation value for the given parameter
-                                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
-                                elevationString = ConvertFeetInchToString(elevationDouble);
-
-                                // Apply the elevation value into the parameter
-                                p.SetValueString(elevationString);
-                            }
-                        }
-                    }
-
-                    elementsAffected.UnionWith(subElementsAffected);
-
-                }
-
-                if (tranSuccess)
-                    tran.Commit();
-                else
-                    tran.RollBack();
-            }
-
-            return elementsAffected.ToList();
-        }
-
+        /// <summary>
+        /// Given the location, get the list of parameter names that have to do with modifying the z values
+        /// </summary>
+        /// <param name="loc"></param>
+        /// <returns></returns>
         private List<string> GetZParamFromLoc(Location loc)
         {
             List<string> zParams;
@@ -502,6 +486,7 @@
 
             if (point != null)
             {
+                // z params for location point type elements
                 zParams = new List<string>()
                 {
                     "Top Offset",
@@ -512,6 +497,7 @@
             }
             else if (curve != null)
             {
+                // z params for location curve type elements
                 zParams = new List<string>()
                 {
                     "Base Offset",
@@ -522,6 +508,7 @@
             }
             else
             {
+                // z params for null location type elements
                 zParams = new List<string>()
                 {
                     "Height Offset From Level"
@@ -531,172 +518,23 @@
             return zParams;
         }
 
-        private List<ElementId> OnlyShiftElements(List<Element> elements, List<int> displacement)
-        {
-            bool tranSuccess = false;
-
-            using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
-            {
-                tran.Start();
-
-
-
-                if (tranSuccess)
-                    tran.Commit();
-                else
-                    tran.RollBack();
-            }
-
-            return null;
-        }
-
-        public void CopyAndMoveElements(
-            List<ElementId> elementIds,
-            List<int> xyzValues,
-            bool copyAndShift
-            )
-        {
-            ICollection<ElementId> elementsToCopy = elementIds;
-
-            int xValue = xyzValues[0];
-            int yValue = xyzValues[1];
-            int zValue = xyzValues[2];
-
-            using (Transaction tran = new Transaction(this.doc, "Copy and Move Elements"))
-            {
-                tran.Start();
-
-                bool transactionSuccessful = true;
-
-                foreach (ElementId id in elementsToCopy)
-                {
-                    Element e = this.GetElement(id);
-
-                    Location eLoc = e.Location;
-                    if (eLoc == null)
-                    {
-                        transactionSuccessful = false;
-                        break;
-                    }
-
-                    List<string> zParamNames;
-
-                    LocationPoint ePoint = eLoc as LocationPoint;
-                    LocationCurve eCurve = eLoc as LocationCurve;
-                    if (ePoint != null)
-                    {
-                        zParamNames = new List<string>()
-                        {
-                            "Top Offset",
-                            "Base Offset",
-                            "Label Elevation",
-                            "Offset"
-                        };
-                    }
-                    else if (eCurve != null)
-                    {
-                        zParamNames = new List<string>()
-                        {
-                            // "z Offset Value"
-                            "Base Offset",
-                            "Top Offset",
-                            "Start Level Offset",
-                            "End Level Offset"
-                        };
-                    }
-                    else
-                    {
-                        zParamNames = new List<string>()
-                        {
-                            "Height Offset From Level"
-                        };
-                    }
-
-                    SetPosition(e, xyzValues, zParamNames, copyAndShift);
-                }
-
-                if (transactionSuccessful)
-                {
-                    tran.Commit();
-                }
-                else
-                {
-                    tran.RollBack();
-                }
-            }
-            // ElementTransformUtils.CopyElements(this.doc, elementsToCopy, )
-        }
-
-        public bool SetPosition(
-            Element element,
-            List<int> coords,
-            List<string> zParamNames,
-            bool copyAndShift
-            )
-        {
-            // Get x, y, and z value (in feet and inches)
-            double xValue = ConvertMM2FeetInch(coords[0]);
-            double yValue = ConvertMM2FeetInch(coords[1]);
-            double zValue = ConvertMM2FeetInch(coords[2]);
-
-            XYZ newXY = new XYZ(xValue, yValue, 0);
-
-            if (copyAndShift)
-            {
-                ICollection<ElementId> eId = ElementTransformUtils.CopyElement(this.doc, element.Id, newXY);
-                if (eId.Count == 0)
-                {
-                    TaskDialog.Show("Warning!",
-                       String.Format("Warning: SetPointPosition(...) attempted to " +
-                                   "copy and move from element {0} but failed.\n" +
-                                   "The command shall abort this command.",
-                                   element.Name));
-                    return false;
-                }
-                // Attempt to get elements from this
-                element = this.GetElement(eId.ToList()[0]);
-            }
-            else
-            {
-                ElementTransformUtils.MoveElement(this.doc, element.Id, newXY);
-            }
-
-            // Get the parameter for Z value
-            List<Parameter> parameters = GetParameters(element, zParamNames);
-
-            // Do a check if parameters are valid
-            if (parameters.Count == 0)
-            {
-                TaskDialog.Show("Warning!",
-                   String.Format("Warning: SetPointPosition(...) attempted to " +
-                               "retrieve zParameter from element {0} but failed.\n" +
-                               "The command shall abort this command.",
-                               element.Name));
-                return false;
-            }
-
-            double elevationDouble;
-            string elevationString;
-            foreach (Parameter p in parameters)
-            {
-                // Get the the new elevation value for the given parameter
-                elevationDouble = ConvertStringToFeetInch(p.AsValueString()) + zValue;
-                elevationString = ConvertFeetInchToString(elevationDouble);
-                // Apply the elevation value into the parameter
-                p.SetValueString(elevationString);
-            }
-
-            return true;
-        }
-        
+        /// <summary>
+        /// Get the list of parameters given the list of parameter names
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="paramNames"></param>
+        /// <returns></returns>
         private List<Parameter> GetParameters(Element element, List<string> paramNames)
         {
+            // Initialize the list of parameters to be returned
             List<Parameter> output = new List<Parameter>();
 
             foreach (string names in paramNames)
             {
+                // Get the parameters from the element
                 IList<Parameter> parameters = element.GetParameters(names);
 
+                // Conditions to iterate to the next name immediately
                 if (parameters == null)
                     continue;
                 else if (parameters.Count == 0)
@@ -704,6 +542,7 @@
                 else if (parameters[0].IsReadOnly)
                     continue;
 
+                // Add to list of parameters
                 output.Add(parameters[0]);
             }
 
