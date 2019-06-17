@@ -135,6 +135,7 @@
         #endregion Update TreeView Structure
 
         #region Update TreeView Selection
+        // TODO: Need to move some of these functions over to TreeViewController
 
         /// <summary>
         /// Update selection by checkedStatus for the given elementIds
@@ -243,34 +244,31 @@
 
         #endregion Update TreeView Selection
 
-        #region Get number of selected elements
+        #region Update TreeView Count
 
-        /// <summary>
-        /// This method is not fully implemented
-        /// </summary>
-        /// <param name="node"></param>
-        /// <param name="depth"></param>
-        /// <param name="lowestDepth"></param>
-        /// <returns></returns>
-        private int TallyUpSelectedElements(
-            TreeNode node,
-            Depth depth,
-            Depth lowestDepth = Depth.Instance)
+        public void UpdateSelectionCounter()
         {
-            if (depth == lowestDepth)
-            {
-                MessageBox.Show(node.FullPath);
-                return 0;
-            }
+            int total = 0;
+            int selected = 0;
 
-            Depth nextDepth = GetNextDepth(depth, lowestDepth);
-
-            foreach (TreeNode n in node.Nodes)
+            lock (treeLock)
             {
-                TallyUpSelectedElements(n, depth);
+                // Get the total number of leafNodes
+                total = this.LeafNodes.Count;
+                // For every TreeNode in leafNode, if its checked, then add one to selected
+                foreach (KeyValuePair<ElementId, TreeNode> kvp in this.LeafNodes)
+                {
+                    if (kvp.Value.Checked) selected += 1;
+                }
+
+                // Put it into the totalLabel.Text
+                totalLabel.Text = String.Format("Total Selected Items: {0}/{1}", selected, total);
             }
-            return 0;
         }
+
+        #endregion Update TreeView Count
+
+        #region Auxiliary Functions
 
         /// <summary>
         /// Gets the next lowest depth of the given depth and returns Depth.Invalid if depth == lowest
@@ -292,7 +290,7 @@
             return next;
         }
 
-        #endregion Get number of selected elements
+        #endregion Auxiliary Functions
 
         #region Expand Nodes
 

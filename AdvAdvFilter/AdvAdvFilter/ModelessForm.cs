@@ -248,6 +248,8 @@
             elementIds.IntersectWith(dataController.AllElements);
             // Step 4: Apply the change to the nodes with the corresponding elementIds
             selectionController.UpdateSelectionByElementId(elementIds, e.Node.Checked);
+            //// Step 5: Update the counter to the tree itself
+            //selectionController.UpdateSelectionCounter(dataController.ElementTree);
 
             if (e.Node.Checked)
             {
@@ -666,7 +668,8 @@
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
-                        selectionController.CommitTree(dataController.ElementTree, dataController.AllElements); 
+                        selectionController.CommitTree(dataController.ElementTree, dataController.AllElements);
+                        selectionController.UpdateSelectionCounter();
                     }));
 
                     // Step 3: Update visibility state of the view
@@ -717,6 +720,7 @@
                     {
                         selectionController.UpdateSelectionByElementId(addSelection, true);
                         selectionController.UpdateSelectionByElementId(remSelection, false);
+                        selectionController.UpdateSelectionCounter();
                     }));
                     // Step 4: Update dataController efficiently
                     // Mathematical visualization: SelElements = (currentSelection ^ revitSelection) U additionalSelection
@@ -741,6 +745,8 @@
                 case Request.SelectElementIds:
                     // Step 1: Make a new selection in Revit
                     revitController.MakeNewSelection(dataController.SelElementIds.ToList());
+                    // Step 2: Update the selection's counter
+                    selectionController.UpdateSelectionCounter();
 
                     // Step 2: (OPTIONAL) Hide the remaining elementIds
                     if (optionController.GetVisibilityState())
@@ -812,7 +818,6 @@
 
                         this.selectionController.NodesToAdd = elementsAffected;
                         requestHandler.ImmediateRequest(Request.UpdateTreeView);
-
                     }
 
                     break;
@@ -861,6 +866,7 @@
             this.BeginInvoke(new Action(() =>
             {
                 selectionController.CommitTree(dataController.ElementTree);
+                selectionController.UpdateSelectionCounter();
             }));
 
             // Remove elements to TreeStructure
