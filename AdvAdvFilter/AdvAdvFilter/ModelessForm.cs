@@ -746,7 +746,10 @@
                     // Step 1: Make a new selection in Revit
                     revitController.MakeNewSelection(dataController.SelElementIds.ToList());
                     // Step 2: Update the selection's counter
-                    selectionController.UpdateSelectionCounter();
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        selectionController.UpdateSelectionCounter();
+                    }));
 
                     // Step 2: (OPTIONAL) Hide the remaining elementIds
                     if (optionController.GetVisibilityState())
