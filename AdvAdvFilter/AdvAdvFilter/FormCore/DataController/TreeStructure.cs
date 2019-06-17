@@ -384,6 +384,11 @@
                         this.subSet.Add(id);
                     }
 
+                    if (this.hiddenNodes.ContainsKey(view.Id))
+                    {
+                        this.subSet.UnionWith(this.hiddenNodes[view.Id]);
+                    }
+
                     break;
                 case FilterMode.Selection:
                     this.subSet = new HashSet<ElementId>(this.SelectedNodes);

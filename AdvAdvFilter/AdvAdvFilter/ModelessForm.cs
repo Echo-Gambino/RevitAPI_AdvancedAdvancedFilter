@@ -23,6 +23,8 @@
 
     public partial class ModelessForm : System.Windows.Forms.Form
     {
+        DebugController debug;
+
         #region Fields
 
         #region Fields: Modeless Form
@@ -80,6 +82,8 @@
             )
         {
             InitializeComponent();
+
+            debug = new DebugController(TestPanel, listBox1, listBox2);
 
             //selectionTool(new List<ElementId>());
 
@@ -656,14 +660,42 @@
                     bool changed = dataController.SetMode(filter);
 
                     changed = true;
-
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
+
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
                         selectionController.CommitTree(dataController.ElementTree, dataController.AllElements); 
                     }));
+
+                    // Step 3: Update visibility state of the view
+                    Autodesk.Revit.DB.View view = dataController.View;
+                    HashSet<ElementId> hidden = new HashSet<ElementId>();
+                    if (optionController.GetVisibilityState())
+                    {
+                        // Step 3.1a: To hide all unselected elements, we need to get the previously hidden ids to be applied again (if there is any)
+                        if (dataController.ElementTree.HiddenNodes.ContainsKey(view.Id))
+                        {
+                            hidden.UnionWith(dataController.ElementTree.HiddenNodes[view.Id]);
+                        }
+                        // Step 3.2a: Request for UpdateTreeViewSelection
+                        requestHandler.AddRequest(Request.UpdateTreeViewSelection);
+                    }
+                    else
+                    {
+                        // Step 3.1b: To show all elements, we need to remove the previously hidden ids from the records (if there is any)
+                        if (dataController.ElementTree.HiddenNodes.ContainsKey(view.Id))
+                        {
+                            dataController.ElementTree.HiddenNodes.Remove(view.Id);
+                        }
+                        // Step 3.2.b: Request for ChangeElementVisibility
+                        requestHandler.AddRequest(Request.ChangeElementVisibility);
+                    }
+
+                    // Step 4: Set dataController's ids to hide with hidden
+                    dataController.IdsToHide = hidden;
+
                     break;
 
                 case Request.UpdateTreeViewSelection:
@@ -733,10 +765,79 @@
                     // Step 1: Get ids to Hide and Show
                     HashSet<ElementId> idsToHide = dataController.IdsToHide;
                     HashSet<ElementId> idsToShow = new HashSet<ElementId>(dataController.AllElements.Except(idsToHide));
+
+                    // Step 2: Get the previously hidden ids
+                    HashSet<ElementId> prevHidden = new HashSet<ElementId>();
+                    Autodesk.Revit.DB.View v = dataController.View;
+                    if (v != null)
+                    {
+                        if (dataController.ElementTree.HiddenNodes.ContainsKey(v.Id))
+                        {
+                            prevHidden.UnionWith(dataController.ElementTree.HiddenNodes[v.Id]);
+                        }
+                    }
+
+                    // Step 3: Add all elementIds from prevHidden into idsToShow
+                    idsToShow.UnionWith(prevHidden);
+
+                    // Step 4: Hide elements if there is any
+                    if (idsToHide.Count != 0)
+                    {
+                        revitController.HideElementIds(idsToHide, dataController.ElementTree);
+                    }
+
+                    // Step 5: Show elements if there is any
+                    if (idsToShow.Count != 0)
+                    {
+                        revitController.ShowElementIds(idsToShow, dataController.ElementTree);
+                    }
+
+
+                    /*
+                    Autodesk.Revit.DB.View v = dataController.View;
+                    if (v != null)
+                    {
+                        if (dataController.ElementTree.HiddenNodes.ContainsKey(v.Id))
+                        {
+                            HashSet<ElementId> show = dataController.ElementTree.HiddenNodes[v.Id];
+                            show.ExceptWith(idsToHide);
+                            idsToShow.UnionWith(show);
+
+                            debug.printText<ElementId>(idsToShow, "idsToShow", 2);
+                        }
+                    }
+
+                    // debug.printText(idsToHide, "idsToHide", 1);
+                    // debug.printText(idsToShow, "idsToShow", 2);
+
                     // Step 2: Hide elementIds
                     revitController.HideElementIds(idsToHide, dataController.ElementTree);
                     // Step 3: Show elementIds
                     revitController.ShowElementIds(idsToShow, dataController.ElementTree);
+
+                    Autodesk.Revit.DB.View v1 = dataController.View;
+                    if (v1 != null)
+                    {
+                        if (dataController.ElementTree.HiddenNodes.ContainsKey(v1.Id))
+                        {
+                            debug.printText<ElementId>(dataController.ElementTree.HiddenNodes[v1.Id], "hiddenNodes of " + v1.Id.ToString(), 1);
+                        }
+                        else
+                        {
+                            debug.printText<ElementId>(new List<ElementId>(), "hiddenNodes of " + v1.Id.ToString(), 1);
+                        }
+                    }
+                    */
+
+                    /*
+                    if (idsToShow.Count > 0)
+                    {
+                        selectionController.NodesToAdd = idsToShow.ToList();
+                        requestHandler.AddRequest(Request.UpdateTreeView);
+                    }
+                    */
+                    // requestHandler.AddRequest();
+
                     break;
 
                 case Request.ShiftElements:

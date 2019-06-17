@@ -77,6 +77,7 @@
     <Compile Include="FormCore\OptionController\OptionFilterController.cs" />
     <Compile Include="FormCore\OptionController\OptionVisibilityController.cs" />
     <Compile Include="FormCore\DataController\TreeStructure.cs" />
+    <Compile Include="FormCore\DebugController\DebugController.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="ModelessForm.cs">
       <SubType>Form</SubType>

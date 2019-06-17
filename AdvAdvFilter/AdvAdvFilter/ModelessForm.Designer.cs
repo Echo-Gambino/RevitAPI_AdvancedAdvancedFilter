@@ -59,6 +59,9 @@
             this.OptionVisibilityLabel = new System.Windows.Forms.Label();
             this.OptionVisibilityCheckBox = new System.Windows.Forms.CheckBox();
             this.OptionLabel = new System.Windows.Forms.Label();
+            this.TestPanel = new System.Windows.Forms.Panel();
+            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.listBox2 = new System.Windows.Forms.ListBox();
             this.ElementSelectionPanel.SuspendLayout();
             this.SidePanel.SuspendLayout();
             this.ActionPanel.SuspendLayout();
@@ -69,6 +72,7 @@
             this.OptionPanel.SuspendLayout();
             this.OptionFilterPanel.SuspendLayout();
             this.OptionVisibilityPanel.SuspendLayout();
+            this.TestPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // ElementSelectionPanel
@@ -81,7 +85,7 @@
             this.ElementSelectionPanel.Location = new System.Drawing.Point(12, 12);
             this.ElementSelectionPanel.MinimumSize = new System.Drawing.Size(300, 300);
             this.ElementSelectionPanel.Name = "ElementSelectionPanel";
-            this.ElementSelectionPanel.Size = new System.Drawing.Size(322, 540);
+            this.ElementSelectionPanel.Size = new System.Drawing.Size(310, 540);
             this.ElementSelectionPanel.TabIndex = 6;
             // 
             // ElementSelectionTreeView
@@ -92,7 +96,7 @@
             this.ElementSelectionTreeView.CheckBoxes = true;
             this.ElementSelectionTreeView.Location = new System.Drawing.Point(0, 3);
             this.ElementSelectionTreeView.Name = "ElementSelectionTreeView";
-            this.ElementSelectionTreeView.Size = new System.Drawing.Size(322, 518);
+            this.ElementSelectionTreeView.Size = new System.Drawing.Size(310, 518);
             this.ElementSelectionTreeView.TabIndex = 1;
             this.ElementSelectionTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCheck);
             this.ElementSelectionTreeView.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeCollapse);
@@ -114,7 +118,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.SidePanel.Controls.Add(this.ActionPanel);
             this.SidePanel.Controls.Add(this.OptionPanel);
-            this.SidePanel.Location = new System.Drawing.Point(340, 12);
+            this.SidePanel.Location = new System.Drawing.Point(328, 12);
             this.SidePanel.MaximumSize = new System.Drawing.Size(400, 1000);
             this.SidePanel.MinimumSize = new System.Drawing.Size(250, 300);
             this.SidePanel.Name = "SidePanel";
@@ -435,11 +439,43 @@
             this.OptionLabel.TabIndex = 0;
             this.OptionLabel.Text = "Options";
             // 
+            // TestPanel
+            // 
+            this.TestPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.TestPanel.Controls.Add(this.listBox2);
+            this.TestPanel.Controls.Add(this.listBox1);
+            this.TestPanel.Location = new System.Drawing.Point(641, 12);
+            this.TestPanel.Name = "TestPanel";
+            this.TestPanel.Size = new System.Drawing.Size(343, 540);
+            this.TestPanel.TabIndex = 9;
+            // 
+            // listBox1
+            // 
+            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.Location = new System.Drawing.Point(3, 3);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(166, 537);
+            this.listBox1.TabIndex = 4;
+            // 
+            // listBox2
+            // 
+            this.listBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listBox2.FormattingEnabled = true;
+            this.listBox2.Location = new System.Drawing.Point(175, 3);
+            this.listBox2.Name = "listBox2";
+            this.listBox2.Size = new System.Drawing.Size(165, 537);
+            this.listBox2.TabIndex = 5;
+            // 
             // ModelessForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(659, 561);
+            this.ClientSize = new System.Drawing.Size(996, 561);
+            this.Controls.Add(this.TestPanel);
             this.Controls.Add(this.SidePanel);
             this.Controls.Add(this.ElementSelectionPanel);
             this.MinimumSize = new System.Drawing.Size(675, 600);
@@ -465,6 +501,7 @@
             this.OptionFilterPanel.PerformLayout();
             this.OptionVisibilityPanel.ResumeLayout(false);
             this.OptionVisibilityPanel.PerformLayout();
+            this.TestPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -501,5 +538,8 @@
         private System.Windows.Forms.Label OptionFilterLabel;
         private System.Windows.Forms.Button ActionShiftButton;
         private System.Windows.Forms.Label ActionPromptLabel;
+        private System.Windows.Forms.Panel TestPanel;
+        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListBox listBox2;
     }
 }
