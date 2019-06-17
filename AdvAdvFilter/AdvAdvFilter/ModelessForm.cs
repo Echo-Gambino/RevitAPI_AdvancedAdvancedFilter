@@ -674,13 +674,8 @@
                     HashSet<ElementId> hidden = new HashSet<ElementId>();
                     if (optionController.GetVisibilityState())
                     {
-                        // Step 3.1a: To hide all unselected elements, we need to get the previously hidden ids to be applied again (if there is any)
-                        if (dataController.ElementTree.HiddenNodes.ContainsKey(view.Id))
-                        {
-                            hidden.UnionWith(dataController.ElementTree.HiddenNodes[view.Id]);
-                        }
-                        // Step 3.2a: Request for UpdateTreeViewSelection
-                        requestHandler.AddRequest(Request.UpdateTreeViewSelection);
+                        // Step 3.1a: Get hidden elements by the formula: hidden = AllElements - SelElements
+                        hidden = new HashSet<ElementId>(dataController.AllElements.Except(dataController.SelElementIds));
                     }
                     else
                     {
@@ -689,12 +684,13 @@
                         {
                             dataController.ElementTree.HiddenNodes.Remove(view.Id);
                         }
-                        // Step 3.2.b: Request for ChangeElementVisibility
-                        requestHandler.AddRequest(Request.ChangeElementVisibility);
                     }
 
                     // Step 4: Set dataController's ids to hide with hidden
                     dataController.IdsToHide = hidden;
+
+                    // Step 5: Request ChangeElementVisibility
+                    requestHandler.AddRequest(Request.ChangeElementVisibility);
 
                     break;
 
@@ -762,11 +758,8 @@
                     break;
 
                 case Request.ChangeElementVisibility:
-                    // Step 1: Get ids to Hide and Show
-                    HashSet<ElementId> idsToHide = dataController.IdsToHide;
-                    HashSet<ElementId> idsToShow = new HashSet<ElementId>(dataController.AllElements.Except(idsToHide));
 
-                    // Step 2: Get the previously hidden ids
+                    // Step 1: Get the previously hidden ids
                     HashSet<ElementId> prevHidden = new HashSet<ElementId>();
                     Autodesk.Revit.DB.View v = dataController.View;
                     if (v != null)
@@ -777,8 +770,14 @@
                         }
                     }
 
-                    // Step 3: Add all elementIds from prevHidden into idsToShow
-                    idsToShow.UnionWith(prevHidden);
+                    // Step 2: Get ids to Hide and Show
+                    // idsToHide = IdsToHide
+                    HashSet<ElementId> idsToHide = dataController.IdsToHide;
+                    // idsToShow = AllElements - prevHidden
+                    HashSet<ElementId> idsToShow = new HashSet<ElementId>(dataController.AllElements.Union(prevHidden));
+
+                    // Step 3: idsToShow = idsToShow - idsToHide
+                    idsToShow.ExceptWith(idsToHide);
 
                     // Step 4: Hide elements if there is any
                     if (idsToHide.Count != 0)
@@ -791,52 +790,6 @@
                     {
                         revitController.ShowElementIds(idsToShow, dataController.ElementTree);
                     }
-
-
-                    /*
-                    Autodesk.Revit.DB.View v = dataController.View;
-                    if (v != null)
-                    {
-                        if (dataController.ElementTree.HiddenNodes.ContainsKey(v.Id))
-                        {
-                            HashSet<ElementId> show = dataController.ElementTree.HiddenNodes[v.Id];
-                            show.ExceptWith(idsToHide);
-                            idsToShow.UnionWith(show);
-
-                            debug.printText<ElementId>(idsToShow, "idsToShow", 2);
-                        }
-                    }
-
-                    // debug.printText(idsToHide, "idsToHide", 1);
-                    // debug.printText(idsToShow, "idsToShow", 2);
-
-                    // Step 2: Hide elementIds
-                    revitController.HideElementIds(idsToHide, dataController.ElementTree);
-                    // Step 3: Show elementIds
-                    revitController.ShowElementIds(idsToShow, dataController.ElementTree);
-
-                    Autodesk.Revit.DB.View v1 = dataController.View;
-                    if (v1 != null)
-                    {
-                        if (dataController.ElementTree.HiddenNodes.ContainsKey(v1.Id))
-                        {
-                            debug.printText<ElementId>(dataController.ElementTree.HiddenNodes[v1.Id], "hiddenNodes of " + v1.Id.ToString(), 1);
-                        }
-                        else
-                        {
-                            debug.printText<ElementId>(new List<ElementId>(), "hiddenNodes of " + v1.Id.ToString(), 1);
-                        }
-                    }
-                    */
-
-                    /*
-                    if (idsToShow.Count > 0)
-                    {
-                        selectionController.NodesToAdd = idsToShow.ToList();
-                        requestHandler.AddRequest(Request.UpdateTreeView);
-                    }
-                    */
-                    // requestHandler.AddRequest();
 
                     break;
 
@@ -861,14 +814,7 @@
                         requestHandler.ImmediateRequest(Request.UpdateTreeView);
 
                     }
-                    /*
-                    StringBuilder sb = new StringBuilder();
-                    foreach (ElementId id in elementsAffected)
-                    {
-                        sb.AppendLine(id.ToString());
-                    }
-                    MessageBox.Show(sb.ToString());
-                    */
+
                     break;
 
                 case Request.Nothing:
