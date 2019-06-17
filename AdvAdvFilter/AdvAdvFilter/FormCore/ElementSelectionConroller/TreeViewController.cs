@@ -340,8 +340,98 @@
 
         #endregion Delete Nodes From TreeView
 
+        #region Nodal Selection Counter
+
+        /// <summary>
+        /// Refresh the selection counters of all the prescribed nodes within TreeView (CategoryType and Category)
+        /// </summary>
+        /// <param name="data"></param>
+        public void RefreshNodeCounters(DataController data)
+        {
+            // Step 1: Get the enumerable of tree nodes
+            TreeNodeCollection collection = treeView.Nodes;
+
+            TreeNodeCollection subCollection = null;
+
+            // Step 2: For every TreeNode...
+            foreach (TreeNode node in collection)
+            {
+                // Step 2.1: Get the node's nodes
+                subCollection = node.Nodes;
+
+                // Step 2.2: For every subNode...
+                foreach (TreeNode subNode in subCollection)
+                {
+                    // Step 2.2.1: Update the nodal counter for subNode
+                    UpdateNodeCounter(subNode, data);
+                }
+
+                // Step 2.3: Update the nodal counter for node
+                UpdateNodeCounter(node, data);
+            }
+        }
+
+        /// <summary>
+        /// Updates the current counter of this node
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="data"></param>
+        public void UpdateNodeCounter(TreeNode node, DataController data)
+        {
+            int total = 0;
+            int selected = 0;
+
+            // Use DataController to get all the leaf's elementIds that is under the current node
+            HashSet<ElementId> leafs = GetLeafsFromNode(node, data);
+
+            // Set the total and initialize selected
+            total = leafs.Count;
+            selected = 0;
+
+            // For each elementId, it retrieves the id from leafNodes, and adds one to selected if that node is checked.
+            TreeNode l;
+            foreach (ElementId id in leafs)
+            {
+                l = this.leafNodes[id];
+                if (l.Checked) { selected += 1; }
+            }
+
+            // text = "{num selected}/{num total} {node name}"
+            string text = string.Format("[{0}/{1}] {2}", selected, total, node.Name);
+
+            // Set the node's text
+            node.Text = text;
+        }
+
+        /// <summary>
+        /// Get the set of the leaf's elementIds that is under the argument node
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private HashSet<ElementId> GetLeafsFromNode(TreeNode node, DataController data)
+        {
+            // Get the tokened string that outlines the path to take in the tree to reach to the current node
+            List<string> pathTokens = GetNamePath(node, new List<string>());
+
+            // From the data controller, call the function to get ALL the element ids by path
+            HashSet<ElementId> elementIds = data.GetElementIdsByPath(pathTokens);
+
+            // Interset the set with the elementIds we currently have
+            elementIds.IntersectWith(curElementIds);
+
+            return elementIds;
+        }
+
+        #endregion Nodal Selection Counter
+
         #region Auxiliary Methods
 
+        /// <summary>
+        /// Returns a new, seperate node with the exact parameters as the given node
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
         private TreeNode CloneTreeNode(TreeNode node)
         {
             if (node == null) throw new ArgumentNullException("node");
@@ -421,6 +511,101 @@
 
             return grouping;
         }
+
+        /// <summary>
+        /// Returns the path of the tree structure to reach the current node but with node names
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        public List<string> GetNamePath(TreeNode node, List<string> list)
+        {
+            if (node == null) throw new ArgumentNullException("node");
+            if (list == null) throw new ArgumentNullException("list");
+
+            // Gets the current node name
+            string name = node.Name;
+
+            // Get the node's parent
+            TreeNode parent = node.Parent;
+
+            // If parent isn't null, then recurse up and get the is name path
+            if (parent != null)
+                list = GetNamePath(parent, list);
+
+            // add the node's name into the list
+            list.Add(name);
+
+            return list;
+        }
+
+        public HashSet<TreeNode> GetBranchNodes(
+            IEnumerable<ElementId> elementIds, 
+            Depth depth
+            )
+        {
+            List<string> GetPathFromDepth(List<string> p, Depth d)
+            {
+                List<string> newP = new List<string>();
+                int i = 0;
+                switch (d)
+                {
+                    case Depth.CategoryType:
+                        i = 1;
+                        break;
+                    case Depth.Category:
+                        i = 2;
+                        break;
+                    default:
+                        i = 1;
+                        break;
+                }
+
+                for (int k = 0; k < i; k++)
+                {
+                    newP.Add(p[k]);
+                }
+
+                return newP;
+            }
+
+            TreeNode GetTreeNodeFromStub(List<string> stub)
+            {
+                TreeNodeCollection col = this.treeView.Nodes;
+
+                TreeNode node = null;
+
+                foreach (string s in stub)
+                {
+                    node = col[s];
+                    col = node.Nodes;
+                }
+
+                return node;
+            }
+
+            IEnumerable<TreeNode> nodes 
+                = from ElementId id in elementIds
+                  select this.leafNodes[id];
+
+            IEnumerable<List<string>> paths
+                = from TreeNode n in nodes
+                  select GetNamePath(n, new List<string>());
+
+            IEnumerable<List<string>> stubs
+                = new HashSet<List<string>> (
+                    from List<string> subPaths in paths
+                    select GetPathFromDepth(subPaths, depth));
+
+            IEnumerable<TreeNode> branches
+                = new List<TreeNode> ( 
+                    from List<string> stub in stubs
+                    select GetTreeNodeFromStub(stub));
+
+            return new HashSet<TreeNode>(branches);
+        }
+
+
 
         #endregion Auxiliary Methods
     }

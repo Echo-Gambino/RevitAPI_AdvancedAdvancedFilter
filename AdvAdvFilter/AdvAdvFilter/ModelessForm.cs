@@ -240,9 +240,10 @@
             this.haltIdlingHandler = true;
 
             // Step 1: Get node's full path
-            string fullPath = e.Node.FullPath;
+            // string fullPath = e.Node.FullPath;
             // Step 2: Tokenize the path by seperating out the '\'s
-            List<string> pathTokens = fullPath.Split('\\').ToList();
+            // List<string> pathTokens = fullPath.Split('\\').ToList();
+            List<string> pathTokens = selectionController.GetNamePath(e.Node);
             // Step 3: Get all elements that has that same path
             HashSet<ElementId> elementIds = dataController.GetElementIdsByPath(pathTokens);
             elementIds.IntersectWith(dataController.AllElements);
@@ -250,6 +251,8 @@
             selectionController.UpdateSelectionByElementId(elementIds, e.Node.Checked);
             //// Step 5: Update the counter to the tree itself
             //selectionController.UpdateSelectionCounter(dataController.ElementTree);
+
+            selectionController.UpdateNodeCounter(e.Node, dataController);
 
             if (e.Node.Checked)
             {
@@ -669,6 +672,7 @@
                     this.BeginInvoke(new Action(() =>
                     {
                         selectionController.CommitTree(dataController.ElementTree, dataController.AllElements);
+                        selectionController.RefreshAllNodeCounters(dataController);
                         selectionController.UpdateSelectionCounter();
                     }));
 
@@ -715,11 +719,16 @@
                     //}
                     //MessageBox.Show(sb.ToString());
 
+                    // Branch nodes to update
+                    
+
                     // Step 3: Update selection by 'adding' and 'removing' selected treeNodes by checking and unchecking them
                     this.BeginInvoke(new Action(() =>
                     {
                         selectionController.UpdateSelectionByElementId(addSelection, true);
                         selectionController.UpdateSelectionByElementId(remSelection, false);
+                        // selectionController.RefreshAllNodeCounters(dataController);
+                        selectionController.UpdateAffectedCounter(addSelection.Union(remSelection), dataController);
                         selectionController.UpdateSelectionCounter();
                     }));
                     // Step 4: Update dataController efficiently
@@ -748,6 +757,7 @@
                     // Step 2: Update the selection's counter
                     this.BeginInvoke(new Action(() =>
                     {
+                        // selectionController.RefreshAllNodeCounters(dataController);
                         selectionController.UpdateSelectionCounter();
                     }));
 
@@ -869,6 +879,8 @@
             this.BeginInvoke(new Action(() =>
             {
                 selectionController.CommitTree(dataController.ElementTree);
+                // selectionController.RefreshAllNodeCounters(dataController);
+                selectionController.UpdateAffectedCounter(addList.Union(delList), dataController);
                 selectionController.UpdateSelectionCounter();
             }));
 

@@ -244,7 +244,43 @@
 
         #endregion Update TreeView Selection
 
-        #region Update TreeView Count
+        #region Update TreeView Counter Node
+
+        public void RefreshAllNodeCounters(DataController data)
+        {
+            lock (treeLock)
+            {
+                treeController.RefreshNodeCounters(data);
+            }
+        }
+
+        public void UpdateNodeCounter(TreeNode node, DataController data)
+        {
+            lock (treeLock)
+            {
+                treeController.UpdateNodeCounter(node, data);
+            }
+        }
+
+        public void UpdateAffectedCounter(
+            IEnumerable<ElementId> affected,
+            DataController data)
+        {
+            lock (treeLock)
+            {
+                HashSet<TreeNode> cTypes = treeController.GetBranchNodes(affected, Depth.CategoryType);
+                HashSet<TreeNode> categories = treeController.GetBranchNodes(affected, Depth.Category);
+
+                foreach (TreeNode node in cTypes.Union(categories))
+                {
+                    treeController.UpdateNodeCounter(node, data);
+                }
+            }
+        }
+
+        #endregion Update TreeView Counter Node
+
+        #region Update TreeView Label
 
         public void UpdateSelectionCounter()
         {
@@ -262,11 +298,11 @@
                 }
 
                 // Put it into the totalLabel.Text
-                totalLabel.Text = String.Format("Total Selected Items: {0}/{1}", selected, total);
+                this.totalLabel.Text = String.Format("Total Selected Items: {0}/{1}", selected, total);
             }
         }
 
-        #endregion Update TreeView Count
+        #endregion Update TreeView Label
 
         #region Auxiliary Functions
 
@@ -288,6 +324,16 @@
                 next = (Depth)((int)depth + 1);
 
             return next;
+        }
+
+        /// <summary>
+        /// Gets the path of the node, but instead using nodes' text, it uses the nodes' names
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public List<string> GetNamePath(TreeNode node)
+        {
+            return treeController.GetNamePath(node, new List<string>());
         }
 
         #endregion Auxiliary Functions
