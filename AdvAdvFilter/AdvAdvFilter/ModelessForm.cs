@@ -260,7 +260,8 @@
             //// Step 5: Update the counter to the tree itself
             //selectionController.UpdateSelectionCounter(dataController.ElementTree);
 
-            selectionController.UpdateNodeCounter(e.Node, dataController);
+            selectionController.UpdateAffectedCounter(elementIds, dataController);
+            // selectionController.UpdateNodeCounter(e.Node, dataController);
 
             if (e.Node.Checked)
             {
