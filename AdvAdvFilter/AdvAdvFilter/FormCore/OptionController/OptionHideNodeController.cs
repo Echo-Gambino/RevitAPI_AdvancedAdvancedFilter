@@ -90,8 +90,25 @@
 
             foreach (string type in this.curCategoryTypes)
             {
-                if (!items.Contains(type)) items.Add(type);
+                if (!items.Contains(type))
+                {
+                    items.Add(type);
+
+                    if (this.categoryTypeStatus[type])
+                    {
+                        this.hiddenNodeList.SetItemChecked(items.IndexOf(type), true);
+                    }
+                }
             }
         }
+
+        public void ToggleCheck(int index)
+        {
+            object item = this.hiddenNodeList.Items[index];
+            string type = item.ToString();
+
+            this.categoryTypeStatus[type] = !this.hiddenNodeList.GetItemChecked(index);
+        }
+
     }
 }

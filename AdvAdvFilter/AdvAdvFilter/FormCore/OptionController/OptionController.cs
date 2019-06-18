@@ -89,10 +89,31 @@
             this.filter.Disable();
         }
 
-        public void ShowHiddenNodeList()
+        #region Hide Controls
+
+        public void UpdateHideNodeList(TreeNodeCollection nodes)
+        {
+            // Get all the categoryTypes from selection handler's TreeView (which should all be on the first layer)
+            List<string> categoryTypes = new List<string>(
+                from TreeNode node in nodes
+                select node.Name);
+            // Set categoryTypes to the HideNodesList
+            this.HideNodesList = categoryTypes;
+            // Display the HideNodeList by updating it
+            this.ShowHideNodeList();
+        }
+
+        public void ShowHideNodeList()
         {
             this.hide.Show();
         }
+
+        public void ToggleCheck(int index)
+        {
+            this.hide.ToggleCheck(index);
+        }
+
+        #endregion Hide Controls
 
         #endregion Controls
 

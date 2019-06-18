@@ -361,6 +361,11 @@
             }
         }
 
+        private void OptionHideNodeCheckedListBox_SelectedIndexChanged(object sender, ItemCheckEventArgs e)
+        {
+            optionController.ToggleCheck(e.Index);
+        }
+
         #endregion EventHandlers: Option
 
         #region EventHandlers: Action
@@ -680,19 +685,15 @@
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
+                        // Commit the changes to the TreeView
                         selectionController.CommitTree(dataController.ElementTree, dataController.AllElements);
+                        // Refresh all node counters since the TreeView's nodes are mostly going to be changed
                         selectionController.RefreshAllNodeCounters(dataController);
+                        // Update the selection counter label
                         selectionController.UpdateSelectionCounter();
 
-                        TreeNodeCollection collection = selectionController.TreeView.Nodes;
-                        List<string> categoryTypes = new List<string>();
-                        foreach (TreeNode node in collection)
-                        {
-                            categoryTypes.Add(node.Name);
-                        }
-                        optionController.HideNodesList = categoryTypes;
-                        optionController.ShowHiddenNodeList();
-
+                        // Update the HideNodeList
+                        optionController.UpdateHideNodeList(selectionController.TreeView.Nodes);
                     }));
 
                     // Step 3: Update visibility state of the view
@@ -897,10 +898,14 @@
             // Commit the changes into the treeView structure
             this.BeginInvoke(new Action(() =>
             {
+                // Commit the changes to the TreeView
                 selectionController.CommitTree(dataController.ElementTree);
-                // selectionController.RefreshAllNodeCounters(dataController);
+                // Update the node counters based on that leaf nodes were affected
                 selectionController.UpdateAffectedCounter(addList.Union(delList), dataController);
+                // Update the selection counter label
                 selectionController.UpdateSelectionCounter();
+                // Update the HideNodeList
+                optionController.UpdateHideNodeList(selectionController.TreeView.Nodes);
             }));
 
             // Remove elements to TreeStructure
@@ -1077,5 +1082,6 @@
         #endregion
 
         #endregion
+
     }
 }
