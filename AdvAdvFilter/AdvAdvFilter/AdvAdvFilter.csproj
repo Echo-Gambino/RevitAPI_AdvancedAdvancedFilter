@@ -65,6 +65,7 @@
     <Compile Include="FormCore\DataController\ElementSet.cs" />
     <Compile Include="FormCore\DataController\NodeData.cs" />
     <Compile Include="FormCore\ElementSelectionConroller\TreeViewController.cs" />
+    <Compile Include="FormCore\FilterController\FilterController.cs" />
     <Compile Include="FormCore\OptionController\OptionHideNodeController.cs" />
     <Compile Include="FormCore\RequestHandler\RequestHandler.cs" />
     <Compile Include="Custom\TreeCheckList.cs" />

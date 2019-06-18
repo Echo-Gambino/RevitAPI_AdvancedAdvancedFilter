@@ -17,7 +17,7 @@
     /// RevitController performs any complex tasks regarding the 
     ///     Revit API in the execution of the ModelessForm.
     /// </summary>
-    class RevitController
+    public class RevitController
     {
         #region Fields
 

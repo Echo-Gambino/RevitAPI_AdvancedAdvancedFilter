@@ -91,14 +91,15 @@
 
         #region Hide Controls
 
-        public void UpdateHideNodeList(TreeNodeCollection nodes)
+        public void UpdateHideNodeList(ElementSet set)
         {
-            // Get all the categoryTypes from selection handler's TreeView (which should all be on the first layer)
-            List<string> categoryTypes = new List<string>(
-                from TreeNode node in nodes
-                select node.Name);
+            // Get all the categoryTypes
+            IEnumerable<string> categoryTypes
+                = from KeyValuePair<string, ElementSet> kvp in set.Branch
+                  select kvp.Key;
+
             // Set categoryTypes to the HideNodesList
-            this.HideNodesList = categoryTypes;
+            this.HideNodesList = categoryTypes.ToList();
             // Display the HideNodeList by updating it
             this.ShowHideNodeList();
         }

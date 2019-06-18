@@ -147,6 +147,7 @@
                     = from ElementId id in oldElementIds
                       where (!newElementIds.Contains(id))
                       select id;
+
                 // Set the treeController's change lists so that it can be used when treeController.CommitChanges is called
                 this.treeController.NodesToAdd = addList.ToList();
                 this.treeController.NodesToDel = delList.ToList();

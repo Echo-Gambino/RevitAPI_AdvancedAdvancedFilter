@@ -64,6 +64,7 @@
         ElementSelectionController selectionController;
         OptionController optionController;
         ActionController actionController;
+        FilterController filterController;
 
         #endregion Fields: Controllers
 
@@ -140,6 +141,7 @@
             this.revitController = new RevitController(commandData);
             this.dataController = new DataController(this.doc);
             this.requestHandler = new RequestHandler();
+            this.filterController = new FilterController(this.revitController);
 
             // Get elementList, not sure what to use it for
             elementList = elementList.Where(e => null != e.Category && e.Category.HasMaterialQuantities).ToList();
@@ -160,6 +162,8 @@
         {
             // Stop IdlingHandler from executing during initialization
             this.haltIdlingHandler = true;
+
+            this.filterController.ClearAllFilters();
 
             this.requestHandler.ResetAll();
 
@@ -363,7 +367,17 @@
 
         private void OptionHideNodeCheckedListBox_SelectedIndexChanged(object sender, ItemCheckEventArgs e)
         {
+            this.haltIdlingHandler = true;
+
             optionController.ToggleCheck(e.Index);
+
+            HashSet<string> hiddenNodes = new HashSet<string>(optionController.HiddenNodes);
+
+            filterController.SetFieldBlackList(hiddenNodes, Common.Depth.CategoryType);
+
+            requestHandler.AddRequest(Request.UpdateTreeView);
+
+            this.haltIdlingHandler = false;
         }
 
         #endregion EventHandlers: Option
@@ -682,18 +696,21 @@
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
 
+                    // Filter the elements from dataController.AllElements
+                    HashSet<ElementId> filteredElements = filterController.Filter(dataController.AllElements);
+
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
                         // Commit the changes to the TreeView
-                        selectionController.CommitTree(dataController.ElementTree, dataController.AllElements);
+                        selectionController.CommitTree(dataController.ElementTree, filteredElements);
                         // Refresh all node counters since the TreeView's nodes are mostly going to be changed
                         selectionController.RefreshAllNodeCounters(dataController);
                         // Update the selection counter label
                         selectionController.UpdateSelectionCounter();
 
                         // Update the HideNodeList
-                        optionController.UpdateHideNodeList(selectionController.TreeView.Nodes);
+                        optionController.UpdateHideNodeList(dataController.ElementTree.SetTree);
                     }));
 
                     // Step 3: Update visibility state of the view
@@ -878,7 +895,11 @@
             ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
 
             // Filter added/deleted elements such that only the ones that are within dataController's subSet are selected
-            HashSet<ElementId> subSet = this.dataController.ElementTree.SubSet;
+            // HashSet<ElementId> subSet = this.dataController.ElementTree.SubSet;
+            HashSet<ElementId> subSet = this.dataController.AllElements;
+
+            subSet = filterController.Filter(subSet);
+
             var addList
                 = from ElementId id in addedElements
                   where subSet.Contains(id)
@@ -905,7 +926,7 @@
                 // Update the selection counter label
                 selectionController.UpdateSelectionCounter();
                 // Update the HideNodeList
-                optionController.UpdateHideNodeList(selectionController.TreeView.Nodes);
+                optionController.UpdateHideNodeList(dataController.ElementTree.SetTree);
             }));
 
             // Remove elements to TreeStructure
