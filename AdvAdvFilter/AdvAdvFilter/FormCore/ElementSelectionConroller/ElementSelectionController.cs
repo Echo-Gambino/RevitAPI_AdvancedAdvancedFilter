@@ -91,6 +91,32 @@
             this.treeController = new TreeViewController(treeView);
         }
 
+        #region Controls
+
+        public void ExpandAll()
+        {
+            this.treeView.ExpandAll();
+        }
+
+        public void CollapseAll()
+        {
+            this.treeView.CollapseAll();
+        }
+
+        public void ExpandSelected()
+        {
+            TreeNode selected = this.treeView.SelectedNode;
+            if (selected != null) selected.ExpandAll();
+        }
+
+        public void CollapseSelected()
+        {
+            TreeNode selected = this.treeView.SelectedNode;
+            if (selected != null) selected.Collapse(false);
+        }
+
+        #endregion Controls
+
         #region Update TreeView Structure
 
         /// <summary>

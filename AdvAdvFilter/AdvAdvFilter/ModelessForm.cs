@@ -218,18 +218,26 @@
 
         private void ElementSelectionTreeView_BeforeCollapse(object sender, TreeViewCancelEventArgs e)
         {
-            /*
-            BranchTreeNode branch = e.Node as BranchTreeNode;
+        }
 
-            if (branch != null)
-            {
-                if (branch.Parent == null) // This is for "CategoryType" Only
-                {
-                    selectionController.ToggleCollapse(branch);
-                    e.Cancel = true;
-                }
-            }
-            */
+        private void ESExpandAllButton_Click(object sender, EventArgs e)
+        {
+            selectionController.ExpandAll();
+        }
+
+        private void ESCollapseAllButton_Click(object sender, EventArgs e)
+        {
+            selectionController.CollapseAll();
+        }
+
+        private void ESExpandSelectedButton_Click(object sender, EventArgs e)
+        {
+            selectionController.ExpandSelected();
+        }
+
+        private void ESCollapseSelectedButton_Click(object sender, EventArgs e)
+        {
+            selectionController.CollapseSelected();
         }
 
         private void ElementSelectionTreeView_AfterCheck(object sender, TreeViewEventArgs e)
@@ -1058,6 +1066,5 @@
         #endregion
 
         #endregion
-
     }
 }
