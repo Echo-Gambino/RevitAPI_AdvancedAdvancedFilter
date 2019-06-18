@@ -16,6 +16,7 @@
 
         OptionVisibilityController visibility;
         OptionFilterController filter;
+        OptionHideNodeController hide;
 
         #endregion Fields
 
@@ -31,6 +32,22 @@
             get { return this.filter; }
         }
 
+        public OptionHideNodeController HideController
+        {
+            get { return this.hide; }
+        }
+
+        public List<string> HideNodesList
+        {
+            get { return this.hide.CategoryTypes; }
+            set { this.hide.CategoryTypes = value; }
+        }
+
+        public List<string> HiddenNodes
+        {
+            get { return this.hide.CategoryHidden; }
+        }
+
         #endregion Parameters
 
         #region Essential Functions
@@ -38,11 +55,13 @@
         public OptionController(
             Panel panel,
             OptionVisibilityController visibility,
-            OptionFilterController filter
+            OptionFilterController filter,
+            OptionHideNodeController hide
             ) : base(panel)
         {
             this.visibility = visibility ?? throw new ArgumentNullException();
             this.filter = filter ?? throw new ArgumentNullException();
+            this.hide = hide ?? throw new ArgumentNullException();
         }
 
         #endregion Essential Functions
@@ -68,6 +87,11 @@
         {
             this.visibility.Disable();
             this.filter.Disable();
+        }
+
+        public void ShowHiddenNodeList()
+        {
+            this.hide.Show();
         }
 
         #endregion Controls

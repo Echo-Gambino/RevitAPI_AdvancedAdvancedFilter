@@ -113,7 +113,11 @@
                                             OptionFilterRadioButton0,
                                             OptionFilterRadioButton1,
                                             OptionFilterRadioButton2);
-            this.optionController = new OptionController(OptionPanel, optionVisibility, optionFilter);
+            OptionHideNodeController optionHideNode = new OptionHideNodeController(
+                                            OptionHideNodePanel,
+                                            OptionHideNodeCheckedListBox);
+
+            this.optionController = new OptionController(OptionPanel, optionVisibility, optionFilter, optionHideNode);
 
             ActionAxisController xAxis = new ActionAxisController(
                 ActionShiftPanel0, ActionShiftLabel0, ActionShiftTextBox0);
@@ -449,10 +453,6 @@
 
         #endregion EventHandlers
 
-        #region Supplementary Form Methods
-
-        #endregion Supplementary Form Methods
-
         #region API CALLS
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
@@ -683,6 +683,16 @@
                         selectionController.CommitTree(dataController.ElementTree, dataController.AllElements);
                         selectionController.RefreshAllNodeCounters(dataController);
                         selectionController.UpdateSelectionCounter();
+
+                        TreeNodeCollection collection = selectionController.TreeView.Nodes;
+                        List<string> categoryTypes = new List<string>();
+                        foreach (TreeNode node in collection)
+                        {
+                            categoryTypes.Add(node.Name);
+                        }
+                        optionController.HideNodesList = categoryTypes;
+                        optionController.ShowHiddenNodeList();
+
                     }));
 
                     // Step 3: Update visibility state of the view
