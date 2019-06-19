@@ -137,6 +137,7 @@
 
             IEnumerable<NodeData> output
                 = from ElementId id in input
+                  where (doc.GetElement(id) != null)
                   select GenerateNodeData(id, doc);
 
             return output;
@@ -163,7 +164,7 @@
             Element element = doc.GetElement(elementId);
 
             // If resulting element is null, fail the process, as it should always return not null
-            if (element == null) throw new InvalidOperationException();
+            if (element == null) throw new InvalidOperationException("element is null!");
 
             // Generate NodeData
             NodeData data = new NodeData();

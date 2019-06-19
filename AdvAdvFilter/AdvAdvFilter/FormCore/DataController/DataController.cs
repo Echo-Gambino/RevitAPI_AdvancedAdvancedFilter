@@ -50,23 +50,34 @@
         // 
         private TreeStructure elementTree;
 
+        private readonly object padLock = new object();
+
         #endregion Fields
 
         #region Parameters
 
         public View View
         {
-            get { return this.elementTree.Doc.ActiveView; }
+            get
+            {
+                lock (padLock) { return this.elementTree.Doc.ActiveView; }
+            }
         }
 
         public HashSet<ElementId> AllElements
         {
-            get { return this.elementTree.SubSet;  }
+            get
+            {
+                lock (padLock) { return this.elementTree.SubSet; }
+            }
         }
 
         public HashSet<ElementId> SelElementIds
         {
-            get { return this.elementTree.SelectedNodes; }
+            get
+            {
+                lock (padLock) { return this.elementTree.SelectedNodes; }
+            }
         }
 
         public HashSet<ElementId> IdsToHide
@@ -156,7 +167,10 @@
 
         public TreeStructure ElementTree
         {
-            get { return this.elementTree; }
+            get
+            {
+                lock (padLock) { return this.elementTree; }
+            }
         }
 
         #endregion Parameters
@@ -195,30 +209,36 @@
 
         public void SetAllElements(List<ElementId> elementIds)
         {
-            this.elementTree.ClearAll();
-            this.elementTree.AppendList(elementIds);
+            lock (padLock)
+            {
+                this.elementTree.ClearAll();
+                this.elementTree.AppendList(elementIds);
+            }
         }
 
         public void ClearAllElements()
         {
-            this.elementTree.ClearAll();
+            lock (padLock)
+            {
+                this.elementTree.ClearAll();
+            }
         }
 
         public void AddToAllElements(List<ElementId> elementIds)
         {
-            this.elementTree.AppendList(elementIds);
+            lock (padLock)
+            {
+                this.elementTree.AppendList(elementIds);
+            }
         }
 
         public void RemoveFromAllElements(List<ElementId> elementIds)
         {
-            this.elementTree.RemoveList(elementIds);
+            lock (padLock)
+            {
+                this.elementTree.RemoveList(elementIds);
+            }
         }
-
-        public void GetAllElements()
-        {
-            List<ElementId> keyList = this.elementTree.ElementIdNodes.Keys.ToList();
-        }
-
 
         #endregion AllElements Operations
 
@@ -226,7 +246,10 @@
 
         public HashSet<ElementId> GetElementIdsByPath(List<string> path)
         {
-            return elementTree.GetElementIdsByPath(path);
+            lock (padLock)
+            {
+                return elementTree.GetElementIdsByPath(path);
+            }
         }
 
         #endregion ElementId Getters

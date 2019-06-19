@@ -914,8 +914,9 @@
 
         public void AppEvent_DocChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
+            this.uiApp.Idling -= Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
             this.haltIdlingHandler = true;
-
+            
             // Retrieve the addedElement Ids and deletedElement Ids
             ICollection<ElementId> addedElements =  args.GetAddedElementIds();
             ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
@@ -924,10 +925,13 @@
             this.dataController.AddToAllElements(addedElements.ToList());
             this.dataController.RemoveFromAllElements(deletedElements.ToList());
 
+            this.dataController.SetMode(requestHandler.FilterBy, true);
+
             // Put up a request to update the TreeView
             requestHandler.AddRequest(Request.UpdateTreeView);
 
             this.haltIdlingHandler = false;
+            this.uiApp.Idling += Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
 
             return;
         }
