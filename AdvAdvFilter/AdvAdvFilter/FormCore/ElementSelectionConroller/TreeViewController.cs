@@ -539,52 +539,11 @@
             return list;
         }
 
-        public HashSet<TreeNode> GetBranchNodes(
-            IEnumerable<ElementId> elementIds, 
-            Depth depth
-            )
+        #region Get Branch Nodes
+
+        public HashSet<TreeNode> GetBranchNodes(IEnumerable<ElementId> elementIds, Depth depth)
         {
-            List<string> GetPathFromDepth(List<string> p, Depth d)
-            {
-                List<string> newP = new List<string>();
-                int i = 0;
-                switch (d)
-                {
-                    case Depth.CategoryType:
-                        i = 1;
-                        break;
-                    case Depth.Category:
-                        i = 2;
-                        break;
-                    default:
-                        i = 1;
-                        break;
-                }
-
-                for (int k = 0; k < i; k++)
-                {
-                    newP.Add(p[k]);
-                }
-
-                return newP;
-            }
-
-            TreeNode GetTreeNodeFromStub(List<string> stub)
-            {
-                TreeNodeCollection col = this.treeView.Nodes;
-
-                TreeNode node = null;
-
-                foreach (string s in stub)
-                {
-                    node = col[s];
-                    col = node.Nodes;
-                }
-
-                return node;
-            }
-
-            IEnumerable<TreeNode> nodes 
+            IEnumerable<TreeNode> nodes
                 = from ElementId id in elementIds
                   select this.leafNodes[id];
 
@@ -593,19 +552,58 @@
                   select GetNamePath(n, new List<string>());
 
             IEnumerable<List<string>> stubs
-                = new HashSet<List<string>> (
+                = new HashSet<List<string>>(
                     from List<string> subPaths in paths
                     select GetPathFromDepth(subPaths, depth));
 
             IEnumerable<TreeNode> branches
-                = new List<TreeNode> ( 
+                = new List<TreeNode>(
                     from List<string> stub in stubs
                     select GetTreeNodeFromStub(stub));
 
             return new HashSet<TreeNode>(branches);
         }
 
+        private List<string> GetPathFromDepth(List<string> p, Depth d)
+        {
+            List<string> newP = new List<string>();
+            int i = 0;
+            switch (d)
+            {
+                case Depth.CategoryType:
+                    i = 1;
+                    break;
+                case Depth.Category:
+                    i = 2;
+                    break;
+                default:
+                    i = 1;
+                    break;
+            }
 
+            for (int k = 0; k < i; k++)
+            {
+                newP.Add(p[k]);
+            }
+
+            return newP;
+        }
+
+        private TreeNode GetTreeNodeFromStub(List<string> stub)
+        {
+            TreeNodeCollection col = this.treeView.Nodes;
+
+            TreeNode node = null;
+            foreach (string s in stub)
+            {
+                node = col[s];
+                col = node.Nodes;
+            }
+
+            return node;
+        }
+
+        #endregion Get Branch Nodess
 
         #endregion Auxiliary Methods
     }

@@ -675,7 +675,8 @@
         private bool RevitSelectionChanged()
         {
             HashSet<ElementId> newSelection = new HashSet<ElementId>(revitController.GetElementIdsFromSelection());
-            newSelection.IntersectWith(dataController.AllElements);
+            // newSelection.IntersectWith(dataController.AllElements);
+            newSelection.IntersectWith(selectionController.AllElementIds);
             return dataController.DidSelectionChange(newSelection);
         }
 
@@ -689,6 +690,9 @@
             switch (request)
             {
                 case Request.UpdateTreeView:
+
+                    debug.printText(dataController.SelElementIds, "SelElementIds Before", 1);
+
                     // Step 1: Update all viewable elements for the current view
                     bool changed = dataController.SetMode(filter);
 
@@ -696,14 +700,31 @@
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
 
-                    // Filter the elements from dataController.AllElements
-                    HashSet<ElementId> filteredElements = filterController.Filter(dataController.AllElements);
+                    // Get the new elements by filtering all the elements reported by dataController
+                    HashSet<ElementId> newElementIds = filterController.Filter(dataController.AllElements);
+                    // Get the old elements obtaining all the elements reported by selectionController
+                    HashSet<ElementId> oldElementIds = selectionController.AllElementIds;
+
+                    // Make a LINQ statement for addList
+                    var addList
+                        = from ElementId id in newElementIds
+                          where (!oldElementIds.Contains(id))
+                          select id;
+                    // Make a LINQ statement for delList
+                    var delList
+                        = from ElementId id in oldElementIds
+                          where (!newElementIds.Contains(id))
+                          select id;
+
+                    // Set nodes to add and nodes to delete
+                    selectionController.NodesToAdd = addList.ToList();
+                    selectionController.NodesToDel = delList.ToList();
 
                     // Step 2: Update the treeView element outside of the API context
                     this.BeginInvoke(new Action(() =>
                     {
                         // Commit the changes to the TreeView
-                        selectionController.CommitTree(dataController.ElementTree, filteredElements);
+                        selectionController.CommitTree(dataController.ElementTree, newElementIds);
                         // Refresh all node counters since the TreeView's nodes are mostly going to be changed
                         selectionController.RefreshAllNodeCounters(dataController);
                         // Update the selection counter label
@@ -736,13 +757,17 @@
                     // Step 5: Request ChangeElementVisibility
                     requestHandler.AddRequest(Request.ChangeElementVisibility);
 
+                    requestHandler.AddRequest(Request.UpdateTreeViewSelection);
+
                     break;
 
                 case Request.UpdateTreeViewSelection:
                     // Step 1: Update dataController's select element list
                     HashSet<ElementId> newSelection = new HashSet<ElementId>(revitController.GetElementIdsFromSelection());
-                    newSelection.IntersectWith(dataController.AllElements);
+                    // newSelection.IntersectWith(dataController.AllElements);
+                    newSelection.IntersectWith(selectionController.AllElementIds);
                     HashSet<ElementId> oldSelection = dataController.SelElementIds;
+                    oldSelection.IntersectWith(selectionController.AllElementIds);
                     // Step 2: Construct add and remove hashsets
                     HashSet<ElementId> addSelection = new HashSet<ElementId>(newSelection.Except(oldSelection));
                     HashSet<ElementId> remSelection = new HashSet<ElementId>(oldSelection.Except(newSelection));
