@@ -691,7 +691,7 @@
             {
                 case Request.UpdateTreeView:
 
-                    debug.printText(dataController.SelElementIds, "SelElementIds Before", 1);
+                    // debug.printText(dataController.SelElementIds, "SelElementIds Before", 1);
 
                     // Step 1: Update all viewable elements for the current view
                     bool changed = dataController.SetMode(filter);
@@ -920,45 +920,15 @@
             ICollection<ElementId> addedElements =  args.GetAddedElementIds();
             ICollection<ElementId> deletedElements = args.GetDeletedElementIds();
 
-            // Filter added/deleted elements such that only the ones that are within dataController's subSet are selected
-            // HashSet<ElementId> subSet = this.dataController.ElementTree.SubSet;
-            HashSet<ElementId> subSet = this.dataController.AllElements;
-
-            subSet = filterController.Filter(subSet);
-
-            var addList
-                = from ElementId id in addedElements
-                  where subSet.Contains(id)
-                  select id;
-            var delList
-                = from ElementId id in deletedElements
-                  where subSet.Contains(id)
-                  select id;
-
-            // Add elements to TreeStructure
+            // Update the dataController's cached elements
             this.dataController.AddToAllElements(addedElements.ToList());
-
-            // Load up on the changes to be committed to selectionController
-            this.selectionController.NodesToAdd = addList.ToList();
-            this.selectionController.NodesToDel = delList.ToList();
-
-            // Commit the changes into the treeView structure
-            this.BeginInvoke(new Action(() =>
-            {
-                // Commit the changes to the TreeView
-                selectionController.CommitTree(dataController.ElementTree);
-                // Update the node counters based on that leaf nodes were affected
-                selectionController.UpdateAffectedCounter(addList.Union(delList), dataController);
-                // Update the selection counter label
-                selectionController.UpdateSelectionCounter();
-                // Update the HideNodeList
-                optionController.UpdateHideNodeList(dataController.ElementTree.SetTree);
-            }));
-
-            // Remove elements to TreeStructure
             this.dataController.RemoveFromAllElements(deletedElements.ToList());
 
+            // Put up a request to update the TreeView
+            requestHandler.AddRequest(Request.UpdateTreeView);
+
             this.haltIdlingHandler = false;
+
             return;
         }
 
