@@ -95,6 +95,7 @@
         /// <param name="keepChangeLists"></param>
         public void CommitChanges(TreeStructure tree, bool keepChangeLists = false)
         {
+
             // Remove and add elementIds
             Remove(this.NodesToDel, this.leafNodes);
             Append(this.NodesToAdd, tree);
@@ -204,27 +205,27 @@
 
             // Sort the dictionary in alphebetical order
             grouping.OrderBy(key => key.Key);
+
+            List<TreeNode> branches;
             foreach (KeyValuePair<string, List<ElementId>> kvp in grouping)
             {
-                TreeNode branch;
-                // If treeNodes doesn't have a node with the name of the parameterValue
-                if (!treeNodes.ContainsKey(kvp.Key))
+                branches = treeNodes.Find(kvp.Key, false).ToList();
+                
+                if (branches.Count == 0)
                 {
-                    // Make a TreeNode that has the name of the parameterValue
-                    branch = new TreeNode();
-                    branch.Name = kvp.Key;
-                    branch.Text = kvp.Key;
-                    // Put it into the treeView
-                    treeNodes.Add(branch);
-                }
-                else
-                {
-                    // Get the treeNode from the treeView
-                    branch = treeNodes[kvp.Key];
+                    TreeNode brnch = new TreeNode();
+                    brnch.Name = kvp.Key;
+                    brnch.Text = kvp.Key;
+                    // Put it into treeView
+                    treeNodes.Add(brnch);
+                    // Add it into branches
+                    branches.Add(brnch);
                 }
 
-                // Recurse into the node that has the node name of kvp.Key
-                AddNodesToTree(kvp.Value, branch.Nodes, tree, nextDepth);
+                foreach (TreeNode brnch in branches)
+                {
+                    AddNodesToTree(kvp.Value, brnch.Nodes, tree, nextDepth);
+                }
             }
         }
 
@@ -255,6 +256,13 @@
                 }
                 else
                 {
+                    /*
+                    var thing = from ElementId id in elementIds
+                                where ("47145" == id.ToString())
+                                select id;
+                    if (thing.Count() != 0)
+                        MessageBox.Show("47145 is going to be deleted!");
+                    */
                     // Else, call a method that will delete the nodes with the corresponding elementIds recursively
                     DelNodesInTree(elementIds, this.treeView.Nodes, nodeDict, Depth.CategoryType);
                 }
@@ -302,37 +310,29 @@
             nextDepth = GetNextDepth(depth, lowestDepth);
             // Get next grouping
             grouping = GetNextGrouping(elementIds, nodeDict, depth.ToString());
-
             // Sort the elements in alphebetical order
             grouping.OrderBy(key => key.Key);
+
+            List<TreeNode> branches;
             foreach (KeyValuePair<string, List<ElementId>> kvp in grouping)
             {
-                TreeNode branch;
-                // If treeNodes doesn't have a node with the name of the parameter value...
-                if (!treeNodes.ContainsKey(kvp.Key))
+                branches = treeNodes.Find(kvp.Key, false).ToList();
+
+                if (branches.Count == 0)
                 {
-                    // Get all elements that is represented and remove them from the records
                     foreach (ElementId id in kvp.Value)
                     {
                         this.curElementIds.Remove(id);
                         this.leafNodes.Remove(id);
                     }
-                    // Continue to the next iteration
                     continue;
                 }
-                else
-                {
-                    // Get the next branch node
-                    branch = treeNodes[kvp.Key];
-                }
 
-                // Recurse into the node that has the node name of kvp.Key
-                DelNodesInTree(kvp.Value, branch.Nodes, nodeDict, nextDepth);
-
-                // If the current branch has no children after the recursion, remove itself as well
-                if (branch.Nodes.Count == 0)
+                foreach (TreeNode brnch in branches)
                 {
-                    branch.Remove();
+                    DelNodesInTree(kvp.Value, brnch.Nodes, nodeDict, nextDepth);
+
+                    if (brnch.Nodes.Count == 0) brnch.Remove();
                 }
             }
 

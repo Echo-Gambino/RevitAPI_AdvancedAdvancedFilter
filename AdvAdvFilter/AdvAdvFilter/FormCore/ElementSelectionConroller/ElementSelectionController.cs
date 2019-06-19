@@ -152,13 +152,7 @@
                 this.treeController.NodesToAdd = addList.ToList();
                 this.treeController.NodesToDel = delList.ToList();
             }
-            
-            var thing = from ElementId id in this.treeController.NodesToDel
-                        where ("47145" == id.ToString())
-                        select id;
-            if (thing.Count() != 0)
-                MessageBox.Show("47145 is going to be deleted!");
-            
+                        
             // Commit the following changes
             this.treeController.CommitChanges(tree);
 

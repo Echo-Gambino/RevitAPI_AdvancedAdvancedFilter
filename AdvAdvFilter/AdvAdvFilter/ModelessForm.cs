@@ -724,7 +724,8 @@
                     this.BeginInvoke(new Action(() =>
                     {
                         // Commit the changes to the TreeView
-                        selectionController.CommitTree(dataController.ElementTree, newElementIds);
+                        selectionController.CommitTree(dataController.ElementTree);
+                        // selectionController.CommitTree(dataController.ElementTree, newElementIds);
                         // Refresh all node counters since the TreeView's nodes are mostly going to be changed
                         selectionController.RefreshAllNodeCounters(dataController);
                         // Update the selection counter label
