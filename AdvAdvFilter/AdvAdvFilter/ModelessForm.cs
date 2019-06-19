@@ -914,7 +914,7 @@
 
         public void AppEvent_DocChangedEventHandler(object sender, DocumentChangedEventArgs args)
         {
-            this.uiApp.Idling -= Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
+            // this.uiApp.Idling -= Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
             this.haltIdlingHandler = true;
             
             // Retrieve the addedElement Ids and deletedElement Ids
@@ -931,7 +931,7 @@
             requestHandler.AddRequest(Request.UpdateTreeView);
 
             this.haltIdlingHandler = false;
-            this.uiApp.Idling += Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
+            // this.uiApp.Idling += Main.ActiveModelessForm.UIAppEvent_IdlingEventHandler;
 
             return;
         }
