@@ -545,6 +545,7 @@
         {
             IEnumerable<TreeNode> nodes
                 = from ElementId id in elementIds
+                  where this.leafNodes.ContainsKey(id)
                   select this.leafNodes[id];
 
             IEnumerable<List<string>> paths
