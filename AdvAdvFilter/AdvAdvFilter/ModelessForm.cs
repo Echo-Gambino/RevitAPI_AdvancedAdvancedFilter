@@ -365,7 +365,7 @@
             }
         }
 
-        private void OptionHideNodeCheckedListBox_SelectedIndexChanged(object sender, ItemCheckEventArgs e)
+        private void OptionHideNodeCheckedListBox_CheckedChanged(object sender, ItemCheckEventArgs e)
         {
             this.haltIdlingHandler = true;
 
@@ -700,6 +700,21 @@
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
 
+                    Dictionary<Common.Depth, HashSet<string>> blackList;
+                    HashSet<string> bl = new HashSet<string>();
+
+                    blackList = filterController.FieldBlackList;
+                    bl.Clear();
+                    if (blackList.ContainsKey(Common.Depth.CategoryType))
+                        bl.UnionWith(blackList[Common.Depth.CategoryType]);
+                    debug.printText(bl, "CategoryType temporary", 1);
+
+                    blackList = filterController.PersistentBlackList;
+                    bl.Clear();
+                    if (blackList.ContainsKey(Common.Depth.CategoryType))
+                        bl.UnionWith(blackList[Common.Depth.CategoryType]);
+                    debug.printText(bl, "CategoryType persistent", 2);
+
                     // Get the new elements by filtering all the elements reported by dataController
                     HashSet<ElementId> newElementIds = filterController.Filter(dataController.AllElements);
                     // Get the old elements obtaining all the elements reported by selectionController
@@ -732,7 +747,7 @@
                         selectionController.UpdateSelectionCounter();
 
                         // Update the HideNodeList
-                        optionController.UpdateHideNodeList(dataController.ElementTree.SetTree);
+                        this.optionController.UpdateHideNodeList(dataController.ElementTree.SetTree, this.filterController);
                     }));
 
                     // Step 3: Update visibility state of the view

@@ -22,6 +22,20 @@
 
         #endregion Field
 
+        #region Parameters
+
+        public Dictionary<Depth, HashSet<string>> FieldBlackList
+        {
+            get { return this.fieldBlackList; }
+        }
+
+        public Dictionary<Depth, HashSet<string>> PersistentBlackList
+        {
+            get { return this.persistentBlacklist; }
+        }
+
+        #endregion Parameters
+
         public FilterController(RevitController revit)
         {
             this.revit = revit;
@@ -33,37 +47,25 @@
 
         private Dictionary<Depth, HashSet<string>> GetPersistentBlackList()
         {
-            HashSet<string> categoryTypeBlackList = new HashSet<string>()
-            {
-                "No Category Type"
-            };
+            Dictionary<Depth, HashSet<string>> output = new Dictionary<Depth, HashSet<string>>();
 
-            HashSet<string> categoryBlackList = new HashSet<string>()
+            output.Add(Depth.CategoryType, new HashSet<string>()
+            {
+                "No CategoryType"
+            });
+            output.Add(Depth.Category, new HashSet<string>()
             {
                 "Elevations",
                 "Views",
                 "Dimensions",
                 "Cameras",
                 "Sum Path",
+                "<Sketch>",
                 "Project Information",
                 "Project Base Point",
                 "Profiles",
                 "No Category"
-            };
-
-            HashSet<string> familyBlackList = new HashSet<string>();
-
-            HashSet<string> elementTypeBlackList = new HashSet<string>();
-
-            HashSet<string> instanceBlackList = new HashSet<string>();
-
-            Dictionary<Depth, HashSet<string>> output = new Dictionary<Depth, HashSet<string>>();
-
-            output.Add(Depth.CategoryType, categoryTypeBlackList);
-            output.Add(Depth.Category, categoryBlackList);
-            output.Add(Depth.Family, familyBlackList);
-            output.Add(Depth.ElementType, elementTypeBlackList);
-            output.Add(Depth.Instance, instanceBlackList);
+            });
 
             return output;
         }
@@ -71,13 +73,6 @@
         public void ClearAllFilters()
         {
             this.fieldBlackList.Clear();
-
-            foreach (Depth depth in (Depth[])Enum.GetValues(typeof(Depth)))
-            {
-                if (depth == Depth.Invalid)
-                    continue;
-                this.fieldBlackList.Add(depth, this.persistentBlacklist[depth]);
-            }
         }
 
         public void SetFieldBlackList(HashSet<string> set, Depth depth)
@@ -127,7 +122,7 @@
 
             // Remove the elements from this.fieldBlackList[depth] that remset has
             this.fieldBlackList[depth].ExceptWith(remset);
-            this.fieldBlackList[depth].UnionWith(this.persistentBlacklist[depth]);
+            // this.fieldBlackList[depth].UnionWith(this.persistentBlacklist[depth]);
 
             // If the entry corresponding to depth is empty, then remove it completely
             if (this.fieldBlackList[depth].Count == 0) this.fieldBlackList.Remove(depth);
@@ -145,35 +140,45 @@
 
             // Convert the list of ElementId into a list of NodeData
             IEnumerable<NodeData> inputData = ConvertToNodeData(cleanedInput);
-
-            inputData = FilterByField(inputData);
+            System.Windows.Forms.MessageBox.Show("Using this.fieldBlackList");
+            inputData = FilterByField(inputData, this.fieldBlackList);
+            System.Windows.Forms.MessageBox.Show("Using this.persistentBlackList");
+            inputData = FilterByField(inputData, this.persistentBlacklist);
 
             IEnumerable<ElementId> outputData = ConvertToElementId(inputData);
 
             return new HashSet<ElementId>(outputData);
         }
 
-        public IEnumerable<NodeData> FilterByField(IEnumerable<NodeData> input)
+        public IEnumerable<NodeData> FilterByField(IEnumerable<NodeData> input, Dictionary<Depth, HashSet<string>> blackList)
         {
             if (input == null) throw new ArgumentNullException("input");
 
-            HashSet<string> blackList;
+            HashSet<string> list;
 
             // Converts the enum into an iterable object
             foreach (Depth depth in (Depth[])Enum.GetValues(typeof(Depth)))
             {
                 if (depth == Depth.Invalid)
                     continue;
-                else if (!this.fieldBlackList.ContainsKey(depth))
+                else if (!blackList.ContainsKey(depth))
                     continue;
 
                 // Get blackList to be its own variable to make the next statement slightly shorter
-                blackList = this.fieldBlackList[depth];
+                list = blackList[depth];
+
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine(depth.ToString());
+                foreach (string s in list)
+                {
+                    sb.AppendLine(s);
+                }
+                System.Windows.Forms.MessageBox.Show(sb.ToString());
 
                 // For each node data in input, select all of those that DOES NOT
                 // have the same field value as what is within the blacklist
                 input = from NodeData data in input
-                        where (!blackList.Contains(data.GetParameter(depth.ToString())))
+                        where (!list.Contains(data.GetParameter(depth.ToString())))
                         select data;
             }
 

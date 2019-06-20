@@ -564,7 +564,7 @@
             this.OptionHideNodeCheckedListBox.Size = new System.Drawing.Size(243, 64);
             this.OptionHideNodeCheckedListBox.Sorted = true;
             this.OptionHideNodeCheckedListBox.TabIndex = 6;
-            this.OptionHideNodeCheckedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.OptionHideNodeCheckedListBox_SelectedIndexChanged);
+            this.OptionHideNodeCheckedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.OptionHideNodeCheckedListBox_CheckedChanged);
             // 
             // OptionHideNodePanel
             // 

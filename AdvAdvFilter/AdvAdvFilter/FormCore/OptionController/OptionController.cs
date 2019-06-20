@@ -91,11 +91,19 @@
 
         #region Hide Controls
 
-        public void UpdateHideNodeList(ElementSet set)
+        public void UpdateHideNodeList(ElementSet set, FilterController filterController)
         {
-            // Get all the categoryTypes
+            // Get the blacklisted CategoryTypes
+            HashSet<string> blacklistedCategoryTypes = new HashSet<string>();
+            if (filterController.PersistentBlackList.ContainsKey(Common.Depth.CategoryType))
+            {
+                blacklistedCategoryTypes.UnionWith(filterController.PersistentBlackList[Common.Depth.CategoryType]);
+            }
+
+            // Get all the categoryTypes that isn't from blacklisted categoryTypes
             IEnumerable<string> categoryTypes
                 = from KeyValuePair<string, ElementSet> kvp in set.Branch
+                  where (!blacklistedCategoryTypes.Contains(kvp.Key))
                   select kvp.Key;
 
             // Set categoryTypes to the HideNodesList
