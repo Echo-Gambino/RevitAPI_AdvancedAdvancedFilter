@@ -140,9 +140,9 @@
 
             // Convert the list of ElementId into a list of NodeData
             IEnumerable<NodeData> inputData = ConvertToNodeData(cleanedInput);
-            System.Windows.Forms.MessageBox.Show("Using this.fieldBlackList");
+
             inputData = FilterByField(inputData, this.fieldBlackList);
-            System.Windows.Forms.MessageBox.Show("Using this.persistentBlackList");
+
             inputData = FilterByField(inputData, this.persistentBlacklist);
 
             IEnumerable<ElementId> outputData = ConvertToElementId(inputData);
@@ -155,7 +155,6 @@
             if (input == null) throw new ArgumentNullException("input");
 
             HashSet<string> list;
-
             // Converts the enum into an iterable object
             foreach (Depth depth in (Depth[])Enum.GetValues(typeof(Depth)))
             {
@@ -166,14 +165,6 @@
 
                 // Get blackList to be its own variable to make the next statement slightly shorter
                 list = blackList[depth];
-
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine(depth.ToString());
-                foreach (string s in list)
-                {
-                    sb.AppendLine(s);
-                }
-                System.Windows.Forms.MessageBox.Show(sb.ToString());
 
                 // For each node data in input, select all of those that DOES NOT
                 // have the same field value as what is within the blacklist

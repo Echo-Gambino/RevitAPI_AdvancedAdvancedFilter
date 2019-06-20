@@ -8,10 +8,17 @@
     using System.Threading.Tasks;
 
     using System.Windows.Forms;
-
     using Autodesk.Revit.DB;
 
     using Depth = AdvAdvFilter.Common.Depth;
+
+    public class NodeCompareAlphabetical : System.Collections.IComparer
+    {
+        public int Compare(object a, object b)
+        {            
+            return string.Compare((a as TreeNode).Name, (b as TreeNode).Name);
+        }
+    }
 
     public class TreeViewController
     {
@@ -81,9 +88,10 @@
         public TreeViewController(TreeView treeView)
         {
             this.treeView = treeView ?? throw new ArgumentNullException("treeView");
-
             this.leafNodes = new Dictionary<ElementId, TreeNode>();
             this.curElementIds = new HashSet<ElementId>();
+
+            this.treeView.TreeViewNodeSorter = new NodeCompareAlphabetical();
         }
 
         #region Update TreeView Structure
@@ -99,6 +107,8 @@
             // Remove and add elementIds
             Remove(this.NodesToDel, this.leafNodes);
             Append(this.NodesToAdd, tree);
+
+            this.treeView.Sort();
 
             // If the argument specifies to not keep the change lists, reset it by passing null to the lists
             if (!keepChangeLists)
