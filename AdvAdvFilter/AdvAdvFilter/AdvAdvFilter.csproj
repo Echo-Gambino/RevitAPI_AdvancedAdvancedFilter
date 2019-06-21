@@ -99,7 +99,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\..\..\..\ProgramData\Autodesk\Revit\Addins\2017\AdvAdvFilter.addin" />
+    <None Include="AdvAdvFilterOLD.addin" />
     <None Include="Resources\AAFilter - 32x32.png" />
+    <None Include="AdvAdvFilter.addin">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ModelessForm.resx">

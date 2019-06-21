@@ -1,1 +1,3 @@
 C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\bin\Debug\AdvAdvFilter.dll
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\bin\Debug\\AdvAdvFilter.addin
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilter\bin\Debug\\AdvAdvFilter.addin

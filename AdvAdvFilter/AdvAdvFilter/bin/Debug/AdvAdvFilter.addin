@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Assembly>[SET BY WIX INSTALLER]</Assembly>
+    <ClientId>61783E3A-70BA-4AAE-9C87-8A6E80A2A893</ClientId>
+    <Name>AdvAdvFilter</Name>
+    <FullClassName>AdvAdvFilter.Main</FullClassName>
+    <VendorId>Echo-Gambino</VendorId>
+    <VendorDescription>A programmer that makes stupid stuff</VendorDescription>
+  </AddIn>
+</RevitAddIns>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <!--<?define BuildVersion = 1.0 ?>-->
   
@@ -19,6 +20,8 @@
              Languages="!(loc.Language)"
              />
 
+    <Property Id="ApplicationFolderName" Value="AdvAdvFilterInstaller" />
+    
 		<MajorUpgrade DowngradeErrorMessage="A newer version of AdvAdvFilter is already installed." />
 
     <!-- include .cab file into .msi file -->
@@ -31,22 +34,74 @@
 
 		<Feature Id="ProductFeature" Title="AdvAdvFilterInstaller" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="AddinAppDirectoryComponents" />
+      <ComponentGroupRef Id="AddinAppDataComponents" />
 		</Feature>
 	</Product>
 
 	<Fragment>
-		<Directory Id="TARGETDIR" Name="SourceDir">
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      
+      <!-- This defines the directory of the program itself (stores all .dll files and resources) -->
 			<Directory Id="ProgramFilesFolder">
 				<Directory Id="INSTALLFOLDER" Name="AdvAdvFilterInstaller" />
 			</Directory>
-		</Directory>
+
+      <!-- Defines the path to the addins files to Autodesk Revit 2017 -->
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="AppDirAutoDesk" Name="Autodesk">
+          <Directory Id="AppDirRevit" Name="Revit">
+            <Directory Id="AppDirAddins" Name="Addins">
+              <Directory Id="AppDir2017" Name="2017"/>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+      
+		</Directory>    
 	</Fragment>
 
 	<Fragment>
+    <!-- Sets up the internal components of AdvAdvFilter to its own folder in ProgramFiles or something-->
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       <Component Id="ProductComponent">
-        <File Source="$(var.AdvAdvFilter.TargetPath)" />
+        <File Id="AdvAdvFilterDLL" Name="AdvAdvFilter.dll" DiskId="1" 
+              Source="$(var.AdvAdvFilter.TargetPath)" Vital="yes" KeyPath="yes" />
       </Component>
 		</ComponentGroup>
+
+    <!-- Sets up / Copies the addin manifest file to its own folder for the purpose of reference or something -->
+    <ComponentGroup Id="AddinAppDirectoryComponents" Directory="INSTALLFOLDER">
+      <Component Id="AddinAppDirectoryComponent" Guid="738F3945-6D15-4A69-AE9E-34C1803B5A8C">
+        <File Id="AppDirectoryAdvAdvFilterAddin" Name="AdvAdvFilter.addin" DiskId="1"
+              Source="$(var.AdvAdvFilter.TargetDir)\AdvAdvFilter.addin" Vital="yes" KeyPath="yes"/>
+        <util:XmlFile 
+              Id="AppDirectoryGetAssembly"
+              Action="bulkSetValue"
+              ElementPath="/RevitAddIns/AddIn/Assembly"
+              Value="[INSTALLFOLDER]\AdvAdvFilter.dll"
+              File="[#AppDirectoryAdvAdvFilterAddin]"
+              SelectionLanguage="XPath"
+              Sequence="1"/>
+      </Component>
+    </ComponentGroup>
+
+    <!-- Sets up / Copies the addin manifest file into the Revit 2017 Addins folder 
+    (This is the block of XML that sends AdvAdvFilter.addin into Revit 2017 Addins!)-->
+    <ComponentGroup Id="AddinAppDataComponents" Directory="AppDir2017">
+      <Component Id="AddinAppDataComponent" Guid="EF140D30-90E6-4C0A-ACA4-8CCB90FBED4F">
+        <File Id="AppDataAdvAdvFilterAddin" Name="AdvAdvFilter.addin" DiskId="1"
+              Source="$(var.AdvAdvFilter.TargetDir)\AdvAdvFilter.addin" Vital="yes" KeyPath="yes" />
+        <util:XmlFile 
+              Id="AppDataSetAssembly"
+              Action="bulkSetValue"
+              ElementPath="/RevitAddIns/AddIn/Assembly"
+              Value="[INSTALLFOLDER]\AdvAdvFilter.dll"
+              File="[#AppDataAdvAdvFilterAddin]"
+              SelectionLanguage="XPath"
+              Sequence="1" />
+      </Component>
+    </ComponentGroup>
+    
 	</Fragment>
 </Wix>
