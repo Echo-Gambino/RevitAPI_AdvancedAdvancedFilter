@@ -373,7 +373,7 @@
 
             HashSet<string> hiddenNodes = new HashSet<string>(optionController.HiddenNodes);
 
-            filterController.SetFieldBlackList(hiddenNodes, Common.Depth.CategoryType);
+            filterController.SetBlackList(hiddenNodes, Common.Depth.CategoryType);
 
             requestHandler.AddRequest(Request.UpdateTreeView);
 
@@ -716,7 +716,7 @@
                     debug.printText(bl, "CategoryType persistent", 2);
 
                     // Get the new elements by filtering all the elements reported by dataController
-                    HashSet<ElementId> newElementIds = filterController.Filter(dataController.AllElements);
+                    HashSet<ElementId> newElementIds = filterController.FilterS(dataController.AllElements);
                     // Get the old elements obtaining all the elements reported by selectionController
                     HashSet<ElementId> oldElementIds = selectionController.AllElementIds;
 
