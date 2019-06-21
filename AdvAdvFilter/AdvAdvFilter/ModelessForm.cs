@@ -23,8 +23,6 @@
 
     public partial class ModelessForm : System.Windows.Forms.Form
     {
-        DebugController debug;
-
         #region Fields
 
         #region Fields: Modeless Form
@@ -83,10 +81,6 @@
             )
         {
             InitializeComponent();
-
-            debug = new DebugController(TestPanel, listBox1, listBox2);
-
-            //selectionTool(new List<ElementId>());
 
             // Stop IdlingHandler from executing during initialization
             this.haltIdlingHandler = true;
@@ -501,119 +495,6 @@
                 Request request = GetNextRequest_IdlingHandler();
 
                 HandleRequest_IdlingHandler(request);
-
-                #region Stow
-                /*
-                if (!this.haltIdlingHandler)
-                {                    
-                    // This is to get the essential objects to use the Revit API
-                    UIApplication uiApp = sender as UIApplication;
-                    UIDocument uiDoc = uiApp.ActiveUIDocument;
-                    Document activeDoc = uiDoc.Document;
-
-                    if (this.firstStartup)
-                    {
-                        this.firstStartup = false;
-
-                        List<ElementId> AllElementIds = revitController.GetAllElementIds(FilterMode.Project);                        
-                        dataController.SetAllElements(AllElementIds);
-                    }
-
-                    Request request;
-                    FilterMode filter;
-
-                    filter = requestHandler.FilterBy;
-
-                    int viewChanged = revitController.UpdateView();
-                    if (viewChanged == 1)
-                    {
-                        request = Request.UpdateTreeView;
-                    }
-                    else
-                    {
-                        request = requestHandler.GetRequest();
-                    }
-
-                    request = requestHandler.ProcessRequest(request);
-
-                    switch (request)
-                    {
-                        case Request.UpdateTreeView:
-
-                            dataController.SetMode(filter);
-
-                            // Update the treeView element within the form
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                selectionController.UpdateTreeViewStructure(dataController.AllElements, dataController.ElementTree);
-                                // selectionController.UpdateTreeViewStructure_New(dataController.ElementTree.SubSet, dataController.ElementTree);
-                            }));
-
-                            break;
-                        case Request.UpdateTreeViewSelection:
-
-                            ICollection<ElementId> currentSelected = this.uiDoc.Selection.GetElementIds();
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                bool updateSucceeded = selectionController.UpdateSelectedLeaves(currentSelected);
-                                if (updateSucceeded)
-                                {
-                                    requestHandler.FailureListRemove(request);
-                                }
-                                else
-                                {
-                                    requestHandler.AttemptRecovery(request);
-                                }
-                            }));
-
-                            break;
-                        case Request.SelectElementIds:
-
-                            revitController.MakeNewSelection(dataController.SelElements);
-
-                            //List<ElementId> elementIds
-                            //    = revitController.GetAllElementIds(filter);
-                            //dataController.UpdateAllElements(elementIds);
-
-                            dataController.SetMode(filter);
-
-                            // Hide all elements 
-                            if (requestHandler.UnselectedHidden)
-                            {
-                                revitController.HideUnselectedElementIds(
-                                    dataController.SelElements,
-                                    dataController.AllElements);
-                            }
-                            else
-                            {
-                                revitController.ShowSelectedElementIds(dataController.SelElements);
-                            }
-
-                            break;
-                        case Request.ShiftSelected:
-
-                            List<ElementId> movElementIds = dataController.MovElements;
-                            List<int> coords = dataController.Coords;
-                            bool copyAndShift = dataController.CopyAndShift;
-
-                            // Copy and Move the Elements
-                            revitController.CopyAndMoveElements(movElementIds, coords, copyAndShift);
-
-                            break;
-                        case Request.Nothing:
-                            // Do absolutely nothing
-                            break;
-                        default:
-
-                            // If the request isn't any other request (even Nothing), then prompt user with warning message
-                            TaskDialog.Show("Debug - SelectionChanged_UIAppEvent_WhileIdling",
-                                "Warning: Handler given invalid request");
-
-                            break;
-                    }
-                }
-                */
-                #endregion STOW
             }
             catch (Exception ex)
             {
@@ -700,21 +581,6 @@
                     // Step 1.1: Exit if dataController doesn't detect a change in viewable elements
                     if (!changed) return;
 
-                    Dictionary<Common.Depth, HashSet<string>> blackList;
-                    HashSet<string> bl = new HashSet<string>();
-
-                    blackList = filterController.FieldBlackList;
-                    bl.Clear();
-                    if (blackList.ContainsKey(Common.Depth.CategoryType))
-                        bl.UnionWith(blackList[Common.Depth.CategoryType]);
-                    debug.printText(bl, "CategoryType temporary", 1);
-
-                    blackList = filterController.PersistentBlackList;
-                    bl.Clear();
-                    if (blackList.ContainsKey(Common.Depth.CategoryType))
-                        bl.UnionWith(blackList[Common.Depth.CategoryType]);
-                    debug.printText(bl, "CategoryType persistent", 2);
-
                     // Get the new elements by filtering all the elements reported by dataController
                     HashSet<ElementId> newElementIds = filterController.FilterS(dataController.AllElements);
                     // Get the old elements obtaining all the elements reported by selectionController
@@ -787,18 +653,6 @@
                     // Step 2: Construct add and remove hashsets
                     HashSet<ElementId> addSelection = new HashSet<ElementId>(newSelection.Except(oldSelection));
                     HashSet<ElementId> remSelection = new HashSet<ElementId>(oldSelection.Except(newSelection));
-
-                    // DEBUG: Print out addSelection
-                    //StringBuilder sb = new StringBuilder();
-                    //sb.AppendLine("RemSelection");
-                    //foreach (ElementId id in remSelection)
-                    //{
-                    //    sb.AppendLine(id.ToString());
-                    //}
-                    //MessageBox.Show(sb.ToString());
-
-                    // Branch nodes to update
-                    
 
                     // Step 3: Update selection by 'adding' and 'removing' selected treeNodes by checking and unchecking them
                     this.BeginInvoke(new Action(() =>

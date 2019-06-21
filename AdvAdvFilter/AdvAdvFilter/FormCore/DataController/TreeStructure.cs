@@ -180,19 +180,6 @@
                     set.Name = depth.ToString();
                 }
 
-                //----- Debug ------
-                /*
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine(depth.ToString());
-                sb.AppendLine(kvp.Key);
-                foreach (NodeData d in kvp.Value)
-                {
-                    sb.AppendLine(d.Id.ToString());
-                }
-                MessageBox.Show(sb.ToString());
-                */
-                //----- Debug ------
-
                 // Recurse down
                 AddToTree(kvp.Value, newSet, newDepth);
 
@@ -282,19 +269,6 @@
                 // If newSet doesn't exist, then add a branch and set newSet to the newly created branch
                 if (newSet == null)
                     throw new NullReferenceException();
-
-                //----- Debug ------
-                /*
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine(depth.ToString());
-                sb.AppendLine(kvp.Key);
-                foreach (NodeData d in kvp.Value)
-                {
-                    sb.AppendLine(d.Id.ToString());
-                }
-                MessageBox.Show(sb.ToString());
-                */
-                //----- Debug ------
 
                 // Recurse down
                 RemoveFromTree(kvp.Value, newSet, newDepth);

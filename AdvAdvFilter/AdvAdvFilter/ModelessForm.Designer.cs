@@ -29,6 +29,11 @@
         private void InitializeComponent()
         {
             this.ElementSelectionPanel = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.ESExpandAllButton = new System.Windows.Forms.Button();
+            this.ESExpandSelectedButton = new System.Windows.Forms.Button();
+            this.ESCollapseSelectedButton = new System.Windows.Forms.Button();
+            this.ESCollapseAllButton = new System.Windows.Forms.Button();
             this.ElementSelectionTreeView = new System.Windows.Forms.TreeView();
             this.ElementSelectionLabel = new System.Windows.Forms.Label();
             this.SidePanel = new System.Windows.Forms.Panel();
@@ -50,6 +55,9 @@
             this.ActionShiftLabel0 = new System.Windows.Forms.Label();
             this.ActionLabel = new System.Windows.Forms.Label();
             this.OptionPanel = new System.Windows.Forms.Panel();
+            this.OptionHideNodePanel = new System.Windows.Forms.Panel();
+            this.OptionHideNodeLabel = new System.Windows.Forms.Label();
+            this.OptionHideNodeCheckedListBox = new System.Windows.Forms.CheckedListBox();
             this.OptionFilterPanel = new System.Windows.Forms.Panel();
             this.OptionFilterRadioButton2 = new System.Windows.Forms.RadioButton();
             this.OptionFilterRadioButton1 = new System.Windows.Forms.RadioButton();
@@ -59,18 +67,8 @@
             this.OptionVisibilityLabel = new System.Windows.Forms.Label();
             this.OptionVisibilityCheckBox = new System.Windows.Forms.CheckBox();
             this.OptionLabel = new System.Windows.Forms.Label();
-            this.TestPanel = new System.Windows.Forms.Panel();
-            this.listBox2 = new System.Windows.Forms.ListBox();
-            this.listBox1 = new System.Windows.Forms.ListBox();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.ESExpandAllButton = new System.Windows.Forms.Button();
-            this.ESExpandSelectedButton = new System.Windows.Forms.Button();
-            this.ESCollapseSelectedButton = new System.Windows.Forms.Button();
-            this.ESCollapseAllButton = new System.Windows.Forms.Button();
-            this.OptionHideNodeCheckedListBox = new System.Windows.Forms.CheckedListBox();
-            this.OptionHideNodePanel = new System.Windows.Forms.Panel();
-            this.OptionHideNodeLabel = new System.Windows.Forms.Label();
             this.ElementSelectionPanel.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SidePanel.SuspendLayout();
             this.ActionPanel.SuspendLayout();
             this.ActionModePanel.SuspendLayout();
@@ -78,11 +76,9 @@
             this.ActionShiftPanel1.SuspendLayout();
             this.ActionShiftPanel0.SuspendLayout();
             this.OptionPanel.SuspendLayout();
+            this.OptionHideNodePanel.SuspendLayout();
             this.OptionFilterPanel.SuspendLayout();
             this.OptionVisibilityPanel.SuspendLayout();
-            this.TestPanel.SuspendLayout();
-            this.tableLayoutPanel1.SuspendLayout();
-            this.OptionHideNodePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // ElementSelectionPanel
@@ -96,8 +92,79 @@
             this.ElementSelectionPanel.Location = new System.Drawing.Point(12, 12);
             this.ElementSelectionPanel.MinimumSize = new System.Drawing.Size(300, 300);
             this.ElementSelectionPanel.Name = "ElementSelectionPanel";
-            this.ElementSelectionPanel.Size = new System.Drawing.Size(322, 640);
+            this.ElementSelectionPanel.Size = new System.Drawing.Size(373, 640);
             this.ElementSelectionPanel.TabIndex = 6;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Controls.Add(this.ESExpandAllButton, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.ESExpandSelectedButton, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.ESCollapseSelectedButton, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.ESCollapseAllButton, 1, 1);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 580);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(373, 60);
+            this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // ESExpandAllButton
+            // 
+            this.ESExpandAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ESExpandAllButton.Location = new System.Drawing.Point(3, 33);
+            this.ESExpandAllButton.Name = "ESExpandAllButton";
+            this.ESExpandAllButton.Size = new System.Drawing.Size(180, 24);
+            this.ESExpandAllButton.TabIndex = 0;
+            this.ESExpandAllButton.Text = "Expand All";
+            this.ESExpandAllButton.UseVisualStyleBackColor = true;
+            this.ESExpandAllButton.Click += new System.EventHandler(this.ESExpandAllButton_Click);
+            // 
+            // ESExpandSelectedButton
+            // 
+            this.ESExpandSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ESExpandSelectedButton.Location = new System.Drawing.Point(3, 3);
+            this.ESExpandSelectedButton.Name = "ESExpandSelectedButton";
+            this.ESExpandSelectedButton.Size = new System.Drawing.Size(180, 24);
+            this.ESExpandSelectedButton.TabIndex = 1;
+            this.ESExpandSelectedButton.Text = "Expand Selected";
+            this.ESExpandSelectedButton.UseVisualStyleBackColor = true;
+            this.ESExpandSelectedButton.Click += new System.EventHandler(this.ESExpandSelectedButton_Click);
+            // 
+            // ESCollapseSelectedButton
+            // 
+            this.ESCollapseSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ESCollapseSelectedButton.Location = new System.Drawing.Point(189, 3);
+            this.ESCollapseSelectedButton.Name = "ESCollapseSelectedButton";
+            this.ESCollapseSelectedButton.Size = new System.Drawing.Size(181, 24);
+            this.ESCollapseSelectedButton.TabIndex = 2;
+            this.ESCollapseSelectedButton.Text = "Collapse Selected";
+            this.ESCollapseSelectedButton.UseVisualStyleBackColor = true;
+            this.ESCollapseSelectedButton.Click += new System.EventHandler(this.ESCollapseSelectedButton_Click);
+            // 
+            // ESCollapseAllButton
+            // 
+            this.ESCollapseAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ESCollapseAllButton.Location = new System.Drawing.Point(189, 33);
+            this.ESCollapseAllButton.Name = "ESCollapseAllButton";
+            this.ESCollapseAllButton.Size = new System.Drawing.Size(181, 24);
+            this.ESCollapseAllButton.TabIndex = 3;
+            this.ESCollapseAllButton.Text = "Collapse All";
+            this.ESCollapseAllButton.UseVisualStyleBackColor = true;
+            this.ESCollapseAllButton.Click += new System.EventHandler(this.ESCollapseAllButton_Click);
             // 
             // ElementSelectionTreeView
             // 
@@ -107,7 +174,7 @@
             this.ElementSelectionTreeView.CheckBoxes = true;
             this.ElementSelectionTreeView.Location = new System.Drawing.Point(0, 3);
             this.ElementSelectionTreeView.Name = "ElementSelectionTreeView";
-            this.ElementSelectionTreeView.Size = new System.Drawing.Size(322, 555);
+            this.ElementSelectionTreeView.Size = new System.Drawing.Size(373, 555);
             this.ElementSelectionTreeView.TabIndex = 1;
             this.ElementSelectionTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.ElementSelectionTreeView_AfterCheck);
             this.ElementSelectionTreeView.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.ElementSelectionTreeView_BeforeCollapse);
@@ -129,7 +196,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.SidePanel.Controls.Add(this.ActionPanel);
             this.SidePanel.Controls.Add(this.OptionPanel);
-            this.SidePanel.Location = new System.Drawing.Point(340, 12);
+            this.SidePanel.Location = new System.Drawing.Point(391, 15);
             this.SidePanel.MaximumSize = new System.Drawing.Size(400, 1000);
             this.SidePanel.MinimumSize = new System.Drawing.Size(250, 300);
             this.SidePanel.Name = "SidePanel";
@@ -349,6 +416,41 @@
             this.OptionPanel.Size = new System.Drawing.Size(249, 248);
             this.OptionPanel.TabIndex = 0;
             // 
+            // OptionHideNodePanel
+            // 
+            this.OptionHideNodePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.OptionHideNodePanel.Controls.Add(this.OptionHideNodeLabel);
+            this.OptionHideNodePanel.Controls.Add(this.OptionHideNodeCheckedListBox);
+            this.OptionHideNodePanel.Location = new System.Drawing.Point(3, 161);
+            this.OptionHideNodePanel.Name = "OptionHideNodePanel";
+            this.OptionHideNodePanel.Size = new System.Drawing.Size(243, 84);
+            this.OptionHideNodePanel.TabIndex = 4;
+            // 
+            // OptionHideNodeLabel
+            // 
+            this.OptionHideNodeLabel.AutoSize = true;
+            this.OptionHideNodeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.OptionHideNodeLabel.Location = new System.Drawing.Point(3, 0);
+            this.OptionHideNodeLabel.Name = "OptionHideNodeLabel";
+            this.OptionHideNodeLabel.Size = new System.Drawing.Size(113, 15);
+            this.OptionHideNodeLabel.TabIndex = 7;
+            this.OptionHideNodeLabel.Text = "Hide CategoryType:";
+            // 
+            // OptionHideNodeCheckedListBox
+            // 
+            this.OptionHideNodeCheckedListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.OptionHideNodeCheckedListBox.FormattingEnabled = true;
+            this.OptionHideNodeCheckedListBox.Location = new System.Drawing.Point(0, 20);
+            this.OptionHideNodeCheckedListBox.MaximumSize = new System.Drawing.Size(294, 70);
+            this.OptionHideNodeCheckedListBox.MinimumSize = new System.Drawing.Size(4, 70);
+            this.OptionHideNodeCheckedListBox.Name = "OptionHideNodeCheckedListBox";
+            this.OptionHideNodeCheckedListBox.Size = new System.Drawing.Size(243, 64);
+            this.OptionHideNodeCheckedListBox.Sorted = true;
+            this.OptionHideNodeCheckedListBox.TabIndex = 6;
+            this.OptionHideNodeCheckedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.OptionHideNodeCheckedListBox_CheckedChanged);
+            // 
             // OptionFilterPanel
             // 
             this.OptionFilterPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -450,149 +552,11 @@
             this.OptionLabel.TabIndex = 0;
             this.OptionLabel.Text = "Options";
             // 
-            // TestPanel
-            // 
-            this.TestPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.TestPanel.Controls.Add(this.listBox2);
-            this.TestPanel.Controls.Add(this.listBox1);
-            this.TestPanel.Location = new System.Drawing.Point(599, 12);
-            this.TestPanel.Name = "TestPanel";
-            this.TestPanel.Size = new System.Drawing.Size(397, 640);
-            this.TestPanel.TabIndex = 9;
-            // 
-            // listBox2
-            // 
-            this.listBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listBox2.FormattingEnabled = true;
-            this.listBox2.Location = new System.Drawing.Point(195, 3);
-            this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size(199, 628);
-            this.listBox2.TabIndex = 5;
-            // 
-            // listBox1
-            // 
-            this.listBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left)));
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(3, 3);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(186, 628);
-            this.listBox1.TabIndex = 4;
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Controls.Add(this.ESExpandAllButton, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.ESExpandSelectedButton, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.ESCollapseSelectedButton, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.ESCollapseAllButton, 1, 1);
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 580);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(322, 60);
-            this.tableLayoutPanel1.TabIndex = 2;
-            // 
-            // ESExpandAllButton
-            // 
-            this.ESExpandAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ESExpandAllButton.Location = new System.Drawing.Point(3, 33);
-            this.ESExpandAllButton.Name = "ESExpandAllButton";
-            this.ESExpandAllButton.Size = new System.Drawing.Size(155, 24);
-            this.ESExpandAllButton.TabIndex = 0;
-            this.ESExpandAllButton.Text = "Expand All";
-            this.ESExpandAllButton.UseVisualStyleBackColor = true;
-            this.ESExpandAllButton.Click += new System.EventHandler(this.ESExpandAllButton_Click);
-            // 
-            // ESExpandSelectedButton
-            // 
-            this.ESExpandSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ESExpandSelectedButton.Location = new System.Drawing.Point(3, 3);
-            this.ESExpandSelectedButton.Name = "ESExpandSelectedButton";
-            this.ESExpandSelectedButton.Size = new System.Drawing.Size(155, 24);
-            this.ESExpandSelectedButton.TabIndex = 1;
-            this.ESExpandSelectedButton.Text = "Expand Selected";
-            this.ESExpandSelectedButton.UseVisualStyleBackColor = true;
-            this.ESExpandSelectedButton.Click += new System.EventHandler(this.ESExpandSelectedButton_Click);
-            // 
-            // ESCollapseSelectedButton
-            // 
-            this.ESCollapseSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ESCollapseSelectedButton.Location = new System.Drawing.Point(164, 3);
-            this.ESCollapseSelectedButton.Name = "ESCollapseSelectedButton";
-            this.ESCollapseSelectedButton.Size = new System.Drawing.Size(155, 24);
-            this.ESCollapseSelectedButton.TabIndex = 2;
-            this.ESCollapseSelectedButton.Text = "Collapse Selected";
-            this.ESCollapseSelectedButton.UseVisualStyleBackColor = true;
-            this.ESCollapseSelectedButton.Click += new System.EventHandler(this.ESCollapseSelectedButton_Click);
-            // 
-            // ESCollapseAllButton
-            // 
-            this.ESCollapseAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.ESCollapseAllButton.Location = new System.Drawing.Point(164, 33);
-            this.ESCollapseAllButton.Name = "ESCollapseAllButton";
-            this.ESCollapseAllButton.Size = new System.Drawing.Size(155, 24);
-            this.ESCollapseAllButton.TabIndex = 3;
-            this.ESCollapseAllButton.Text = "Collapse All";
-            this.ESCollapseAllButton.UseVisualStyleBackColor = true;
-            this.ESCollapseAllButton.Click += new System.EventHandler(this.ESCollapseAllButton_Click);
-            // 
-            // OptionHideNodeCheckedListBox
-            // 
-            this.OptionHideNodeCheckedListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.OptionHideNodeCheckedListBox.FormattingEnabled = true;
-            this.OptionHideNodeCheckedListBox.Location = new System.Drawing.Point(0, 20);
-            this.OptionHideNodeCheckedListBox.MaximumSize = new System.Drawing.Size(294, 70);
-            this.OptionHideNodeCheckedListBox.MinimumSize = new System.Drawing.Size(0, 70);
-            this.OptionHideNodeCheckedListBox.Name = "OptionHideNodeCheckedListBox";
-            this.OptionHideNodeCheckedListBox.Size = new System.Drawing.Size(243, 64);
-            this.OptionHideNodeCheckedListBox.Sorted = true;
-            this.OptionHideNodeCheckedListBox.TabIndex = 6;
-            this.OptionHideNodeCheckedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.OptionHideNodeCheckedListBox_CheckedChanged);
-            // 
-            // OptionHideNodePanel
-            // 
-            this.OptionHideNodePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.OptionHideNodePanel.Controls.Add(this.OptionHideNodeLabel);
-            this.OptionHideNodePanel.Controls.Add(this.OptionHideNodeCheckedListBox);
-            this.OptionHideNodePanel.Location = new System.Drawing.Point(3, 161);
-            this.OptionHideNodePanel.Name = "OptionHideNodePanel";
-            this.OptionHideNodePanel.Size = new System.Drawing.Size(243, 84);
-            this.OptionHideNodePanel.TabIndex = 4;
-            // 
-            // OptionHideNodeLabel
-            // 
-            this.OptionHideNodeLabel.AutoSize = true;
-            this.OptionHideNodeLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.OptionHideNodeLabel.Location = new System.Drawing.Point(3, 0);
-            this.OptionHideNodeLabel.Name = "OptionHideNodeLabel";
-            this.OptionHideNodeLabel.Size = new System.Drawing.Size(113, 15);
-            this.OptionHideNodeLabel.TabIndex = 7;
-            this.OptionHideNodeLabel.Text = "Hide CategoryType:";
-            // 
             // ModelessForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1008, 661);
-            this.Controls.Add(this.TestPanel);
+            this.ClientSize = new System.Drawing.Size(659, 661);
             this.Controls.Add(this.SidePanel);
             this.Controls.Add(this.ElementSelectionPanel);
             this.MinimumSize = new System.Drawing.Size(675, 700);
@@ -601,6 +565,7 @@
             this.Load += new System.EventHandler(this.ModelessForm_Load);
             this.ElementSelectionPanel.ResumeLayout(false);
             this.ElementSelectionPanel.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.SidePanel.ResumeLayout(false);
             this.ActionPanel.ResumeLayout(false);
             this.ActionPanel.PerformLayout();
@@ -614,14 +579,12 @@
             this.ActionShiftPanel0.PerformLayout();
             this.OptionPanel.ResumeLayout(false);
             this.OptionPanel.PerformLayout();
+            this.OptionHideNodePanel.ResumeLayout(false);
+            this.OptionHideNodePanel.PerformLayout();
             this.OptionFilterPanel.ResumeLayout(false);
             this.OptionFilterPanel.PerformLayout();
             this.OptionVisibilityPanel.ResumeLayout(false);
             this.OptionVisibilityPanel.PerformLayout();
-            this.TestPanel.ResumeLayout(false);
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.OptionHideNodePanel.ResumeLayout(false);
-            this.OptionHideNodePanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -658,9 +621,6 @@
         private System.Windows.Forms.Label OptionFilterLabel;
         private System.Windows.Forms.Button ActionShiftButton;
         private System.Windows.Forms.Label ActionPromptLabel;
-        private System.Windows.Forms.Panel TestPanel;
-        private System.Windows.Forms.ListBox listBox1;
-        private System.Windows.Forms.ListBox listBox2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button ESExpandAllButton;
         private System.Windows.Forms.Button ESExpandSelectedButton;

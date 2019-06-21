@@ -240,18 +240,7 @@
             filteredData = FilterByField(filteredData, this.persistentBlacklist);
 
             afterFilterIds = new HashSet<ElementId>(ConvertToElementId(filteredData));
-            /*
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Filter Statistics");
-            sb.AppendFormat("this.cachedBlackList: {0}\n", this.cachedBlackList.Count);
-            sb.AppendFormat("this.cachedWhiteList: {0}\n", this.cachedWhiteList.Count);
-            sb.AppendFormat("idsPreBlackListed: {0}\n", idsPreBlackListed.Count);
-            sb.AppendFormat("idsPreWhiteListed: {0}\n", idsPreWhiteListed.Count);
-            sb.AppendFormat("input: {0}\n", input.Count);
-            sb.AppendFormat("beforeFilteredIds: {0}\n", beforeFilterIds.Count);
-            sb.AppendFormat("afterFilteredIds: {0}\n", afterFilterIds.Count);
-            System.Windows.Forms.MessageBox.Show(sb.ToString());
-            */
+
             AddToCacheBlackList(beforeFilterIds.Except(afterFilterIds));
             AddToCacheWhiteList(afterFilterIds);
 

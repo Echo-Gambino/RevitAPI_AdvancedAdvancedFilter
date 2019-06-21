@@ -255,24 +255,16 @@
         {
             // If there are no elementIds, then exit out
             if (elementIds.Count == 0) return;
-
+            
             lock (treeLock)
             {
                 if (elementIds.Count == this.curElementIds.Count)
                 {
-                    // If the method detects that all elementIds are being removed,
-                    // take a shortcut and clear out everything
+                    // If the method detects that all elementIds are being removed, take a shortcut and clear out everything
                     ClearAllData();
                 }
                 else
                 {
-                    /*
-                    var thing = from ElementId id in elementIds
-                                where ("47145" == id.ToString())
-                                select id;
-                    if (thing.Count() != 0)
-                        MessageBox.Show("47145 is going to be deleted!");
-                    */
                     // Else, call a method that will delete the nodes with the corresponding elementIds recursively
                     DelNodesInTree(elementIds, this.treeView.Nodes, nodeDict, Depth.CategoryType);
                 }
