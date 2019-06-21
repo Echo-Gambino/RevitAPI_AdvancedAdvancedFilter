@@ -1,0 +1,6 @@
+obj\Debug\Product.wixobj
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilterInstaller\bin\Debug\en-us\AdvAdvFilterInstaller.msi
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilterInstaller\bin\Debug\en-us\AdvAdvFilterInstaller.wixpdb
+obj\Debug\AdvAdvFilterInstaller.wixproj.BindContentsFileListen-us.txt
+obj\Debug\AdvAdvFilterInstaller.wixproj.BindOutputsFileListen-us.txt
+obj\Debug\AdvAdvFilterInstaller.wixproj.BindBuiltOutputsFileListen-us.txt

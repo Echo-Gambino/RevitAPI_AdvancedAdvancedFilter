@@ -1,0 +1,2 @@
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilterInstaller\bin\Debug\en-us\AdvAdvFilterInstaller.msi
+C:\Users\Henry\Projects\RevitAPI_AdvAdvFilter\AdvAdvFilter\AdvAdvFilterInstaller\bin\Debug\en-us\AdvAdvFilterInstaller.wixpdb

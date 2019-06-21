@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+  <!--<?define BuildVersion = 1.0 ?>-->
+  
+	<Product Id="*" 
+           Name="AdvAdvFilterInstaller"
+           Language="1033"
+           Version="1.0.0.0" 
+           Manufacturer="Echo-Gambino" 
+           UpgradeCode="52b6e01a-9e6c-44f7-9d5d-f8b0c5e8b9f0">
+    
+		<Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine"
+            Description="!(loc.Description)"
+             Keywords="!(loc.Keywords)"
+             Comments="!(loc.Comments)"
+             Languages="!(loc.Language)"
+             />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of AdvAdvFilter is already installed." />
+
+    <!-- include .cab file into .msi file -->
+    <MediaTemplate EmbedCab="yes"/>
+
+    <!-- Create a basic UI for the installer (built-in for WiX) -->
+    <!-- <UIRef Id="WixUI_Minimal" /> -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+		<Feature Id="ProductFeature" Title="AdvAdvFilterInstaller" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="AdvAdvFilterInstaller" />
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="ProductComponent">
+        <File Source="$(var.AdvAdvFilter.TargetPath)" />
+      </Component>
+		</ComponentGroup>
+	</Fragment>
+</Wix>
