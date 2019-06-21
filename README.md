@@ -19,7 +19,7 @@ git clone https://github.com/Echo-Gambino/RevitAPI_AdvancedAdvancedFilter.git
 
 
 
-[download_image]: https://github.com/Echo-Gambino/RevitAPI_AdvancedAdvancedFilter/DownloadThisBois.png
+[download_image]: https://github.com/Echo-Gambino/RevitAPI_AdvancedAdvancedFilter/raw/release/DownloadThisBois.PNG	"Download Image"
 
 
 
